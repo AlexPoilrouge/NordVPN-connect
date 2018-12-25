@@ -46,8 +46,9 @@ class NVPNMenu extends PanelMenu.Button{
   static get STATUS() {
     return {
       NOT_FOUND: 0,
-      DISCONNECTED: 1,
-      CONNECTED: 2
+      DAEMON_DOWN: 1,
+      DISCONNECTED: 2,
+      CONNECTED: 3
     };
   }
 
@@ -107,11 +108,17 @@ class NVPNMenu extends PanelMenu.Button{
 
     vbox2.add_child(this.action_button);
 
+
+
+
     _itemCurrent2.actor.add(vbox2, { expand: true });
     this.menu.addMenuItem(_itemCurrent2);
 
 
+    this.submenu= new PopupMenu.PopupSubMenuMenuItem(_("Select country"), true);
+    this.menu.addMenuItem(this.submenu);
 
+    this._fill_country_submenu();
 
 
 
@@ -152,6 +159,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     switch(this.currentStatus){
     case NVPNMenu.STATUS.NOT_FOUND:
+    case NVPNMenu.STATUS.DAEMON_DOWN:
       this.label_status.text= " tool not found.";
 
       this.label_connection.text= "--";
@@ -193,6 +201,7 @@ class NVPNMenu extends PanelMenu.Button{
     log('[nvpn] button clicked?');
     switch(this.currentStatus){
     case NVPNMenu.STATUS.NOT_FOUND:
+    case NVPNMenu.STATUS.DAEMON_DOWN:
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -212,10 +221,36 @@ class NVPNMenu extends PanelMenu.Button{
 
   }
 
-  _get_cities_list(){
-    let lst_str= GLib.spawn_command_line_sync("sh -c \"nordvpn countries | sed 's/\s\{1,\}/;/g' | sed 's/;-;//g' | sed ':a;N;$!ba;s/\n/ /g'\"")[1].toString();
+  _get_countries_list(){
+    let lst_str= GLib.spawn_command_line_sync("sh -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
+
+    log('[nvpn] lst_str= '+ lst_str);
 
     return lst_str.split(';');
+  }
+
+  _fill_country_submenu(){
+    let country_list= this. _get_countries_list();
+    let tsmm= this.submenu.menu;
+
+
+
+
+    let item= new PopupMenu.PopupBaseMenuItem();
+    let label_item= new St.Label({style_class: 'label-action-btn', text: 'Default'});
+    item.actor.add(label_item);
+
+    tsmm.addMenuItem(item);
+
+    country_list.forEach(function(elmt){
+      log('[nvpn] - c= ' + elmt);
+
+      item= new PopupMenu.PopupBaseMenuItem();
+      label_item= new St.Label({style_class: 'label-action-btn', text: elmt});
+      item.actor.add(label_item);
+
+      tsmm.addMenuItem(item);
+    });
   }
 
 
