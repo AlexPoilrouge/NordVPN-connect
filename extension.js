@@ -78,10 +78,6 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.label_status= new St.Label({style_class: 'label-nvpn-status'});
     this.label_connection= new St.Label({style_class: 'label-nvpn-connection', text: '--'});
-    this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
-    this._update_status_and_ui();
-
-    log('[nvpn] nvpn server? '+ this. _get_server_text_info());
 
 
     hbox2.add_child(this.label_status);
@@ -90,7 +86,39 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(this.label_connection);
 
     _itemCurrent.actor.add(vbox, { expand: true });
+
+
     this.menu.addMenuItem(_itemCurrent,0);
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+
+    let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
+            reactive: false
+        });
+    let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
+    vbox2.set_vertical(true);
+
+    // this.action_button= new St.Button({style_class: 'action_button'});
+    this.label_action_btn= new St.Label({style_class: 'label-action-btn', text: 'Quick Connect'});
+    // this.action_button.add_child(this.label_action_btn);
+    this.action_button= new St.Button({style_class: 'action_button', child:this.label_action_btn});
+
+    this.action_button.connect('clicked', this._button_clicked.bind(this));
+
+    vbox2.add_child(this.action_button);
+
+    _itemCurrent2.actor.add(vbox2, { expand: true });
+    this.menu.addMenuItem(_itemCurrent2);
+
+
+
+
+
+
+    this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
+    this._update_status_and_ui();
+
+    log('[nvpn] nvpn server? '+ this. _get_server_text_info());
   }
 
   destroy(){
@@ -102,7 +130,7 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _is_NVPN_connected(){
-    return (GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po Disconnected\"")[1].length===0);
+    return !(GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
   }
 
   _get_current_status(){
@@ -126,15 +154,25 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.NOT_FOUND:
       this.label_status.text= " tool not found.";
 
+      this.label_connection.text= "--";
+
+      this.label_action_btn= "Help?";
+
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
       this.label_status.text= " disconnected.";
+
+      this.label_connection.text= "--";
+
+      this.label_action_btn.text= "Quick Connect";
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
       this.label_status.text= " connected to";
 
       this.label_connection.text= this._get_server_text_info();
+
+      this.label_action_btn.text= "Disconnect";
 
       break;
     }
@@ -149,6 +187,35 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       return "--";
     }
+  }
+
+  _button_clicked(){
+    log('[nvpn] button clicked?');
+    switch(this.currentStatus){
+    case NVPNMenu.STATUS.NOT_FOUND:
+
+      break;
+    case NVPNMenu.STATUS.DISCONNECTED:
+      GLib.spawn_command_line_sync("sh -c \"nordvpn c\"");
+        log('[nvpn] -> sh -c \"nordvpn c\"?');
+
+      break;
+    case NVPNMenu.STATUS.CONNECTED:
+      GLib.spawn_command_line_sync("sh -c \"nordvpn d\"");
+        log('[nvpn] -> sh -c \"nordvpn d\"?');
+
+
+      break;
+    }
+
+    this._update_status_and_ui();
+
+  }
+
+  _get_cities_list(){
+    let lst_str= GLib.spawn_command_line_sync("sh -c \"nordvpn countries | sed 's/\s\{1,\}/;/g' | sed 's/;-;//g' | sed ':a;N;$!ba;s/\n/ /g'\"")[1].toString();
+
+    return lst_str.split(';');
   }
 
 
