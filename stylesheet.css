@@ -11,3 +11,24 @@
 .countries_submenu_label_item_selected_icon {
     icon-size: 15px;
 }
+
+.nvpn-action-button{
+  font-weight: bold;
+  border-radius: 1px;
+  border-color: rgba(250,250,250,1.0);
+  background-color: rgba(10,130,10,0.7);
+}
+
+.nvpn-action-button-dq{
+  font-weight: bold;
+  border-radius: 1px;
+  border-color: rgba(250,250,250,1.0);
+  background-color: rgba(130,10,10,0.7);
+}
+
+.nvpn-action-button-help{
+  font-weight: bold;
+  border-radius: 1px;
+  border-color: rgba(250,250,250,1.0);
+  background-color: rgba(200,150,30,0.7);
+}
