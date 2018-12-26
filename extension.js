@@ -6,6 +6,8 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
+const Mainloop = imports.mainloop;
+
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
@@ -156,7 +158,11 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     for(let i=0; i<this.menu.length; ++i){
       let item= children[i];
       if(item.PlaceName===placeName){
-        this._item_select(item);
+        if(this.cur_select!=null){
+          cur_select.select(false);
+        }
+        item.select();
+        this.cur_select= item.PlaceName;
       }
     }
   }
@@ -251,6 +257,9 @@ class NVPNMenu extends PanelMenu.Button{
     this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
     this._update_status_and_ui();
 
+    this._vpn_lock= false;
+    this._vpn_survey();
+
     log('[nvpn] nvpn server? '+ this. _get_server_text_info());
   }
 
@@ -288,6 +297,8 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _update_status_and_ui(){
+    if(this._vpn_lock) return;
+    this._vpn_lock= true;
     this.currentStatus= this._get_current_status();
 
     switch(this.currentStatus){
@@ -349,6 +360,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     }
+    this._vpn_lock= false;
   }
 
   _get_server_text_info(){
@@ -426,6 +438,27 @@ class NVPNMenu extends PanelMenu.Button{
     }
 
     this._update_status_and_ui();
+  }
+
+  _vpn_survey(){
+    this._vpn_check();
+
+    if(this._vpn_timeout){
+      Mainloop.source_remove(this._vpn_timeout);
+      this._vpn_timeout= null;
+    }
+
+    this._vpn_timeout= Mainloop.timeout_add_seconds(2,this._vpn_survey.bind(this));
+  }
+
+  _vpn_check(){
+    let vpn_up= (GLib.spawn_command_line_sync("sh -c \"ifconfig -a | grep tun0\"")[1].toString().length!==0);
+    log('[nvpn] vpn_up? ' + vpn_up.toString());
+
+    if( (this.currentStatus!==NVPNMenu.STATUS.CONNECTED && vpn_up) || (this.currentStatus===NVPNMenu.STATUS.CONNECTED && (!vpn_up))){
+        log('[nvpn] change in vpn detected?');
+      this._update_status_and_ui();
+    }
   }
 
 
