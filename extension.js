@@ -42,6 +42,87 @@ function _showHello() {
                        onComplete: _hideHello });
 }
 
+class PlaceItem extends PopupMenu.PopupBaseMenuItem{
+  constructor(str_Place){
+    super();
+
+    this.placeName= str_Place;
+
+    this.checkIcon = new St.Icon({  icon_name: 'object-select-symbolic',
+                                style_class: 'countries_submenu_label_item_selected_icon' });
+    this.actor.add(this.checkIcon);
+
+    let label_item= new St.Label({style_class: 'countries_submenu_label_item', text: this.placeName});
+    this.actor.add(label_item);
+    log('[nvpn] creating placeitem for ' + str_Place);
+    this.checkIcon.hide();
+  }
+
+  select(b=true){
+    if (b){
+      this.checkIcon.show();
+    }
+    else{
+      this.checkIcon.hide();
+    }
+  }
+
+  get PlaceName(){
+    return this.placeName;
+  }
+};
+
+class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
+  constructor(){
+    super(_("Select country"), true);
+
+    this.select_cb= null;
+    this.last_selected=null;
+  }
+
+  add_place(str_Place){
+    let item= new PlaceItem(str_Place);
+    this.menu.addMenuItem(item);
+
+    // item.connect('clicked',this._item_select.bind(this));
+    let t= this;
+    // item.addAction(_("Select_Place"),function(){t._item_select();});
+    item.connect('activate', this._item_select.bind(this,item));
+
+    if(this.menu.length===1){
+      item.select();
+      this.last_selected= item;
+    }
+  }
+
+  select_callback(func=null){
+    this.select_cb= func;
+  }
+
+  _item_select(item){
+    if(this.last_selected != null){
+      this.last_selected.select(false);
+    }
+
+    item.select();
+    this.last_selected= item;
+
+
+    if (this.select_cb != null){
+      this.select_cb(item.PlaceName);
+    }
+  }
+
+  get LastSelectedPlaceName(){
+    if (this.last_selected!=null){
+      return this.last_selected.PlaceName;
+    }
+    else {
+      return "";
+    }
+  }
+};
+
 class NVPNMenu extends PanelMenu.Button{
   static get STATUS() {
     return {
@@ -93,6 +174,17 @@ class NVPNMenu extends PanelMenu.Button{
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
 
+    this.submenu= new PlacesMenu();
+    this.menu.addMenuItem(this.submenu);
+
+    this.submenu.select_callback(function(placeName){
+      log("[nvpn] Wow! Clicked on " + placeName);
+    });
+
+    this.submenuSelection= 0;
+    this._fill_country_submenu();
+
+
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
             reactive: false
         });
@@ -115,12 +207,6 @@ class NVPNMenu extends PanelMenu.Button{
     this.menu.addMenuItem(_itemCurrent2);
 
 
-    this.submenu= new PopupMenu.PopupSubMenuMenuItem(_("Select country"), true);
-    this.menu.addMenuItem(this.submenu);
-
-    this._fill_country_submenu();
-
-
 
     this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
     this._update_status_and_ui();
@@ -140,6 +226,10 @@ class NVPNMenu extends PanelMenu.Button{
     return !(GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
   }
 
+  _is_daemon_unreachable(){
+    return !(GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
+  }
+
   _get_current_status(){
     if (!(this._is_NVPN_found())){
       return NVPNMenu.STATUS.NOT_FOUND;
@@ -148,7 +238,10 @@ class NVPNMenu extends PanelMenu.Button{
       if (this._is_NVPN_connected()){
         return NVPNMenu.STATUS.CONNECTED;
       }
-      else {
+      else if (this._is_daemon_unreachable()) {
+        return NVPNMenu.STATUS.DAEMON_DOWN;
+      }
+      else{
         return NVPNMenu.STATUS.DISCONNECTED;
       }
     }
@@ -158,13 +251,24 @@ class NVPNMenu extends PanelMenu.Button{
     this.currentStatus= this._get_current_status();
 
     switch(this.currentStatus){
-    case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.DAEMON_DOWN:
+      this.label_status.text= " daemon disabled/missing ";
+
+      this.label_connection.text= "--";
+
+      this.label_action_btn.text= "Help?";
+
+      this.submenu.actor.hide();
+
+      break;
+    case NVPNMenu.STATUS.NOT_FOUND:
       this.label_status.text= " tool not found.";
 
       this.label_connection.text= "--";
 
-      this.label_action_btn= "Help?";
+      this.label_action_btn.text= "Help?";
+
+      this.submenu.actor.hide();
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -172,7 +276,9 @@ class NVPNMenu extends PanelMenu.Button{
 
       this.label_connection.text= "--";
 
-      this.label_action_btn.text= "Quick Connect";
+      this.label_action_btn.text= "Quick Connect (default)";
+
+      this.submenu.actor.show();
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
@@ -181,6 +287,8 @@ class NVPNMenu extends PanelMenu.Button{
       this.label_connection.text= this._get_server_text_info();
 
       this.label_action_btn.text= "Disconnect";
+
+      this.submenu.actor.show();
 
       break;
     }
@@ -205,8 +313,16 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
-      GLib.spawn_command_line_sync("sh -c \"nordvpn c\"");
+
+      let strPlace= this.submenu.LastSelectedPlaceName;
+      if((strPlace.length===0) || (strPlace==="Default")){
+        GLib.spawn_command_line_sync("sh -c \"nordvpn c\"");
         log('[nvpn] -> sh -c \"nordvpn c\"?');
+      }
+      else{
+        GLib.spawn_command_line_sync("sh -c \"nordvpn c " + strPlace + "\"");
+        log('[nvpn] -> sh -c \"nordvpn c ' + strPlace + '\"?');
+      }
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
@@ -226,30 +342,17 @@ class NVPNMenu extends PanelMenu.Button{
 
     log('[nvpn] lst_str= '+ lst_str);
 
-    return lst_str.split(';');
+    return lst_str.split(';').sort();
   }
 
   _fill_country_submenu(){
     let country_list= this. _get_countries_list();
-    let tsmm= this.submenu.menu;
+    let tsm= this.submenu;
 
-
-
-
-    let item= new PopupMenu.PopupBaseMenuItem();
-    let label_item= new St.Label({style_class: 'label-action-btn', text: 'Default'});
-    item.actor.add(label_item);
-
-    tsmm.addMenuItem(item);
+    tsm.add_place("Default");
 
     country_list.forEach(function(elmt){
-      log('[nvpn] - c= ' + elmt);
-
-      item= new PopupMenu.PopupBaseMenuItem();
-      label_item= new St.Label({style_class: 'label-action-btn', text: elmt});
-      item.actor.add(label_item);
-
-      tsmm.addMenuItem(item);
+      tsm.add_place(elmt);
     });
   }
 

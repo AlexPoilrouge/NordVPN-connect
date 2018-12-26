@@ -7,3 +7,7 @@
     border-radius: 5px;
     padding: .5em;
 }
+
+.countries_submenu_label_item_selected_icon {
+    icon-size: 15px;
+}
