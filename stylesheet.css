@@ -8,6 +8,20 @@
     padding: .5em;
 }
 
+.panel-status-menu-hbox{
+  font-size: 18px;
+}
+
+.panel-status-menu-hbox-connected{
+  background-color: rgba(10,130,10,0.7);
+  font-size: 18px;
+}
+
+.panel-status-menu-hbox-problem{
+  background-color: rgba(200,150,30,0.7);
+  font-size: 18px;
+}
+
 .countries_submenu_label_item_selected_icon {
     icon-size: 15px;
 }

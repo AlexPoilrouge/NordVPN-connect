@@ -185,12 +185,24 @@ class NVPNMenu extends PanelMenu.Button{
   constructor(){
     super(0.0, _("NordVPN"));
 
-    let hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
-    let icon = new St.Icon({ icon_name: 'media-eject-symbolic',
+    this.nvpn_monitor= true;
+
+    this.panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
+    this.panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
                                style_class: 'system-status-icon' });
-    hbox.add_child(icon);
-    hbox.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
-    this.actor.add_child(hbox);
+    this.panel_hbox.add_child(this.panel_icon);
+    let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
+    this.panel_hbox.add_child(label_nvpn);
+    // this.panel_hbox.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
+    this.actor.add_child(this.panel_hbox);
+
+    this.connect('clicked',
+      function(){
+        if(!this.nvpn_monitor){
+          this._update_status_and_ui();
+        }
+      }.bind(this)
+    );
 
     let _itemCurrent = new PopupMenu.PopupBaseMenuItem({
             reactive: false
@@ -237,7 +249,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
             reactive: true
-        });
+        });this.panel_icon
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
 
@@ -314,6 +326,9 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-help'
       this.label_action_btn.text= "Help?";
 
+      this.panel_hbox.style_class='panel-status-menu-hbox-problem';
+      this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
+
       this.submenu.actor.hide();
 
       break;
@@ -324,6 +339,9 @@ class NVPNMenu extends PanelMenu.Button{
 
       this.action_button.style_class= 'nvpn-action-button-help'
       this.label_action_btn.text= "Help?";
+
+      this.panel_hbox.style_class='panel-status-menu-hbox-problem';
+      this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
       this.submenu.actor.hide();
 
@@ -336,6 +354,9 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button'
       this.label_action_btn.text= "Quick Connect (default)";
 
+      this.panel_hbox.style_class='panel-status-menu-hbox';
+      this.panel_icon.icon_name= 'action-unavailable-symbolic';
+
       this.submenu.actor.show();
       this.submenu.unselect_no_cb();
 
@@ -346,8 +367,10 @@ class NVPNMenu extends PanelMenu.Button{
       let server_txt= this._get_server_text_info();
       this.label_connection.text= server_txt;
       this.action_button.style_class= 'nvpn-action-button-dq';
-
       this.label_action_btn.text= "Disconnect";
+
+      this.panel_hbox.style_class='panel-status-menu-hbox-connected';
+      this.panel_icon.icon_name= 'network-vpn-symbolic';
 
       this.submenu.actor.show();
       if(this.submenu.LastSelectedPlaceName.length ===0){
@@ -378,6 +401,36 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  _nordvpn_quickconnect(placeName=""){
+    let cmd= COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"";
+    if(this.nvpn_monitor){
+      GLib.spawn_command_line_async( cmd );
+    }
+    else{
+      GLib.spawn_command_line_sync( cmd );
+    }
+  }
+
+  _nordvpn_disconnect(){
+    let cmd= COMMAND_SHELL + " -c \"nordvpn d\"";
+    if(this.nvpn_monitor){
+      GLib.spawn_command_line_async( cmd );
+    }
+    else{
+      GLib.spawn_command_line_sync( cmd );
+    }
+  }
+
+  _nordvpn_ch_connect(placeName=""){
+    let cmd= COMMAND_SHELL + " -c \"nordvpn d; nordvpn c " + placeName + "\"";
+    if(this.nvpn_monitor){
+      GLib.spawn_command_line_async( cmd );
+    }
+    else{
+      GLib.spawn_command_line_sync( cmd );
+    }
+  }
+
   _button_clicked(){
     log('[nvpn] button clicked?');
     switch(this.currentStatus){
@@ -389,21 +442,24 @@ class NVPNMenu extends PanelMenu.Button{
 
       let strPlace= this.submenu.LastSelectedPlaceName;
       if(strPlace.length===0){
-        GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c\"");
+        // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c\"");
+        this. _nordvpn_quickconnect();
         log('[nvpn] -> sh -c \"nordvpn c\"?');
       }
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
-      GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
+      // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
+      this._nordvpn_disconnect();
         log('[nvpn] -> sh -c \"nordvpn d\"?');
 
 
       break;
     }
 
-    //this._update_status_and_ui();
-
+    if(!this.nvpn_monitor){
+      this._update_status_and_ui();
+    }
   }
 
   _get_countries_list(){
@@ -426,25 +482,34 @@ class NVPNMenu extends PanelMenu.Button{
   _place_menu_new_selection(placeName){
     log("[nvpn] Wow! Clicked on " + placeName);
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
-      GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
+      // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
+      this._nordvpn_ch_connect(placeName);
       log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
     }
     else{
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
-        GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
+        // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
         log('[nvpn] -> sh -c \"nordvpn d\"?');
 
         if(placeName.length!==0){
-          GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
+          // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
+          this._nordvpn_ch_connect(placeName);
           log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
+        }
+        else{
+          this._nordvpn_disconnect();
         }
       }
     }
 
-    //this._update_status_and_ui();
+    if(!this.nvpn_monitor){
+      this._update_status_and_ui();
+    }
   }
 
   _vpn_survey(){
+    if(!this.nvpn_monitor) return;
+
     this._vpn_check();
 
     if(this._vpn_timeout){
@@ -481,6 +546,16 @@ class NVPNMenu extends PanelMenu.Button{
 
     if (change){
       this._update_status_and_ui();
+    }
+  }
+
+  set_monitoring(b){
+    if(b!=this.nvpn_monitor){
+      this.nvpn_monitor= b;
+
+      if(b){
+        this._vpn_survey();
+      }
     }
   }
 
