@@ -17,6 +17,10 @@ const GLib = imports.gi.GLib;
 
 
 
+
+const COMMAND_SHELL= "/usr/bin/bash"
+
+
 let text, button;
 
 function _hideHello() {
@@ -122,7 +126,7 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
   _item_select(item){
     log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")")
     if(this.cur_selected!=null){
-      cur_selected.select(false);
+      this.cur_selected.select(false);
     }
 
     if(item==this.cur_selected){
@@ -159,10 +163,10 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
       let item= children[i];
       if(item.PlaceName===placeName){
         if(this.cur_select!=null){
-          cur_select.select(false);
+          this.cur_selected.select(false);
         }
         item.select();
-        this.cur_select= item.PlaceName;
+        this.cur_selected= item;
       }
     }
   }
@@ -268,15 +272,15 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _is_NVPN_found(){
-    return (GLib.spawn_command_line_sync("sh -c 'hash nordvpn'")[2].length === 0);
+    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c 'hash nordvpn'")[2].length === 0);
   }
 
   _is_NVPN_connected(){
-    return !(GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
+    return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
   }
 
   _is_daemon_unreachable(){
-    return !(GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
+    return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
   }
 
   _get_current_status(){
@@ -366,7 +370,7 @@ class NVPNMenu extends PanelMenu.Button{
   _get_server_text_info(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
       return "-"+
-          GLib.spawn_command_line_sync("sh -c \"nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d: -f2\"")[1].toString().replace(/(\r\n\t|\n|\r\t)/gm,"")
+          GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d: -f2\"")[1].toString().replace(/(\r\n\t|\n|\r\t)/gm,"")
               +" -" ;
     }
     else{
@@ -385,25 +389,25 @@ class NVPNMenu extends PanelMenu.Button{
 
       let strPlace= this.submenu.LastSelectedPlaceName;
       if(strPlace.length===0){
-        GLib.spawn_command_line_sync("sh -c \"nordvpn c\"");
+        GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c\"");
         log('[nvpn] -> sh -c \"nordvpn c\"?');
       }
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
-      GLib.spawn_command_line_sync("sh -c \"nordvpn d\"");
+      GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
         log('[nvpn] -> sh -c \"nordvpn d\"?');
 
 
       break;
     }
 
-    this._update_status_and_ui();
+    //this._update_status_and_ui();
 
   }
 
   _get_countries_list(){
-    let lst_str= GLib.spawn_command_line_sync("sh -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
+    let lst_str= GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
 
     log('[nvpn] lst_str= '+ lst_str);
 
@@ -422,22 +426,22 @@ class NVPNMenu extends PanelMenu.Button{
   _place_menu_new_selection(placeName){
     log("[nvpn] Wow! Clicked on " + placeName);
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
-      GLib.spawn_command_line_sync("sh -c \"nordvpn c " + placeName + "\"");
+      GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
       log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
     }
     else{
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
-        GLib.spawn_command_line_sync("sh -c \"nordvpn d\"");
+        GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
         log('[nvpn] -> sh -c \"nordvpn d\"?');
 
         if(placeName.length!==0){
-          GLib.spawn_command_line_sync("sh -c \"nordvpn c " + placeName + "\"");
+          GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
           log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
         }
       }
     }
 
-    this._update_status_and_ui();
+    //this._update_status_and_ui();
   }
 
   _vpn_survey(){
@@ -452,11 +456,30 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _vpn_check(){
-    let vpn_up= (GLib.spawn_command_line_sync("sh -c \"ifconfig -a | grep tun0\"")[1].toString().length!==0);
-    log('[nvpn] vpn_up? ' + vpn_up.toString());
+    let change= false;
+    switch(this.currentStatus){
+    case NVPNMenu.STATUS.NOT_FOUND:
+      change= this._is_NVPN_found();
 
-    if( (this.currentStatus!==NVPNMenu.STATUS.CONNECTED && vpn_up) || (this.currentStatus===NVPNMenu.STATUS.CONNECTED && (!vpn_up))){
-        log('[nvpn] change in vpn detected?');
+      break;
+    case NVPNMenu.STATUS.DAEMON_DOWN:
+      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'")[1].toString().length!==0 );
+
+      break;
+    case NVPNMenu.STATUS.DISCONNECTED:
+      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length!==0 );
+
+      break;
+    case NVPNMenu.STATUS.CONNECTED:
+      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length===0 );
+      if(change){
+        this.submenu.unselect_no_cb();
+      }
+
+      break;
+    }
+
+    if (change){
       this._update_status_and_ui();
     }
   }
