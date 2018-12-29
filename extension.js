@@ -447,11 +447,14 @@ class NVPNMenu extends PanelMenu.Button{
     // else{
     //   GLib.spawn_command_line_sync( cmd );
     // }
-    this._auto_connect_to= placeName;
-    this._nordvpn_disconnect();
+    if(placeName.length!==0){
+      this._auto_connect_to= placeName;
+      this._nordvpn_disconnect();
+    }
     if(this.nvpn_monitor){
       _nordvpn_quickconnect(placeName);
     }
+
   }
 
   _button_clicked(){
@@ -497,7 +500,7 @@ class NVPNMenu extends PanelMenu.Button{
       l.push(Country_Dict[country]);
     }
 
-    return l;
+    return l.sort();
   }
 
   _fill_country_submenu(){
