@@ -177,8 +177,9 @@ class NVPNMenu extends PanelMenu.Button{
     return {
       NOT_FOUND: 0,
       DAEMON_DOWN: 1,
-      DISCONNECTED: 2,
-      CONNECTED: 3
+      LOGGED_OUT: 2,
+      DISCONNECTED: 3,
+      CONNECTED: 4
     };
   }
 
@@ -298,6 +299,10 @@ class NVPNMenu extends PanelMenu.Button{
     return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
   }
 
+  _is_user_logged_in(){
+    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"echo '' | nordvpn login | grep -Po 'already logged'\"")[1].length!==0);
+  }
+
   _get_current_status(){
     if (!(this._is_NVPN_found())){
       return NVPNMenu.STATUS.NOT_FOUND;
@@ -308,6 +313,9 @@ class NVPNMenu extends PanelMenu.Button{
       }
       else if (this._is_daemon_unreachable()) {
         return NVPNMenu.STATUS.DAEMON_DOWN;
+      }
+      else if (!this._is_user_logged_in()){
+        return NVPNMenu.STATUS.LOGGED_OUT;
       }
       else{
         return NVPNMenu.STATUS.DISCONNECTED;
@@ -325,21 +333,13 @@ class NVPNMenu extends PanelMenu.Button{
 
     switch(this.currentStatus){
     case NVPNMenu.STATUS.DAEMON_DOWN:
-      this.label_status.text= " daemon disabled/missing ";
-
-      this.label_connection.text= "--";
-
-      this.action_button.style_class= 'nvpn-action-button-help'
-      this.label_action_btn.text= "Help?";
-
-      this.panel_hbox.style_class='panel-status-menu-hbox-problem';
-      this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
-
-      this.submenu.actor.hide();
-
-      break;
+    case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.NOT_FOUND:
-      this.label_status.text= " tool not found.";
+      this.label_status.text= (this.currentStatus===NVPNMenu.STATUS.LOGGED_OUT)?
+                                " nordvpn tool not logged in"
+                              : (this.currentStatus===NVPNMenu.STATUS.DAEMON_DOWN)?
+                                " daemon disabled/missing "
+                              : " tool not found.";
 
       this.label_connection.text= "--";
 
@@ -461,6 +461,7 @@ class NVPNMenu extends PanelMenu.Button{
     log('[nvpn] button clicked?');
     switch(this.currentStatus){
     case NVPNMenu.STATUS.NOT_FOUND:
+    case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.DAEMON_DOWN:
 
       break;
@@ -556,6 +557,10 @@ class NVPNMenu extends PanelMenu.Button{
   _vpn_check(){
     let change= false;
     switch(this.currentStatus){
+    case NVPNMenu.STATUS.LOGGED_OUT:
+      change= this._is_user_logged_in();
+
+      break;
     case NVPNMenu.STATUS.NOT_FOUND:
       change= this._is_NVPN_found();
 
@@ -573,9 +578,11 @@ class NVPNMenu extends PanelMenu.Button{
       if(change){
         this.submenu.unselect_no_cb();
 
+        log("[nvpn] act= "+this._auto_connect_to)
         if(this._auto_connect_to.length!==0){
           this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
 
+          log("[nvpn] hi!")
           this._nordvpn_quickconnect(this._auto_connect_to);
 
           this._auto_connect_to="";
