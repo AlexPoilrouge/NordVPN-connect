@@ -186,6 +186,9 @@ class NVPNMenu extends PanelMenu.Button{
     super(0.0, _("NordVPN"));
 
     this.nvpn_monitor= true;
+    this.connection_wait= false;
+
+    this._auto_connect_to= "";
 
     this.panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
     this.panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
@@ -204,7 +207,7 @@ class NVPNMenu extends PanelMenu.Button{
       }.bind(this)
     );
 
-    let _itemCurrent = new PopupMenu.PopupBaseMenuItem({
+    this._main_menu = new PopupMenu.PopupBaseMenuItem({
             reactive: false
         });
 
@@ -228,10 +231,10 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(hbox2);
     vbox.add_child(this.label_connection);
 
-    _itemCurrent.actor.add(vbox, { expand: true });
+    this._main_menu.actor.add(vbox, { expand: true });
 
 
-    this.menu.addMenuItem(_itemCurrent,0);
+    this.menu.addMenuItem(this._main_menu,0);
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
 
@@ -317,6 +320,9 @@ class NVPNMenu extends PanelMenu.Button{
     this._vpn_lock= true;
     this.currentStatus= this._get_current_status();
 
+    // this.actor.show();
+    this.setSensitive(true);
+
     switch(this.currentStatus){
     case NVPNMenu.STATUS.DAEMON_DOWN:
       this.label_status.text= " daemon disabled/missing ";
@@ -401,10 +407,18 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  _waiting_state(){
+      this.setSensitive(false);
+      this.menu.close();
+      this.panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
+  }
+
   _nordvpn_quickconnect(placeName=""){
     let cmd= COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"";
     if(this.nvpn_monitor){
       GLib.spawn_command_line_async( cmd );
+      // this.actor.hide();
+      this._waiting_state();
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -415,6 +429,8 @@ class NVPNMenu extends PanelMenu.Button{
     let cmd= COMMAND_SHELL + " -c \"nordvpn d\"";
     if(this.nvpn_monitor){
       GLib.spawn_command_line_async( cmd );
+      // this.actor.hide();
+      this._waiting_state();
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -422,12 +438,19 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _nordvpn_ch_connect(placeName=""){
-    let cmd= COMMAND_SHELL + " -c \"nordvpn d; nordvpn c " + placeName + "\"";
+    // let cmd= COMMAND_SHELL + " -c \"nordvpn d; nordvpn c " + placeName + "\"";
+    // if(this.nvpn_monitor){
+    //   GLib.spawn_command_line_async( cmd );
+      // this.actor.hide();
+    //   this._waiting_state();
+    // }
+    // else{
+    //   GLib.spawn_command_line_sync( cmd );
+    // }
+    this._auto_connect_to= placeName;
+    this._nordvpn_disconnect();
     if(this.nvpn_monitor){
-      GLib.spawn_command_line_async( cmd );
-    }
-    else{
-      GLib.spawn_command_line_sync( cmd );
+      _nordvpn_quickconnect(placeName);
     }
   }
 
@@ -463,11 +486,18 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _get_countries_list(){
-    let lst_str= GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
+    // let lst_str= GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
 
-    log('[nvpn] lst_str= '+ lst_str);
+    // log('[nvpn] lst_str= '+ lst_str);
 
-    return lst_str.split(';').sort();
+    // return lst_str.split(';').sort();
+
+    let l=[];
+    for (let country in Country_Dict){
+      l.push(Country_Dict[country]);
+    }
+
+    return l;
   }
 
   _fill_country_submenu(){
@@ -539,6 +569,15 @@ class NVPNMenu extends PanelMenu.Button{
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length===0 );
       if(change){
         this.submenu.unselect_no_cb();
+
+        if(this._auto_connect_to.length!==0){
+          this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
+
+          this._nordvpn_quickconnect(this._auto_connect_to);
+
+          this._auto_connect_to="";
+          change= false;
+        }
       }
 
       break;
