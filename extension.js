@@ -451,8 +451,8 @@ class NVPNMenu extends PanelMenu.Button{
       this._auto_connect_to= placeName;
       this._nordvpn_disconnect();
     }
-    if(this.nvpn_monitor){
-      _nordvpn_quickconnect(placeName);
+    if(!this.nvpn_monitor){
+      this._nordvpn_quickconnect(placeName);
     }
 
   }
@@ -514,10 +514,10 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _place_menu_new_selection(placeName){
-    log("[nvpn] Wow! Clicked on " + placeName);
+    log("[nvpn] Wow! Clicked on " + placeName + " s= "+this.currentStatus.toString();
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
-      this._nordvpn_ch_connect(placeName);
+      this._nordvpn_quickconnect(placeName);
       log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
     }
     else{
