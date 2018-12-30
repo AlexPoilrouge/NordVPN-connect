@@ -411,6 +411,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.setSensitive(false);
       this.menu.close();
       this.panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
+      this.panel_hbox.style_class='panel-status-menu-hbox';
   }
 
   _nordvpn_quickconnect(placeName=""){
