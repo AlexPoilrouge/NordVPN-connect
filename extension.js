@@ -66,7 +66,7 @@ const Country_Dict= {
   cz: "Czech_Republic", my: "Malaysia", th: "Thailand",
   dk: "Denmark", mx: "Mexico", tr: "Turkey",
   ee: "Estonia", md: "Moldova", ua: "Ukraine",
-  fi: "Finland", nl: "Netherlands", gb: "United_Kingdom",
+  fi: "Finland", nl: "Netherlands", uk: "United_Kingdom",//gb: "United_Kingdom",
   fr: "France", nz: "New_Zealand", us: "United_States",
   ge: "Georgia", no: "Norway", vn: "Vietnam"
 };
@@ -515,7 +515,7 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _place_menu_new_selection(placeName){
-    log("[nvpn] Wow! Clicked on " + placeName + " s= "+this.currentStatus.toString();
+    log("[nvpn] Wow! Clicked on " + placeName + " s= "+this.currentStatus.toString());
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
       this._nordvpn_quickconnect(placeName);
