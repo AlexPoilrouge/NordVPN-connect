@@ -178,8 +178,9 @@ class NVPNMenu extends PanelMenu.Button{
       NOT_FOUND: 0,
       DAEMON_DOWN: 1,
       LOGGED_OUT: 2,
-      DISCONNECTED: 3,
-      CONNECTED: 4
+      TRANSITION: 3,
+      DISCONNECTED: 4,
+      CONNECTED: 5
     };
   }
 
@@ -295,6 +296,10 @@ class NVPNMenu extends PanelMenu.Button{
     return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
   }
 
+  _is_in_transition(){
+    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po '[cC]onnecting'\"")[1].length!==0)
+  }
+
   _is_daemon_unreachable(){
     return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
   }
@@ -316,6 +321,9 @@ class NVPNMenu extends PanelMenu.Button{
       }
       else if (!this._is_user_logged_in()){
         return NVPNMenu.STATUS.LOGGED_OUT;
+      }
+      else if(this._is_in_transition()){
+        return NVPNMenu.STATUS.TRANSITION;
       }
       else{
         return NVPNMenu.STATUS.DISCONNECTED;
@@ -350,6 +358,10 @@ class NVPNMenu extends PanelMenu.Button{
       this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
       this.submenu.actor.hide();
+
+      break;
+    case NVPNMenu.STATUS.TRANSITION:
+      this._waiting_state();
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -420,6 +432,7 @@ class NVPNMenu extends PanelMenu.Button{
       GLib.spawn_command_line_async( cmd );
       // this.actor.hide();
       this._waiting_state();
+      this.current_status= NVPNMenu.STATUS.TRANSITION;
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -432,6 +445,7 @@ class NVPNMenu extends PanelMenu.Button{
       GLib.spawn_command_line_async( cmd );
       // this.actor.hide();
       this._waiting_state();
+      this.current_status= NVPNMenu.STATUS.TRANSITION;
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -464,6 +478,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.DAEMON_DOWN:
+    case NVPNMenu.STATUS.TRANSITION:
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -568,6 +583,10 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     case NVPNMenu.STATUS.DAEMON_DOWN:
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'")[1].toString().length!==0 );
+
+      break;
+    case NVPNMenu.STATUS.TRANSITION:
+      change= !(this._is_in_transition());
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
