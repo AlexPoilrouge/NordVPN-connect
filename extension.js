@@ -253,7 +253,7 @@ class NVPNMenu extends PanelMenu.Button{
 
 
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
-            reactive: true
+            reactive: false
         });this.panel_icon
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
