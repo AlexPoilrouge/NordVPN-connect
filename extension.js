@@ -429,10 +429,16 @@ class NVPNMenu extends PanelMenu.Button{
   _nordvpn_quickconnect(placeName=""){
     let cmd= COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"";
     if(this.nvpn_monitor){
+
+      this._vpn_lock= true;
+
+
       GLib.spawn_command_line_async( cmd );
       // this.actor.hide();
       this._waiting_state();
       this.current_status= NVPNMenu.STATUS.TRANSITION;
+
+      this._vpn_lock= false;
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -442,10 +448,15 @@ class NVPNMenu extends PanelMenu.Button{
   _nordvpn_disconnect(){
     let cmd= COMMAND_SHELL + " -c \"nordvpn d\"";
     if(this.nvpn_monitor){
+
+      this._vpn_lock= true;
+
       GLib.spawn_command_line_async( cmd );
       // this.actor.hide();
       this._waiting_state();
       this.current_status= NVPNMenu.STATUS.TRANSITION;
+
+      this._vpn_lock= false;
     }
     else{
       GLib.spawn_command_line_sync( cmd );
@@ -560,11 +571,13 @@ class NVPNMenu extends PanelMenu.Button{
   _vpn_survey(){
     if(!this.nvpn_monitor) return;
 
-    this._vpn_check();
+    if(!this._vpn_lock){
+      this._vpn_check();
 
-    if(this._vpn_timeout){
-      Mainloop.source_remove(this._vpn_timeout);
-      this._vpn_timeout= null;
+      if(this._vpn_timeout){
+        Mainloop.source_remove(this._vpn_timeout);
+        this._vpn_timeout= null;
+      }
     }
 
     this._vpn_timeout= Mainloop.timeout_add_seconds(2,this._vpn_survey.bind(this));
