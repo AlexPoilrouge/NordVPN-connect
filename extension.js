@@ -161,13 +161,15 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     let children= this.menu._getMenuItems();
     for(let i=0; i<this.menu.length; ++i){
       let item= children[i];
-      if(item.PlaceName===placeName){
+      if((item!==undefined) && (item.PlaceName===placeName)){
         if(this.cur_select!=null){
           this.cur_selected.select(false);
         }
         item.select();
         this.cur_selected= item;
       }
+      else if (item===undefined) {
+        log("[nvpn] Error: got item (n=" + i.toString() + ") undefined looking for \"" + placeName + "\"...");
     }
   }
 };
