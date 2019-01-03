@@ -18,7 +18,7 @@ const GLib = imports.gi.GLib;
 
 
 
-const COMMAND_SHELL= "/usr/bin/bash"
+const COMMAND_SHELL= "/usr/bin/bash";
 
 
 let text, button;
@@ -124,7 +124,7 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
   }
 
   _item_select(item){
-    log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")")
+    log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")");
     if(this.cur_selected!=null){
       this.cur_selected.select(false);
     }
@@ -170,6 +170,7 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
       }
       else if (item===undefined) {
         log("[nvpn] Error: got item (n=" + i.toString() + ") undefined looking for \"" + placeName + "\"...");
+      }
     }
   }
 };
@@ -256,7 +257,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
             reactive: false
-        });this.panel_icon
+        });
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
 
@@ -299,7 +300,7 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _is_in_transition(){
-    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po '[cC]onnecting'\"")[1].length!==0)
+    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po '[cC]onnecting'\"")[1].length!==0);
   }
 
   _is_daemon_unreachable(){
@@ -353,7 +354,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       this.label_connection.text= "--";
 
-      this.action_button.style_class= 'nvpn-action-button-help'
+      this.action_button.style_class= 'nvpn-action-button-help';
       this.label_action_btn.text= "Help?";
 
       this.panel_hbox.style_class='panel-status-menu-hbox-problem';
@@ -371,7 +372,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       this.label_connection.text= "--";
 
-      this.action_button.style_class= 'nvpn-action-button'
+      this.action_button.style_class= 'nvpn-action-button';
       this.label_action_btn.text= "Quick Connect (default)";
 
       this.panel_hbox.style_class='panel-status-menu-hbox';
