@@ -598,7 +598,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.DAEMON_DOWN:
-      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'")[1].toString().length!==0 );
+      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'\"")[1].toString().length!==0 );
 
       break;
     case NVPNMenu.STATUS.TRANSITION:
