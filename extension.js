@@ -169,35 +169,65 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
   }
 };
 
+/** Class that implements the dedicated status area of the extension
+ *  and contains its main menu
+ */
 class NVPNMenu extends PanelMenu.Button{
+  /** Enumerator for the values of the "main states", this extension can be found in
+   *  @readonly
+   *  @enum {number}
+   */
   static get STATUS() {
     return {
+      /** If the 'nordvpn' tool isn't avaiblable for the extension **/
       NOT_FOUND: 0,
+      /** The 'nordvpnd' systemd deamon isn't available or down **/
       DAEMON_DOWN: 1,
+      /** The user hasn't set his logins through the nordvpn tool yet **/
       LOGGED_OUT: 2,
+      /** The 'nordvpn' is processing and (dis)connection and his in transition **/
       TRANSITION: 3,
+      /** Disconnected from any server **/
       DISCONNECTED: 4,
+      /** connected to a server **/
       CONNECTED: 5
     };
   }
 
+  /**
+   * Initiate the UI element and creates the object.
+   */
   constructor(){
     super(0.0, _("NordVPN"));
 
+    /** @member {boolean} nvpn_monitor
+     *  whether or not the extension monitors the state of the connection to
+     *  nordvpn servers
+     *  (contrary is experimental) */
     this.nvpn_monitor= true;
-    this.connection_wait= false;
 
+    /** this private member is used while reconnecting to another server
+     * i.e.: when user wants to switch server locations
+     * if this string is not empty during deconnection, the code will try
+     *  to reconnect to the location designated by this string after disconnecting*/
     this._auto_connect_to= "";
 
-    this.panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
-    this.panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
+    /** this private member is the horyzontal layout box contaning the server indicator
+     * in the panel area*/
+    this._panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
+    /** the icon in the top panel area (may change according to current status)*/
+    this._panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
                                style_class: 'system-status-icon' });
-    this.panel_hbox.add_child(this.panel_icon);
-    let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
-    this.panel_hbox.add_child(label_nvpn);
-    this.actor.add_child(this.panel_hbox);
+    this._panel_hbox.add_child(this._panel_icon);
 
+    /** 'NVPN' panel text label*/
+    let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
+    this._panel_hbox.add_child(label_nvpn);
+    this.actor.add_child(this._panel_hbox);
+
+    /** saving this idea for later disconnection of the signal during object's destruction*/
     this._id_c_click1= this.connect('clicked',
+      /** when the panel is clicked, the extension performs a refresh of the menu's ui*/
       function(){
         if(!this.nvpn_monitor){
           this._update_status_and_ui();
@@ -205,10 +235,15 @@ class NVPNMenu extends PanelMenu.Button{
       }.bind(this)
     );
 
+    /** this private member implements the menu that appears when user clicks on the top
+     * panel's indicator*/
     this._main_menu = new PopupMenu.PopupBaseMenuItem({
+            /** elements will not be interacive by default */
             reactive: false
         });
 
+    /** vertical box layout, the first item of our menu, that will contain all
+     * server information ui elements*/
     let vbox= new St.BoxLayout({style_class: 'nvpn-menu-vbox'});
     vbox.set_vertical(true);
     let hbox2= new St.BoxLayout({style_class: 'nvpn-menu-hbox'});
@@ -216,15 +251,19 @@ class NVPNMenu extends PanelMenu.Button{
 
     hbox2.add_child(label1);
 
-    log('[nvpn] is nvpn found? '+ this._is_NVPN_found().toString());
-    log('[nvpn] is nvpn connected? '+ this._is_NVPN_connected().toString());
-    log('[nvpn] nvpn status? '+ this._get_current_status().toString());
+    // log('[nvpn] is nvpn found? '+ this._is_NVPN_found().toString());
+    // log('[nvpn] is nvpn connected? '+ this._is_NVPN_connected().toString());
+    // log('[nvpn] nvpn status? '+ this._get_current_status().toString());
 
-    this.label_status= new St.Label({style_class: 'label-nvpn-status'});
+    /** this private member is the part of the server info that is an adaptable
+     * text according to status*/
+    this._label_status= new St.Label({style_class: 'label-nvpn-status'});
+    /** this private member is the text label that will display the current nordvpn connected
+     * server name*/
     this.label_connection= new St.Label({style_class: 'label-nvpn-connection', text: '--'});
 
 
-    hbox2.add_child(this.label_status);
+    hbox2.add_child(this._label_status);
 
     vbox.add_child(hbox2);
     vbox.add_child(this.label_connection);
@@ -233,18 +272,23 @@ class NVPNMenu extends PanelMenu.Button{
 
 
     this.menu.addMenuItem(this._main_menu,0);
+    /** adding a sperator int his menu to separate the 'information display' part
+     *  from the 'connection interface' part*/
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
+    /** this private member is the implementation of the submenu that allows to select
+     *  a nordvpn server by clicking on the country */
+    this._submenu= new PlacesMenu();
+    this.menu.addMenuItem(this._submenu);
 
-    this.submenu= new PlacesMenu();
-    this.menu.addMenuItem(this.submenu);
+    /** when an item of this submenu (i.e. a place name) is selected,
+     *  the '_place_menu_new_selection()' method will be called (no argument). */
+    this._submenu.select_callback(this._place_menu_new_selection.bind(this));
 
-    this.submenu.select_callback(this._place_menu_new_selection.bind(this));
-
-    this.submenuSelection= 0;
+    /** call to private method that fill the 'country submenu' with all the required country name */
     this._fill_country_submenu();
 
-
+    /** creating the menu item that contains the 'connection' menu button */
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
             reactive: false
         });
@@ -254,26 +298,34 @@ class NVPNMenu extends PanelMenu.Button{
     this.label_action_btn= new St.Label({style_class: 'label-action-btn', text: _("Quick Connect")});
     this.action_button= new St.Button({style_class: 'nvpn-action-button', child:this.label_action_btn});
 
+    /** saving this idea for later disconnection of the signal during object's destruction*/
     this._id_c_btn1= this.action_button.connect('clicked', this._button_clicked.bind(this));
     vbox2.add_child(this.action_button);
-
-
-
 
     _itemCurrent2.actor.add(vbox2, { expand: true });
     this.menu.addMenuItem(_itemCurrent2);
 
-
-
+    /** @member {enum} currentStatus
+     *  member that stored the current status designating the current state of the interaction
+     *  with the 'nordvpn' tool */
     this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
+    /** call to the private '_update_status_and_ui()' method that updates the ui and the currentStatus
+     *  according to the current state provided of the 'nordvpn tool' */
     this._update_status_and_ui();
 
+    /** this private member is a boolean that is used (when 'true') to keep the ui from updating during
+     *  a connection transition, for instance */
     this._vpn_lock= false;
+    /** call to the private method '_vpn_survey()' to start "the monitoring loop "
+     *  that update the ui in case of a 'norvdpn' tool state change */
     this._vpn_survey();
 
-    log('[nvpn] nvpn server? '+ this. _get_server_text_info());
+    // log('[nvpn] nvpn server? '+ this. _get_server_text_info());
   }
 
+  /**
+   *  Disconnect the ui signals before the object's destruction
+   */
   destroy(){
     this.disconnect(this._id_c_click1);
     this._id_c_click1= 0;
@@ -337,7 +389,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.DAEMON_DOWN:
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.NOT_FOUND:
-      this.label_status.text= (this.currentStatus===NVPNMenu.STATUS.LOGGED_OUT)?
+      this._label_status.text= (this.currentStatus===NVPNMenu.STATUS.LOGGED_OUT)?
                                 _(" nordvpn tool not logged in")
                               : (this.currentStatus===NVPNMenu.STATUS.DAEMON_DOWN)?
                                 _(" daemon disabled/missing ")
@@ -348,10 +400,10 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-help';
       this.label_action_btn.text= _("Help?");
 
-      this.panel_hbox.style_class='panel-status-menu-hbox-problem';
-      this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
+      this._panel_hbox.style_class='panel-status-menu-hbox-problem';
+      this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
-      this.submenu.actor.hide();
+      this._submenu.actor.hide();
 
       break;
     case NVPNMenu.STATUS.TRANSITION:
@@ -359,40 +411,40 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
-      this.label_status.text= _(" disconnected.");
+      this._label_status.text= _(" disconnected.");
 
       this.label_connection.text= "--";
 
       this.action_button.style_class= 'nvpn-action-button';
       this.label_action_btn.text= _("Quick Connect (default)");
 
-      this.panel_hbox.style_class='panel-status-menu-hbox';
-      this.panel_icon.icon_name= 'action-unavailable-symbolic';
+      this._panel_hbox.style_class='panel-status-menu-hbox';
+      this._panel_icon.icon_name= 'action-unavailable-symbolic';
 
-      this.submenu.actor.show();
-      this.submenu.unselect_no_cb();
+      this._submenu.actor.show();
+      this._submenu.unselect_no_cb();
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
-      this.label_status.text= _(" connected to");
+      this._label_status.text= _(" connected to");
 
       let server_txt= this._get_server_text_info();
       this.label_connection.text= server_txt;
       this.action_button.style_class= 'nvpn-action-button-dq';
       this.label_action_btn.text= _("Disconnect");
 
-      this.panel_hbox.style_class='panel-status-menu-hbox-connected';
-      this.panel_icon.icon_name= 'network-vpn-symbolic';
+      this._panel_hbox.style_class='panel-status-menu-hbox-connected';
+      this._panel_icon.icon_name= 'network-vpn-symbolic';
 
-      this.submenu.actor.show();
-      if(this.submenu.LastSelectedPlaceName.length ===0){
+      this._submenu.actor.show();
+      if(this._submenu.LastSelectedPlaceName.length ===0){
         let rgx= /- ([a-z]*)[0-9]*.*$/g;
         let arr= rgx.exec(server_txt);
         if((arr!==null) && (arr[1]!==undefined)){
           let country= Country_Dict[arr[1]];
           if (country!==undefined){
              // log('[nvpn] finding '+country);
-            this.submenu.select_from_name(country);
+            this._submenu.select_from_name(country);
           }
         }
       }
@@ -416,8 +468,8 @@ class NVPNMenu extends PanelMenu.Button{
   _waiting_state(){
       this.setSensitive(false);
       this.menu.close();
-      this.panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
-      this.panel_hbox.style_class='panel-status-menu-hbox';
+      this._panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
+      this._panel_hbox.style_class='panel-status-menu-hbox';
   }
 
   _nordvpn_quickconnect(placeName=""){
@@ -477,7 +529,7 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
 
-      let strPlace= this.submenu.LastSelectedPlaceName;
+      let strPlace= this._submenu.LastSelectedPlaceName;
       if(strPlace.length===0){
         this. _nordvpn_quickconnect();
         // log('[nvpn] -> sh -c \"nordvpn c\"?');
@@ -508,7 +560,7 @@ class NVPNMenu extends PanelMenu.Button{
 
   _fill_country_submenu(){
     let country_list= this. _get_countries_list();
-    let tsm= this.submenu;
+    let tsm= this._submenu;
 
     country_list.forEach(function(elmt){
       tsm.add_place(elmt);
@@ -581,7 +633,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.CONNECTED:
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length===0 );
       if(change){
-        this.submenu.unselect_no_cb();
+        this._submenu.unselect_no_cb();
 
         // log("[nvpn] act= "+this._auto_connect_to)
         if(this._auto_connect_to.length!==0){
