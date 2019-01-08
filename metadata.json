@@ -1,1 +1,7 @@
-{"name": "NordVPN Connect", "description": "Connecting to a NordVPN server", "uuid": "NordVPN_Connect@poilrouge.fr", "shell-version": ["3.30.2"]}
+{
+	"gettext-domain": "gnome-shell-extensions",
+	"name": "NordVPN Connect",
+	"description": "Connecting to a NordVPN server",
+	"uuid": "NordVPN_Connect@poilrouge.fr",
+	"shell-version": ["3.30.2"]
+}

@@ -15,38 +15,14 @@ const Convenience = Me.imports.convenience;
 const Util = imports.misc.util;
 const GLib = imports.gi.GLib;
 
+const Gettext = imports.gettext.domain('gnome-shell-extensions');
+const _ = Gettext.gettext;
+
 
 
 
 const COMMAND_SHELL= "/usr/bin/bash";
 
-
-let text, button;
-
-function _hideHello() {
-    Main.uiGroup.remove_actor(text);
-    text = null;
-}
-
-function _showHello() {
-    if (!text) {
-        text = new St.Label({ style_class: 'helloworld-label', text: "Hello, world!" });
-        Main.uiGroup.add_actor(text);
-    }
-
-    text.opacity = 255;
-
-    let monitor = Main.layoutManager.primaryMonitor;
-
-    text.set_position(monitor.x + Math.floor(monitor.width / 2 - text.width / 2),
-                      monitor.y + Math.floor(monitor.height / 2 - text.height / 2));
-
-    Tweener.addTween(text,
-                     { opacity: 0,
-                       time: 2,
-                       transition: 'easeOutQuad',
-                       onComplete: _hideHello });
-}
 
 const Country_Dict= {
   al: "Albania", de: "Germany", pl: "Poland",
@@ -107,16 +83,34 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
 
     this.select_cb= null;
     this.cur_selected=null;
+
+    this._ids_c_items= [];
+  }
+
+  destroy(){
+    let children= this.menu._getMenuItems();
+    let diff= 0;
+    for(let i=0; i<this.menu.length; ++i){
+      let item= children[i];
+      if(item!==undefined){
+        item.disconnect(this._ids_c_items[i-diff]);
+      }
+      else{
+        ++diff;
+      }
+    }
+
+    super.destroy();
   }
 
   add_place(str_Place){
     let item= new PlaceItem(str_Place);
     this.menu.addMenuItem(item);
 
-    // item.connect('clicked',this._item_select.bind(this));
     let t= this;
-    // item.addAction(_("Select_Place"),function(){t._item_select();});
-    item.connect('activate', this._item_select.bind(this,item));
+    this._ids_c_items.push(
+      item.connect('activate', this._item_select.bind(this,item))
+    );
   }
 
   select_callback(func=null){
@@ -201,10 +195,9 @@ class NVPNMenu extends PanelMenu.Button{
     this.panel_hbox.add_child(this.panel_icon);
     let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
     this.panel_hbox.add_child(label_nvpn);
-    // this.panel_hbox.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
     this.actor.add_child(this.panel_hbox);
 
-    this.connect('clicked',
+    this._id_c_click1= this.connect('clicked',
       function(){
         if(!this.nvpn_monitor){
           this._update_status_and_ui();
@@ -219,7 +212,7 @@ class NVPNMenu extends PanelMenu.Button{
     let vbox= new St.BoxLayout({style_class: 'nvpn-menu-vbox'});
     vbox.set_vertical(true);
     let hbox2= new St.BoxLayout({style_class: 'nvpn-menu-hbox'});
-    let label1= new St.Label({style_class: 'label-nvpn-menu', text: "NordVPN"});
+    let label1= new St.Label({style_class: 'label-nvpn-menu', text: _("NordVPN")});
 
     hbox2.add_child(label1);
 
@@ -246,9 +239,6 @@ class NVPNMenu extends PanelMenu.Button{
     this.submenu= new PlacesMenu();
     this.menu.addMenuItem(this.submenu);
 
-    // this.submenu.select_callback(function(placeName){
-    //   log("[nvpn] Wow! Clicked on " + placeName);
-    // });
     this.submenu.select_callback(this._place_menu_new_selection.bind(this));
 
     this.submenuSelection= 0;
@@ -261,13 +251,10 @@ class NVPNMenu extends PanelMenu.Button{
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
 
-    // this.action_button= new St.Button({style_class: 'action_button'});
-    this.label_action_btn= new St.Label({style_class: 'label-action-btn', text: 'Quick Connect'});
-    // this.action_button.add_child(this.label_action_btn);
+    this.label_action_btn= new St.Label({style_class: 'label-action-btn', text: _("Quick Connect")});
     this.action_button= new St.Button({style_class: 'nvpn-action-button', child:this.label_action_btn});
 
-    this.action_button.connect('clicked', this._button_clicked.bind(this));
-
+    this._id_c_btn1= this.action_button.connect('clicked', this._button_clicked.bind(this));
     vbox2.add_child(this.action_button);
 
 
@@ -288,6 +275,11 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   destroy(){
+    this.disconnect(this._id_c_click1);
+    this._id_c_click1= 0;
+    this.action_button.disconnect(this._id_c_btn1);
+    this._id_c_btn1= 0;
+
     super.destroy();
   }
 
@@ -339,7 +331,6 @@ class NVPNMenu extends PanelMenu.Button{
     this._vpn_lock= true;
     this.currentStatus= this._get_current_status();
 
-    // this.actor.show();
     this.setSensitive(true);
 
     switch(this.currentStatus){
@@ -347,15 +338,15 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.NOT_FOUND:
       this.label_status.text= (this.currentStatus===NVPNMenu.STATUS.LOGGED_OUT)?
-                                " nordvpn tool not logged in"
+                                _(" nordvpn tool not logged in")
                               : (this.currentStatus===NVPNMenu.STATUS.DAEMON_DOWN)?
-                                " daemon disabled/missing "
-                              : " tool not found.";
+                                _(" daemon disabled/missing ")
+                              : _(" tool not found.");
 
       this.label_connection.text= "--";
 
       this.action_button.style_class= 'nvpn-action-button-help';
-      this.label_action_btn.text= "Help?";
+      this.label_action_btn.text= _("Help?");
 
       this.panel_hbox.style_class='panel-status-menu-hbox-problem';
       this.panel_icon.icon_name= 'network-vpn-no-route-symbolic';
@@ -368,12 +359,12 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
-      this.label_status.text= " disconnected.";
+      this.label_status.text= _(" disconnected.");
 
       this.label_connection.text= "--";
 
       this.action_button.style_class= 'nvpn-action-button';
-      this.label_action_btn.text= "Quick Connect (default)";
+      this.label_action_btn.text= _("Quick Connect (default)");
 
       this.panel_hbox.style_class='panel-status-menu-hbox';
       this.panel_icon.icon_name= 'action-unavailable-symbolic';
@@ -383,12 +374,12 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
-      this.label_status.text= " connected to";
+      this.label_status.text= _(" connected to");
 
       let server_txt= this._get_server_text_info();
       this.label_connection.text= server_txt;
       this.action_button.style_class= 'nvpn-action-button-dq';
-      this.label_action_btn.text= "Disconnect";
+      this.label_action_btn.text= _("Disconnect");
 
       this.panel_hbox.style_class='panel-status-menu-hbox-connected';
       this.panel_icon.icon_name= 'network-vpn-symbolic';
@@ -400,7 +391,7 @@ class NVPNMenu extends PanelMenu.Button{
         if((arr!==null) && (arr[1]!==undefined)){
           let country= Country_Dict[arr[1]];
           if (country!==undefined){
-             log('[nvpn] finding '+country);
+             // log('[nvpn] finding '+country);
             this.submenu.select_from_name(country);
           }
         }
@@ -437,7 +428,6 @@ class NVPNMenu extends PanelMenu.Button{
 
 
       GLib.spawn_command_line_async( cmd );
-      // this.actor.hide();
       this._waiting_state();
       this.current_status= NVPNMenu.STATUS.TRANSITION;
 
@@ -455,7 +445,6 @@ class NVPNMenu extends PanelMenu.Button{
       this._vpn_lock= true;
 
       GLib.spawn_command_line_async( cmd );
-      // this.actor.hide();
       this._waiting_state();
       this.current_status= NVPNMenu.STATUS.TRANSITION;
 
@@ -467,15 +456,6 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _nordvpn_ch_connect(placeName=""){
-    // let cmd= COMMAND_SHELL + " -c \"nordvpn d; nordvpn c " + placeName + "\"";
-    // if(this.nvpn_monitor){
-    //   GLib.spawn_command_line_async( cmd );
-      // this.actor.hide();
-    //   this._waiting_state();
-    // }
-    // else{
-    //   GLib.spawn_command_line_sync( cmd );
-    // }
     if(placeName.length!==0){
       this._auto_connect_to= placeName;
       this._nordvpn_disconnect();
@@ -487,7 +467,7 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _button_clicked(){
-    log('[nvpn] button clicked?');
+    // log('[nvpn] button clicked?');
     switch(this.currentStatus){
     case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.LOGGED_OUT:
@@ -499,16 +479,14 @@ class NVPNMenu extends PanelMenu.Button{
 
       let strPlace= this.submenu.LastSelectedPlaceName;
       if(strPlace.length===0){
-        // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c\"");
         this. _nordvpn_quickconnect();
-        log('[nvpn] -> sh -c \"nordvpn c\"?');
+        // log('[nvpn] -> sh -c \"nordvpn c\"?');
       }
 
       break;
     case NVPNMenu.STATUS.CONNECTED:
-      // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
       this._nordvpn_disconnect();
-        log('[nvpn] -> sh -c \"nordvpn d\"?');
+        // log('[nvpn] -> sh -c \"nordvpn d\"?');
 
 
       break;
@@ -520,12 +498,6 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _get_countries_list(){
-    // let lst_str= GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn countries | sed 's/\\s\\\{1,\\\}/;/g' | sed 's/;-;//g' | sed ':a;N;\\$!ba;s/\\\\n/;/g'\"")[1].toString();
-
-    // log('[nvpn] lst_str= '+ lst_str);
-
-    // return lst_str.split(';').sort();
-
     let l=[];
     for (let country in Country_Dict){
       l.push(Country_Dict[country]);
@@ -544,21 +516,18 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _place_menu_new_selection(placeName){
-    log("[nvpn] Wow! Clicked on " + placeName + " s= "+this.currentStatus.toString());
+    // log("[nvpn] Clicked on " + placeName + " s= "+this.currentStatus.toString());
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
-      // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
       this._nordvpn_quickconnect(placeName);
-      log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
+      // log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
     }
     else{
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
-        // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn d\"");
-        log('[nvpn] -> sh -c \"nordvpn d\"?');
+        // log('[nvpn] -> sh -c \"nordvpn d\"?');
 
         if(placeName.length!==0){
-          // GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"");
           this._nordvpn_ch_connect(placeName);
-          log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
+          // log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
         }
         else{
           this._nordvpn_disconnect();
@@ -614,11 +583,11 @@ class NVPNMenu extends PanelMenu.Button{
       if(change){
         this.submenu.unselect_no_cb();
 
-        log("[nvpn] act= "+this._auto_connect_to)
+        // log("[nvpn] act= "+this._auto_connect_to)
         if(this._auto_connect_to.length!==0){
           this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
 
-          log("[nvpn] hi!")
+          // log("[nvpn] hi!")
           this._nordvpn_quickconnect(this._auto_connect_to);
 
           this._auto_connect_to="";
@@ -648,21 +617,17 @@ class NVPNMenu extends PanelMenu.Button{
 };
 
 function init() {
-    //Convenience.initTranslations();
+    Convenience.initTranslations();
 }
 
 let _indicator;
 
 function enable() {
-    //Main.panel._rightBox.insert_child_at_index(button, 0);
-
     _indicator= new NVPNMenu;
     Main.panel.addToStatusArea('nvpn-menu', _indicator);
 }
 
 function disable() {
-    //Main.panel._rightBox.remove_child(button);
-
     _indicator.destroy();
 }
 
