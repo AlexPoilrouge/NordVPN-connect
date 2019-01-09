@@ -625,15 +625,22 @@ class NVPNMenu extends PanelMenu.Button{
 
   }
 
+  /**
+   * Private method called when the action button of the menu (connect/disconnect) is pressed
+   * @method
+   */
   _button_clicked(){
     // log('[nvpn] button clicked?');
+    /** the apearance and behavior of the button changes according to the current status */
     switch(this.currentStatus){
+    /** these states are not supposed to display the button, so nothing is done */
     case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.DAEMON_DOWN:
     case NVPNMenu.STATUS.TRANSITION:
 
       break;
+    /** allows to reconnect when status is 'disconnected' */
     case NVPNMenu.STATUS.DISCONNECTED:
 
       let strPlace= this._submenu.LastSelectedPlaceName;
@@ -643,6 +650,7 @@ class NVPNMenu extends PanelMenu.Button{
       }
 
       break;
+    /** allows to disconnect when status is 'connected' */
     case NVPNMenu.STATUS.CONNECTED:
       this._nordvpn_disconnect();
         // log('[nvpn] -> sh -c \"nordvpn d\"?');
@@ -651,94 +659,150 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     }
 
+    /** if no live monitoring, the ui will be updated now */
     if(!this.nvpn_monitor){
       this._update_status_and_ui();
     }
   }
 
+  /**
+   *  Private method that simply gives a list of available countries to select a
+   *  server from
+   *  @method
+   *  @returns {StringList} - The sorted string list of available countries
+   */
   _get_countries_list(){
+    /** We build our list from all the entries in the const field 'Country_Dict' */
     let l=[];
     for (let country in Country_Dict){
       l.push(Country_Dict[country]);
     }
 
+    /** Returns a sorted version */
     return l.sort();
   }
 
+  /**
+   *  Private method that fills the country connection submenu with all the
+   *  required country names
+   *  @method
+   */
   _fill_country_submenu(){
+    /** get the country name list by calling the private method '_get_countries_list()' */
     let country_list= this. _get_countries_list();
     let tsm= this._submenu;
 
+    /** foreach element in this list, it is added as an item to the submenu */
     country_list.forEach(function(elmt){
+      /** using the 'PlacesMenu' object's method 'addPlace' to add this country name to
+       *  this submenu */
       tsm.add_place(elmt);
     });
   }
 
+  /**
+   *  Private method that is used as the callback method when an item in the country connection submenu is
+   *  clicked by the user.
+   *  @method
+   *  @param {string} placeName - the callback is supposed to give the name of the selected place as argument
+   */
   _place_menu_new_selection(placeName){
     // log("[nvpn] Clicked on " + placeName + " s= "+this.currentStatus.toString());
+    /** Connection to this placeName if the current status is 'Disconnected' */
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       this._nordvpn_quickconnect(placeName);
-      // log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
     }
     else{
+      /** if the current status is 'connected' */
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
-        // log('[nvpn] -> sh -c \"nordvpn d\"?');
 
+        /** and, if the placeName is not empty, a 'reconnection' has to be made, using the
+         *  '_nordvpn_ch_connect' private method */
         if(placeName.length!==0){
           this._nordvpn_ch_connect(placeName);
-          // log('[nvpn] -> sh -c \"nordvpn c ' + placeName + '\"?');
         }
+        /** if placeName not empty, a reconnection cannot be made, so only a disconnection is made */
         else{
           this._nordvpn_disconnect();
         }
       }
     }
 
+    /** if live monitoring isn't enabled, the ui update will be done now */
     if(!this.nvpn_monitor){
       this._update_status_and_ui();
     }
   }
 
+  /**
+   * This private method implements the 'live monitoring' loops that is repeated the periodically
+   * check any change of connection status or availability of the 'nordvpn' command line tool
+   * @method
+   */
   _vpn_survey(){
     if(!this.nvpn_monitor) return;
 
+    /** if no lock, on or by the ui update */
     if(!this._vpn_lock){
+      /** calls the '_vpn_check()' private method, that checks said potential changes, and makes
+       *  update or connection calls if necessary */
       this._vpn_check();
 
+      /** updating timeout ?  */
       if(this._vpn_timeout){
         Mainloop.source_remove(this._vpn_timeout);
         this._vpn_timeout= null;
       }
     }
 
+    /** recall itself, creating a separate loop, in 2 second (=timeout) */
     this._vpn_timeout= Mainloop.timeout_add_seconds(2,this._vpn_survey.bind(this));
   }
 
+  /**
+   * Private method that implements the necessity of status change check, necessary for the
+   * 'live monitoring'. If a change (i.e. an incoherence between currentStatus and reality of
+   * the state of the vpn connection or state of the 'nordvpn' command line tool.
+   * @method
+   */
   _vpn_check(){
+    /** boolean that will be set to true when change is detected */
     let change= false;
     switch(this.currentStatus){
+    /** when state is 'logged out', check for login state */
     case NVPNMenu.STATUS.LOGGED_OUT:
       change= this._is_user_logged_in();
 
       break;
+    /** when the status is 'nordvpn tool not found' makes a check for this tool presence */
     case NVPNMenu.STATUS.NOT_FOUND:
       change= this._is_NVPN_found();
 
       break;
+    /** when the status is 'daemon not operating', makes a check for the availabily of this deamon */
     case NVPNMenu.STATUS.DAEMON_DOWN:
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'\"")[1].toString().length!==0 );
 
       break;
+    /** when the status is 'in transition', checks if this is still the case */
     case NVPNMenu.STATUS.TRANSITION:
       change= !(this._is_in_transition());
 
       break;
+    /** when the status is 'disconnected', check if there's a connection to a vpn */
     case NVPNMenu.STATUS.DISCONNECTED:
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length!==0 );
 
       break;
+    /** when the status is 'connected', chech if there's still a connection to a vpn */
     case NVPNMenu.STATUS.CONNECTED:
       change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length===0 );
+
+      /** if a change is detected in this case, a particular disposition has to be made:
+       *  the country selection submenu has to be clear of any selection,
+       *  and if the application is in the process of reconnection (recognized by the fact that the private attribute
+       *  '_auto_connect_to' is a non empty string list) then lauchnes a connection to the target country server (designated
+       *  by the value of '_auto_connect_to') */
       if(change){
         this._submenu.unselect_no_cb();
 
@@ -749,6 +813,10 @@ class NVPNMenu extends PanelMenu.Button{
           this._nordvpn_quickconnect(this._auto_connect_to);
 
           this._auto_connect_to="";
+
+          /** in this particular case, the necessary changes have already been made at this point,
+           *  the variable 'change' is set back to false, since the pending detected (re)connection
+           *  will handle the needed process */
           change= false;
         }
       }
@@ -756,16 +824,23 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     }
 
+    /** if a change has been detected, a ui update is needed */
     if (change){
       // log("[nvpn] Change detected from "+this.currentStatus.toString());
       this._update_status_and_ui();
     }
   }
 
+  /**
+   *  Method the enables/diables the 'live monitoring'
+   *  @param {boolean} b - should be enabled?
+   */
   set_monitoring(b){
     if(b!=this.nvpn_monitor){
       this.nvpn_monitor= b;
 
+      /** if there was in fact a change of value, a the 'monitoring' is now enabled
+       *  the survey is set, via a call to the private method '_vpn_survey()' */
       if(b){
         this._vpn_survey();
       }
@@ -775,18 +850,33 @@ class NVPNMenu extends PanelMenu.Button{
 
 };
 
+/**
+ * Called when extension is initialized
+ * @function
+ */
+
 function init() {
     Convenience.initTranslations();
 }
 
 let _indicator;
 
+/**
+ * Called when extension is enabled
+ * @function
+ */
 function enable() {
+    /** creating main object and attaching it to the top pannel */
     _indicator= new NVPNMenu;
     Main.panel.addToStatusArea('nvpn-menu', _indicator);
 }
 
+/**
+ * Called when extension is disabled
+ * @function
+ */
 function disable() {
+    /** destruction of the main object */
     _indicator.destroy();
 }
 
