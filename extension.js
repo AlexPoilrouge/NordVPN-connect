@@ -23,7 +23,11 @@ const _ = Gettext.gettext;
 
 const COMMAND_SHELL= "/usr/bin/bash";
 
-
+/**
+ * Dictionnary that pair up country from their country code
+ * (seems similar to the ISO norm except for the uk ('uk' instead
+ * of 'gb' )
+ */
 const Country_Dict= {
   al: "Albania", de: "Germany", pl: "Poland",
   ar: "Argentina", gr: "Greece", pt: "Portugal",
@@ -47,7 +51,13 @@ const Country_Dict= {
   ge: "Georgia", no: "Norway", vn: "Vietnam"
 };
 
+/**
+ * Class that implements an item to be inserted int the 'PlaceMenu' menu.
+ */
 class PlaceItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * Constructor, also initializes the UI for the item
+   */
   constructor(str_Place){
     super();
 
@@ -63,6 +73,11 @@ class PlaceItem extends PopupMenu.PopupBaseMenuItem{
     this.checkIcon.hide();
   }
 
+  /**
+   * method that marks the item (ui) as (un)selected
+   * @method
+   * @param {boolean} b - select if ture, unselect otherwise
+   */
   select(b=true){
     if (b){
       this.checkIcon.show();
@@ -72,21 +87,47 @@ class PlaceItem extends PopupMenu.PopupBaseMenuItem{
     }
   }
 
+  /**
+   * Getter for the (displayed) text of this item
+   * @method
+   * @returns {string} - the text displayed by this item, as a string
+   */
   get PlaceName(){
     return this.placeName;
   }
 };
 
+/**
+ * Class that implements the submenu use to pick a server by clicking
+ * on a country name
+ */
 class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
+  /**
+   * Initiate the attributes needed to maintain this menu
+   * @method
+   */
   constructor(){
     super(_("Select country"), true);
 
+    /** this attribute will be use to store the 'callback' function
+     *  that will be called whenever an item (i.e. country) of this submenu
+     *  is selected */
     this.select_cb= null;
+    /** attribute used to point on the item that is currently 'selected' */
     this.cur_selected=null;
 
+    /** this attribute is a list that will be used to store the 'ids' generated
+     *  when a signal connection is made with an item (in private method 'add_place()')
+     *  so that these ids may be reused later to handle all the signal disonnections for
+     *  all the items during this menu's destruction */
     this._ids_c_items= [];
   }
 
+  /**
+   * Destructor. Makes sure to disconnect all the signal connection made
+   * for all the added items
+   * @method
+   */
   destroy(){
     let children= this.menu._getMenuItems();
     let diff= 0;
@@ -103,38 +144,72 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     super.destroy();
   }
 
+  /**
+   * Method to add a new country as an item to this menu
+   * @method
+   * @param {string} str_Place - the displayed name of the item (i.e. the country's name)
+   */
   add_place(str_Place){
+    /** creating the new item as an instance of 'PlaceItem' class */
     let item= new PlaceItem(str_Place);
+    /** adding this item to the menu */
     this.menu.addMenuItem(item);
 
+    /** setting the callback for when our item is click by the user, while not forgetting
+     *  to store the 'connect id' for a later disconnection before destruction */
     let t= this;
     this._ids_c_items.push(
       item.connect('activate', this._item_select.bind(this,item))
     );
   }
 
+  /**
+   * Method to set the function that will be used as callback when an item is clicked.
+   * @param {function} func - a function respecting this signature: void func(string)
+   *   during the callbakc, the parameter passed to func will be the clicked item text
+   *   (i.e. country name) passed as a string
+   */
   select_callback(func=null){
     this.select_cb= func;
   }
 
+  /**
+   * Private method that is called when an item is click.
+   * When the item is clicked, a callback to this method is made, with the said item
+   * passed as argument. The method makes the necessary ui update and the menu's data
+   * required adjustments, before calling the real callback function (pointed via the
+   * attribute 'select_cb').
+   * @method
+   */
   _item_select(item){
-    log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")");
+    // log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")");
+    /** if there is an item currently selected (data), unselect it (ui) */
     if(this.cur_selected!=null){
       this.cur_selected.select(false);
     }
 
+    /** if the item clicked is the one currently selected (data), then it is deselected (ui & data) */
     if(item==this.cur_selected){
       this.cur_selected= null;
       item.select(false);
     }
+    /** otherwise, if the clicked is different from the one currently selected (data),
+     *  make it the currently selected item (data) and select it (ui) */
     else{
       this.cur_selected= item;
       item.select();
     }
 
+    /** make the requested call back (function pointed by attribute 'select_db'),
+     *  with the currently selected item as string argument (empty string if nothing
+     *  currently selected */
     this.select_cb(this.LastSelectedPlaceName);
   }
 
+  /**
+   * Getter to access the currently selected item in this country menu.
+   * @method
+   * @returns {string} coutnry name currently selected, empty string if nothing selected */
   get LastSelectedPlaceName(){
     if (this.cur_selected!=null){
       return this.cur_selected.PlaceName;
@@ -144,6 +219,11 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     }
   }
 
+  /**
+   * Method that unselects (ui and data) the currently selected country item
+   * (if there is one)
+   * @method
+   */
   unselect_no_cb(){
     if (this.cur_selected!=null){
       this.cur_selected.select(false);
@@ -151,16 +231,29 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     }
   }
 
+  /**
+   * Method that allows to select an item by passing its (diplayed) text/name as argument.
+   * @method
+   * @param {string} placeName - the text of the item to be selected (data & ui). Of course it must
+   *      be exactly matching, if no item with matching name in this menu, nothing will be selected.
+   */
   select_from_name(placeName){
+    /** browse every item in the menu */
     let children= this.menu._getMenuItems();
     for(let i=0; i<this.menu.length; ++i){
       let item= children[i];
+      /** if this item text matches the 'placeName' argument,
+       *  it is selected (ui & data) */
       if((item!==undefined) && (item.PlaceName===placeName)){
+        /** if there already is a current selected item, firstly deselect it */
         if(this.cur_select!=null){
           this.cur_selected.select(false);
         }
         item.select();
         this.cur_selected= item;
+
+        /** can't select multiple items, therefore once a match is met, ends the loop */
+        break;
       }
       else if (item===undefined) {
         log("[nvpn] Error: got item (n=" + i.toString() + ") undefined looking for \"" + placeName + "\"...");
@@ -850,11 +943,11 @@ class NVPNMenu extends PanelMenu.Button{
 
 };
 
+
 /**
  * Called when extension is initialized
  * @function
  */
-
 function init() {
     Convenience.initTranslations();
 }
