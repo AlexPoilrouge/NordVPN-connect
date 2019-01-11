@@ -675,8 +675,12 @@ class NVPNMenu extends PanelMenu.Button{
 
       /** asynchronous connection call */
       COMMAND_LINE_ASYNC( cmd );
+
       this._waiting_state();
-      this.currentStatus= NVPNMenu.STATUS.TRANSITION;
+
+      /** if there is a reconnection, it is done with the connection step, or there is none to begin
+          with. Either way we deativate it by emptying the private attribute '_auto_connect_to' */
+      this._auto_connect_to="";
 
       /** unlocking ui updates */
       this._vpn_lock= false;
@@ -693,7 +697,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _nordvpn_disconnect(){
-    let cmd= COMMAND_SHELL + " -c \"nordvpn d\"";
+    let cmd= "nordvpn d";
     /** if the live monitoring of the vpn connection state in on (through the boolean
      *  attribute 'nvpn_monitor') */
     if(this.nvpn_monitor){
@@ -705,8 +709,9 @@ class NVPNMenu extends PanelMenu.Button{
 
       /** asynchronous disconnection call */
       COMMAND_LINE_ASYNC( cmd );
+
       this._waiting_state();
-      this.currentStatus= NVPNMenu.STATUS.TRANSITION;
+      // this.currentStatus= NVPNMenu.STATUS.TRANSITION;
 
       /** unlocking ui updates */
       this._vpn_lock= false;
@@ -756,7 +761,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.DAEMON_DOWN:
       Gio.app_info_launch_default_for_uri(
-        "https://github.com/AlexPoilrouge/NordVPN-connect/blob/master/README.md",
+        "https://github.com/AlexPoilrouge/NordVPN-connect/blob/master/README.md#help",
         global.create_app_launch_context(0, -1)
       );
 
@@ -765,7 +770,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.TRANSITION:
 
       break;
-    /** allows to reconnect when status is 'disconnected' */
+    /** allows to connect when status is 'disconnected' */
     case NVPNMenu.STATUS.DISCONNECTED:
 
       let strPlace= this._submenu.LastSelectedPlaceName;
@@ -840,7 +845,6 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** if the current status is 'connected' */
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
-
         /** and, if the placeName is not empty, a 'reconnection' has to be made, using the
          *  '_nordvpn_ch_connect' private method */
         if(placeName.length!==0){
@@ -893,6 +897,15 @@ class NVPNMenu extends PanelMenu.Button{
   _vpn_check(){
     /** boolean that will be set to true when change is detected */
     let change= false;
+
+    /** local reconnection function for factoring purposes */
+    let _this= this;
+    let _reconnection= function(){
+      if(_this._auto_connect_to.length!==0){
+          _this._nordvpn_quickconnect(_this._auto_connect_to);
+        }
+    };
+
     switch(this.currentStatus){
     /** when state is 'logged out', check for login state */
     case NVPNMenu.STATUS.LOGGED_OUT:
@@ -911,7 +924,18 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'in transition', checks if this is still the case */
     case NVPNMenu.STATUS.TRANSITION:
-      change= !(this._is_in_transition());
+      change= (!(this._is_in_transition()) && this._auto_connect_to.length===0);
+
+      /** if, while in transition, a change is detected, and if the attribute
+       *  _auto_connect_to is set, then it means that a reconnection to the
+       *  place designated by this attribute is pending. */
+      if(change && this._auto_connect_to.length!==0){
+        _reconnection();
+
+        /** if there is a reconnection, then we're still in transition.
+         *  No change is status and visual feedback necessary */
+        change= false;
+      }
 
       break;
     /** when the status is 'disconnected', check if there's a connection to a vpn */
@@ -931,17 +955,11 @@ class NVPNMenu extends PanelMenu.Button{
       if(change){
         this._submenu.unselect_no_cb();
 
-        // log("[nvpn] act= "+this._auto_connect_to)
         if(this._auto_connect_to.length!==0){
-          this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
+           _reconnection();
 
-          this._nordvpn_quickconnect(this._auto_connect_to);
-
-          this._auto_connect_to="";
-
-          /** in this particular case, the necessary changes have already been made at this point,
-           *  the variable 'change' is set back to false, since the pending detected (re)connection
-           *  will handle the needed process */
+          /** if there is a reconnection, then we're still in transition.
+           *  No change is status and visual feedback necessary */
           change= false;
         }
       }
@@ -951,7 +969,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** if a change has been detected, a ui update is needed */
     if (change){
-      // log("[nvpn] Change detected from "+this.currentStatus.toString());
+      log("[nvpn] Change detected from "+this.currentStatus.toString());
       this._update_status_and_ui();
     }
   }
