@@ -59,12 +59,12 @@ the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
 Once the 'nordvpn' CLI tool is installed, check the packaged daemon's status:
 
-	systemd status nordvpnd.service
+	systemctl status nordvpnd.service
     
 If the daemon isn't up and running, fix that:
 
-    systemd enable nordvpnd.service
-    systemd start nordvpnd.service
+	systemctl enable nordvpnd.service
+	systemctl start nordvpnd.service
     
 Now, set up your logins to the NordVPN service:
 
@@ -87,8 +87,8 @@ This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the 
 
   Installing the 'nordvpn' CLI tool isn't enough. The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
   
-	systemd enable nordvpnd.service
-	systemd start nordvpnd.service
+	systemctl enable nordvpnd.service
+	systemctl start nordvpnd.service
 
 ***The extension says « tool not logged in », what's up?***
 
