@@ -7,6 +7,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
 const Mainloop = imports.mainloop;
+const ByteArray = imports.byteArray;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -22,6 +23,27 @@ const _ = Gettext.gettext;
 
 
 const COMMAND_SHELL= "/usr/bin/bash";
+
+/**
+ * Calls for a given shell command in a synchronous way
+ * @function
+ * @param {string} cmd - the shell command to execute
+ * @param {number} descriptor - 1 (default) for the function to return the stdout output,
+ *                              2 for stderr.
+ * @returns {string} the stddout of the command's exectuion as a string
+ */
+function COMMAND_LINE_SYNC(cmd, descriptor=1){
+  return ByteArray.toString(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \""+ cmd + "\"")[(descriptor>=2)?2:1]);
+}
+
+/**
+ * Calls for a given shell command in an asynchronous way
+ * @function
+ * @param {string} cmd - the shell command to execute
+ */
+function COMMAND_LINE_ASYNC(cmd){
+  GLib.spawn_command_line_async(COMMAND_SHELL + " -c \""+ cmd + "\"");
+}
 
 /**
  * Dictionnary that pair up country from their country code
@@ -50,6 +72,7 @@ const Country_Dict= {
   fr: "France", nz: "New_Zealand", us: "United_States",
   ge: "Georgia", no: "Norway", vn: "Vietnam"
 };
+
 
 /**
  * Class that implements an item to be inserted int the 'PlaceMenu' menu.
@@ -436,7 +459,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_NVPN_found(){
-    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c 'hash nordvpn'")[2].length === 0);
+    return (COMMAND_LINE_SYNC('hash nordvpn',2).length === 0);
   }
 
   /**
@@ -445,7 +468,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_NVPN_connected(){
-    return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po ' [cC]onnected'\"")[1].length===0);
+    return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po ' [cC]onnected'").length===0);
   }
 
   /**
@@ -455,7 +478,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_in_transition(){
-    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po '[cC]onnecting'\"")[1].length!==0);
+    return (COMMAND_LINE_SYNC("nordvpn status | grep -Po '[cC]onnecting'").length!==0);
   }
 
   /**
@@ -465,7 +488,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_daemon_unreachable(){
-    return !(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Daemon.*unreachable'\"")[1].length===0);
+    return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Daemon.*unreachable'").length===0);
   }
 
   /**
@@ -474,7 +497,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_user_logged_in(){
-    return (GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"echo '' | nordvpn login | grep -Po 'already logged'\"")[1].length!==0);
+    return (COMMAND_LINE_SYNC("echo '' | nordvpn login | grep -Po 'already logged'").length!==0);
   }
 
   /**
@@ -611,7 +634,7 @@ class NVPNMenu extends PanelMenu.Button{
   _get_server_text_info(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
       return "-"+
-          GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d: -f2\"")[1].toString().replace(/(\r\n\t|\n|\r\t)/gm,"")
+          COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d: -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
               +" -" ;
     }
     else{
@@ -638,7 +661,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @param {string} placeName - optional, the place name (i.e. country, server, ...) to connect to
    */
   _nordvpn_quickconnect(placeName=""){
-    let cmd= COMMAND_SHELL + " -c \"nordvpn c " + placeName + "\"";
+    let cmd= "nordvpn c " + placeName;
     /** if the live monitoring of the vpn connection state in on (through the boolean
      *  attribute 'nvpn_monitor') */
     if(this.nvpn_monitor){
@@ -649,7 +672,7 @@ class NVPNMenu extends PanelMenu.Button{
       this._vpn_lock= true;
 
       /** asynchronous connection call */
-      GLib.spawn_command_line_async( cmd );
+      COMMAND_LINE_ASYNC( cmd );
       this._waiting_state();
       this.currentStatus= NVPNMenu.STATUS.TRANSITION;
 
@@ -659,7 +682,7 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** (if no live monitoring) synchronous connection call (freezes the ui in the
        *  meantime) */
-      GLib.spawn_command_line_sync( cmd );
+      COMMAND_LINE_SYNC( cmd );
     }
   }
 
@@ -679,7 +702,7 @@ class NVPNMenu extends PanelMenu.Button{
       this._vpn_lock= true;
 
       /** asynchronous disconnection call */
-      GLib.spawn_command_line_async( cmd );
+      COMMAND_LINE_ASYNC( cmd );
       this._waiting_state();
       this.currentStatus= NVPNMenu.STATUS.TRANSITION;
 
@@ -689,7 +712,7 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** (if no live monitoring) synchronous disconnection call (freezes the ui in the
        *  meantime) */
-      GLib.spawn_command_line_sync( cmd );
+      COMMAND_LINE_SYNC( cmd );
     }
   }
 
@@ -874,7 +897,7 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'daemon not operating', makes a check for the availabily of this deamon */
     case NVPNMenu.STATUS.DAEMON_DOWN:
-      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"systemctl status nordvpnd 2> /dev/null | grep 'active (running)'\"")[1].toString().length!==0 );
+      change= ( COMMAND_LINE_SYNC("systemctl status nordvpnd 2> /dev/null | grep 'active (running)'").length!==0 );
 
       break;
     /** when the status is 'in transition', checks if this is still the case */
@@ -884,12 +907,12 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'disconnected', check if there's a connection to a vpn */
     case NVPNMenu.STATUS.DISCONNECTED:
-      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length!==0 );
+      change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length!==0 );
 
       break;
     /** when the status is 'connected', chech if there's still a connection to a vpn */
     case NVPNMenu.STATUS.CONNECTED:
-      change= ( GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \"ifconfig -a | grep tun0\"")[1].toString().length===0 );
+      change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length===0 );
 
       /** if a change is detected in this case, a particular disposition has to be made:
        *  the country selection submenu has to be clear of any selection,
