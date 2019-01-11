@@ -1,8 +1,10 @@
 #README: 'NordVPN Connect' gnome-shell extension
+
 The natural basic necessary step before using this GNOME-Shell extension is, of course, to read this README in its entirety.
 
 
 ##About
+
 This extension acts merely and only as a simple GUI for the 'nordvpn' command
 line tool basic features that are connection and disconnection to a vpn server.
 It also provides basic info about the current status of said connection: whether
@@ -14,6 +16,7 @@ NordVPN's corresponding page: https://nordvpn.com/download/linux/
 Ultimately, this extension should be replaced by any GUI app, NordVPN might officially release for Linux desktop.
 
 ######ToDo?
+
 On the off change, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
 - [] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
 - [ ] Add a 'settings' page for this extension.
@@ -22,7 +25,9 @@ On the off change, such GUI app isn't released for Linux in the near future. Som
 
 
 ##Disclaimer
+
 ######Nothing official
+
 This extension has been made **without any endorsement or support from NordVPN.**
 The developer has no ties nor affiliation whatsoever with NordVPN, its
 services, nor its software.
@@ -30,6 +35,7 @@ Naturally, this extension is free and isn't, shouldn't and will **not be
 subject to any form of profit or compensation**.
 
 ######Release and use
+
 This extension was made for personal needs and use. The code is release on the
 off chance it might be of use to someone but without the intention of providing
 any form of utility software or service in a rigorous manner.
@@ -41,6 +47,7 @@ code might have on any system lies solely in the hands of the user.
 
 
 ##Installation prerequisites
+
 Since this is only a GNOME-Shell GUI for the 'nordvpn' command line tool, said
 tool must be installed before anything else. This extension is destined for
 **systemd distributions only!**
@@ -66,10 +73,12 @@ Now, set up your logins to the NordVPN service:
 Now you should be able to use this extension.
 
 ######Test
+
 This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*.
 
 
 ##Help
+
 ***The extension says « tool not found. », Holly Cow!***
 
   This probably means that the 'nordvpn' CLI tool is either not installed, either not found by the system. See previous section for installation and the NordVPN website ( https://nordvpn.com/download/linux/ ).
