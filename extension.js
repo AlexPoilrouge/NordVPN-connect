@@ -673,10 +673,17 @@ class NVPNMenu extends PanelMenu.Button{
        *  and making sure (forcing) the transition status is set, to avoir breaking interference */
       this._vpn_lock= true;
 
-      /** asynchronous connection call */
-      COMMAND_LINE_ASYNC( cmd );
+      /** if the nordvpn tool isn't is a usable state (not found, logged out, or daemon disabled),
+       *  the process must be aborted and updating accordingly the ui */
+      if (this._get_current_status() < NVPNMenu.STATUS.TRANSITION){
+        this._update_status_and_ui();
+      }
+      else{
+        /** asynchronous connection call */
+        COMMAND_LINE_ASYNC( cmd );
 
-      this._waiting_state();
+        this._waiting_state();
+      }
 
       /** if there is a reconnection, it is done with the connection step, or there is none to begin
           with. Either way we deativate it by emptying the private attribute '_auto_connect_to' */
@@ -707,11 +714,18 @@ class NVPNMenu extends PanelMenu.Button{
        *  and making sure (forcing) the transition status is set, to avoir breaking interference */
       this._vpn_lock= true;
 
+      /** if the nordvpn tool isn't is a usable state (not found, logged out, or daemon disabled),
+       *  the process must be aborted and updating accordingly the ui */
+      if (this._get_current_status() < NVPNMenu.STATUS.TRANSITION){
+        this._update_status_and_ui();
+        this._auto_connect_to="";
+      }
+      else{
       /** asynchronous disconnection call */
-      COMMAND_LINE_ASYNC( cmd );
+        COMMAND_LINE_ASYNC( cmd );
 
-      this._waiting_state();
-      // this.currentStatus= NVPNMenu.STATUS.TRANSITION;
+        this._waiting_state();
+      }
 
       /** unlocking ui updates */
       this._vpn_lock= false;
