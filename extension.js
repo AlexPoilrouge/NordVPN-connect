@@ -6,6 +6,8 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
+const Gio = imports.gi.Gio;
+
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
@@ -753,6 +755,13 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.DAEMON_DOWN:
+      Gio.app_info_launch_default_for_uri(
+        "https://github.com/AlexPoilrouge/NordVPN-connect/blob/master/README.md",
+        global.create_app_launch_context(0, -1)
+      );
+
+
+      break;
     case NVPNMenu.STATUS.TRANSITION:
 
       break;
