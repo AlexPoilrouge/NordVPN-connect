@@ -18,7 +18,7 @@ Ultimately, this extension should be replaced by any GUI app, NordVPN might offi
 ######ToDo?
 
 On the off change, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
-- [] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
+- [ ] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
 - [ ] Add a 'settings' page for this extension.
 - [ ] Add the possibility to type in the name of the server (e.g.: de145, uk123, fr067) the user wants to connect to.
 - [ ] Add the possibility to pick server by choosing a city (instead of country).
