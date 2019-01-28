@@ -933,7 +933,7 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'daemon not operating', makes a check for the availabily of this deamon */
     case NVPNMenu.STATUS.DAEMON_DOWN:
-      change= ( COMMAND_LINE_SYNC("systemctl is-active nordvpnd 2> /dev/null | grep '\bactive'").length!==0 );
+      change= ( COMMAND_LINE_SYNC("systemctl is-active nordvpnd | grep '\bactive'").length!==0 );
 
       break;
     /** when the status is 'in transition', checks if this is still the case */
