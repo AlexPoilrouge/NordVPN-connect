@@ -108,7 +108,7 @@ and enter your NordVPN logins.
   This extension is supposed to react to the current state of the NordVPN server connection given by the 'nordvpn' CLI tool and the 'nordvpnd' systemd daemon. Therefore, you might need to use those tool to fix the issue.
 
 
-***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r` ***
+***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
 
 
 ***
