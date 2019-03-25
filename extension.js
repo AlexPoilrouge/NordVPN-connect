@@ -7,6 +7,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
 const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
@@ -84,7 +85,7 @@ class PlaceItem extends PopupMenu.PopupBaseMenuItem{
    * Constructor, also initializes the UI for the item
    */
   constructor(str_Place){
-    super();
+    super ();
 
     this.placeName= str_Place;
 
@@ -287,6 +288,7 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
   }
 };
 
+let NVPNMenu = GObject.registerClass(
 /** Class that implements the dedicated status area of the extension
  *  and contains its main menu
  */
@@ -316,8 +318,8 @@ class NVPNMenu extends PanelMenu.Button{
    * Initiate the UI element and creates the object.
    * @method
    */
-  constructor(){
-    super(0.0, _("NordVPN"));
+  _init(){
+    super._init(0.0, _("NordVPN"));
 
     /** @member {boolean} nvpn_monitor
      *  whether or not the extension monitors the state of the connection to
@@ -343,16 +345,6 @@ class NVPNMenu extends PanelMenu.Button{
     let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
     this._panel_hbox.add_child(label_nvpn);
     this.actor.add_child(this._panel_hbox);
-
-    /** saving this idea for later disconnection of the signal during object's destruction */
-    this._id_c_click1= this.connect('clicked',
-      /** when the panel is clicked, the extension performs a refresh of the menu's ui */
-      function(){
-        if(!this.nvpn_monitor){
-          this._update_status_and_ui();
-        }
-      }.bind(this)
-    );
 
     /** this private member implements the menu that appears when user clicks on the top
      * panel's indicator */
@@ -446,9 +438,7 @@ class NVPNMenu extends PanelMenu.Button{
    *  Disconnect the ui signals before the object's destruction
    *  @method
    */
-  destroy(){
-    this.disconnect(this._id_c_click1);
-    this._id_c_click1= 0;
+  _onDestroy(){
     this.action_button.disconnect(this._id_c_btn1);
     this._id_c_btn1= 0;
 
@@ -490,7 +480,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @return {boolean}
    */
   _is_daemon_unreachable(){
-    return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Daemon.*unreachable'").length===0);
+    return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'").length===0);
   }
 
   /**
@@ -1005,7 +995,7 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
 
-};
+});
 
 
 /**

@@ -19,7 +19,7 @@ Ultimately, this extension should be replaced by any GUI app, NordVPN might offi
 ###### ToDo?
 
 On the off change, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
-- [] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
+- [ ] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
 - [ ] Add a 'settings' page for this extension.
 - [ ] Add the possibility to type in the name of the server (e.g.: de145, uk123, fr067) the user wants to connect to.
 - [ ] Add the possibility to pick server by choosing a city (instead of country).
@@ -77,7 +77,9 @@ Now you should be able to use this extension.
 
 ###### Test
 
-This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*.
+This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*, for all commits before (and including) commit *a0c1b1034e0a8518796e5490a4a8746fa20da506* (revert to this commit if encountering compatibility issues).
+
+This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for later commits.
 
 
 ## Help
@@ -104,6 +106,10 @@ and enter your NordVPN logins.
 ***The extension seems to be blocked in some sort of “ waiting state ”.***
 
   This extension is supposed to react to the current state of the NordVPN server connection given by the 'nordvpn' CLI tool and the 'nordvpnd' systemd daemon. Therefore, you might need to use those tool to fix the issue.
+
+
+*** -> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r` ***
+
 
 ***
 
