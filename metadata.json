@@ -1,9 +1,10 @@
 {
-	"gettext-domain": "gnome-shell-extensions",
+	"gettext-domain": "gnome-shell-extensions-nvpnconnect",
 	"name": "NordVPN Connect",
 	"description": "Merely an unoffical interface for the 'nordvpn connect' command.",
 	"url": "https://github.com/AlexPoilrouge/NordVPN-connect",
 	"uuid": "NordVPN_Connect@poilrouge.fr",
+	"settings-schema": "org.gnome.shell.extensions.nvpnconnect",
 	"shell-version": ["3.30.2"],
 	"version": 3
 }

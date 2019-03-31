@@ -19,7 +19,7 @@ const Convenience = Me.imports.convenience;
 const Util = imports.misc.util;
 const GLib = imports.gi.GLib;
 
-const Gettext = imports.gettext.domain('gnome-shell-extensions');
+const Gettext = imports.gettext.domain('gnome-shell-extensions-nvpnconnect');
 const _ = Gettext.gettext;
 
 
@@ -288,6 +288,9 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
   }
 };
 
+
+var SETTINGS;
+
 let NVPNMenu = GObject.registerClass(
 /** Class that implements the dedicated status area of the extension
  *  and contains its main menu
@@ -321,6 +324,8 @@ class NVPNMenu extends PanelMenu.Button{
   _init(){
     super._init(0.0, _("NordVPN"));
 
+    this.SETT_SIGS= [];
+
     /** @member {boolean} nvpn_monitor
      *  whether or not the extension monitors the state of the connection to
      *  nordvpn servers
@@ -342,9 +347,23 @@ class NVPNMenu extends PanelMenu.Button{
     this._panel_hbox.add_child(this._panel_icon);
 
     /** 'NVPN' panel text label*/
-    let label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
-    this._panel_hbox.add_child(label_nvpn);
+    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
+    this.label_nvpn.visible= !(SETTINGS.get_boolean('compact-icon'));
+    this.SETT_SIGS[0]= SETTINGS.connect('changed::compact-icon', () => {
+      this.label_nvpn.visible= (!SETTINGS.get_boolean('compact-icon'));
+    });
+    this._panel_hbox.add_child(this.label_nvpn);
     this.actor.add_child(this._panel_hbox);
+
+    /** saving this idea for later disconnection of the signal during object's destruction */
+    this._id_c_click1= this.connect('button-press-event',
+    /** when the panel is clicked, the extension performs a refresh of the menu's ui */
+      function(){
+        if(!this.nvpn_monitor){
+          this._update_status_and_ui();
+        }
+      }.bind(this)
+    );
 
     /** this private member implements the menu that appears when user clicks on the top
      * panel's indicator */
@@ -424,6 +443,10 @@ class NVPNMenu extends PanelMenu.Button{
      *  according to the current state provided of the 'nordvpn tool' */
     this._update_status_and_ui();
 
+    this._refresh_delay= SETTINGS.get_int('refresh-delay');
+    this.SETT_SIGS[1]= SETTINGS.connect('changed::refresh-delay', () => {
+      this._refresh_delay= SETTINGS.get_int('refresh-delay');
+    });
     /** this private member is a boolean that is used (when 'true') to keep the ui from updating during
      *  a connection transition, for instance */
     this._vpn_lock= false;
@@ -439,8 +462,16 @@ class NVPNMenu extends PanelMenu.Button{
    *  @method
    */
   _onDestroy(){
+    this.disconnect(this._id_c_click1);
+    this._id_c_click1= 0;
+
     this.action_button.disconnect(this._id_c_btn1);
     this._id_c_btn1= 0;
+
+    for(var i= 0; i<SETT_SIGS.length; ++i){
+      if(SETT_SIGS[i])
+        SETTINGS.disconnect(SETT_SIGS[i]);
+    }
 
     super.destroy();
   }
@@ -626,7 +657,7 @@ class NVPNMenu extends PanelMenu.Button{
   _get_server_text_info(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
       return "-"+
-          COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d: -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
+          COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
               +" -" ;
     }
     else{
@@ -889,7 +920,7 @@ class NVPNMenu extends PanelMenu.Button{
     }
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
-    this._vpn_timeout= Mainloop.timeout_add_seconds(2,this._vpn_survey.bind(this));
+    this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
   }
 
   /**
@@ -1013,6 +1044,8 @@ let _indicator;
  * @function
  */
 function enable() {
+    SETTINGS = Convenience.getSettings();
+    
     /** creating main object and attaching it to the top pannel */
     _indicator= new NVPNMenu;
     Main.panel.addToStatusArea('nvpn-menu', _indicator);

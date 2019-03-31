@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE schemalist SYSTEM "/usr/share/glib-2.0/schemas/gschema.dtd">
+<schemalist gettext-domain="gnome-shell-extensions-nvpnconnect">
+    <schema path="/org/gnome/shell/extensions/nvpnconnect/"
+        id="org.gnome.shell.extensions.nvpnconnect">
+        <key type="b" name="compact-icon">
+            <default>false</default>
+            <summary>if true just icon on pannel</summary>
+            <description>Display just the icon in top pannel (without 'NVPN')</description>
+        </key>
+        <key type="i" name="refresh-delay">
+            <range min="1" max="60"/>
+            <default>2</default>
+        </key>
+        <key type="s" name="cmd-tool-available">
+            <default>"hash nordvpn"</default>
+        </key>
+        <key type="s" name="cmd-tool-connected-check">
+            <default>"nordvpn status | grep -Po ' [cC]onnected'"</default>
+        </key>
+        <key type="s" name="cmd-tool-transition-check">
+            <default>"nordvpn status | grep -Po '[cC]onnecting'"</default>
+        </key>
+        <key type="s" name="cmd-daemon-unreachable-check">
+            <default>"nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'"</default>
+        </key>
+        <key type="s" name="cmd-tool-logged-check">
+            <default>"echo '' | nordvpn login | grep -Po 'already logged'"</default>
+        </key>
+        <key type="s" name="cmd-current-server-get">
+            <default>"nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2"</default>
+        </key>
+        <key type="s" name="cmd-server-place-connect">
+            <default>"nordvpn c _%place%_"</default>
+        </key>
+        <key type="s" name="cmd-server-disconnect">
+            <default>"nordvpn d"</default>
+        </key>
+        <key type="s" name="cmd-daemon-online-check">
+            <default>"systemctl is-active nordvpnd | grep '\bactive'"</default>
+        </key>
+        <key type="s" name="cmd-vpn-online-check">
+            <default>"ifconfig -a | grep tun0"</default>
+        </key>
+    </schema>
+</schemalist>
