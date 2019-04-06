@@ -28,16 +28,16 @@
             <default>"echo '' | nordvpn login | grep -Po 'already logged'"</default>
         </key>
         <key type="s" name="cmd-current-server-get">
-            <default>"nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2"</default>
+            <default>'nordvpn status | grep -Po \'Current server: .*\\..*\\..*\' | cut -d: -f2 | cut -d\' \' -f2'</default>
         </key>
         <key type="s" name="cmd-server-place-connect">
-            <default>"nordvpn c _%place%_"</default>
+            <default>"nordvpn c _%target%_"</default>
         </key>
         <key type="s" name="cmd-server-disconnect">
             <default>"nordvpn d"</default>
         </key>
         <key type="s" name="cmd-daemon-online-check">
-            <default>"systemctl is-active nordvpnd | grep '\bactive'"</default>
+            <default>'systemctl is-active nordvpnd | grep "\bactive"'</default>
         </key>
         <key type="s" name="cmd-vpn-online-check">
             <default>"ifconfig -a | grep tun0"</default>

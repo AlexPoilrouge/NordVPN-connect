@@ -221,7 +221,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Available_Tool">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -251,7 +251,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Connected_Check">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -281,7 +281,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Transition_Check">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -304,7 +304,6 @@ Only modify if you have a good understanding of what you're doing…</property>
                         <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI can't access the &lt;i&gt;nordvpnd&lt;/i&gt; systemd daemon :</property>
                         <property name="use_markup">True</property>
                         <property name="wrap">True</property>
-                        <property name="wrap_mode">word-char</property>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
@@ -329,7 +328,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_No_Daemon_Check">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -342,7 +341,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Login_Check">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -355,7 +354,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Server_Get">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -368,7 +367,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Connect_To">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -381,7 +380,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Disconnect">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -394,7 +393,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Daemon_Online_Check">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -475,7 +474,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_VPN_Online">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="margin_top">5</property>
@@ -512,7 +511,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButtonBox">
+                  <object class="GtkButtonBox" id="NVPN_Sett_ButBox_Change_Cmd_Confirm">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="margin_left">8</property>
@@ -522,7 +521,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                     <property name="spacing">8</property>
                     <property name="layout_style">end</property>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="NVPN_Sett_Button_Default">
                         <property name="label" translatable="yes">Default</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -535,7 +534,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="NVPN_Sett_Button_Reset">
                         <property name="label" translatable="yes">Reset</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -548,7 +547,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="NVPN_Sett_Button_Apply">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
