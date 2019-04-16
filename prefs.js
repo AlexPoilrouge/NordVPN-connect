@@ -167,20 +167,18 @@ class NVPN_Settings{
         fillEntries(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         fillEntries(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
 
-        this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(
-            this._objects.NVPN_Sett_Switch_Cmd_Change.get_state()
-        );
+        let s= this._objects.NVPN_Sett_Switch_Cmd_Change.get_state();
+        this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(s);
+        this._objects.NVPN_Sett_Grid2.set_sensitive(s);
     }
 
 
     _sig_Compact_state_set(item, state, user_data){
-        log("lol state at "+state);
         SETTINGS.set_boolean('compact-icon', state);
     }
     
     _sig_Referesh_value_changed(item, user_data){
         if(item){
-            log("rofl");
             SETTINGS.set_int('refresh-delay', item.get_value());
         }
     }
@@ -192,8 +190,9 @@ class NVPN_Settings{
 
     _sig_Cmd_change_default(){
         let chToDef= (gEntry, gsKey) => {
+            SETTINGS.reset(gsKey);
             gEntry.set_text(
-                SETTINGS.get_default_value(gsKey).get_string()[0]
+                SETTINGS.get_string(gsKey)
             );
         }
 
@@ -207,6 +206,8 @@ class NVPN_Settings{
         chToDef(this._objects.NVPN_Sett_Entry_Disconnect, 'cmd-server-disconnect');
         chToDef(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         chToDef(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
+
+        this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
 
     _sig_Cmd_change_reset(){

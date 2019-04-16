@@ -293,62 +293,105 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
 var SETTINGS;
 
 class Core_CMDs{
-  constructor(){
+  constructor(parent=null){
     this.SETT_SIGS= [];
+    this._parent= parent;
   }
 
   init(){
     let txt= "";
-    this.tool_available= (txt=Unescape.create(SETTINGS.get_string("cmd-tool-available")))?
+    this.tool_available= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-available")))?
                           txt : "hash nordvpn";
-    this.tool_connected_check= (txt=Unescape.create(SETTINGS.get_string("cmd-tool-connected-check")))?
+    this.tool_connected_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-connected-check")))?
                           txt : "nordvpn status | grep -Po ' [cC]onnected'";
-    this.tool_transition_check= (txt=Unescape.create(SETTINGS.get_string("cmd-tool-transition-check")))?
+    this.tool_transition_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-transition-check")))?
                           txt : "nordvpn status | grep -Po '[cC]onnecting'";
-    this.daemon_unreachable_check= (txt=Unescape.create(SETTINGS.get_string("cmd-daemon-unreachable-check")))?
+    this.daemon_unreachable_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-daemon-unreachable-check")))?
                           txt : "nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'";
-    this.tool_logged_check= (txt=Unescape.create(SETTINGS.get_string("cmd-tool-logged-check")))?
+    this.tool_logged_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-logged-check")))?
                           txt : "echo '' | nordvpn login | grep -Po 'already logged'";
-    this.current_server_get= (txt=Unescape.create(SETTINGS.get_string("cmd-current-server-get")))?
+    this.current_server_get= (txt=Unescape.convert(SETTINGS.get_string("cmd-current-server-get")))?
                           txt : "nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2";
-    this.server_place_connect= (txt=Unescape.create(SETTINGS.get_string("cmd-server-place-connect")))?
+    this.server_place_connect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-place-connect")))?
                           txt : "nordvpn c _%target%_";
-    this.server_disconnect= (txt=Unescape.create(SETTINGS.get_string("cmd-server-disconnect")))?
+    this.server_disconnect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-disconnect")))?
                           txt : "nordvpn d";
-    this.daemon_online_check= (txt=Unescape.create(SETTINGS.get_string("cmd-daemon-online-check")))?
+    this.daemon_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-daemon-online-check")))?
                           txt : "systemctl is-active nordvpnd | grep '\bactive'";
-    this.vpn_online_check= (txt=Unescape.create(SETTINGS.get_string("cmd-vpn-online-check")))?
+    this.vpn_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check")))?
                           txt : "ifconfig -a | grep tun0";
 
+    /*log("nvpn "+this.tool_available);
+    log("nvpn "+this.tool_connected_check);
+    log("nvpn "+this.tool_transition_check);
+    log("nvpn "+this.daemon_unreachable_check);
+    log("nvpn "+this.tool_logged_check);
+    log("nvpn "+this.current_server_get);
+    log("nvpn "+this.server_place_connect);
+    log("nvpn "+this.server_disconnect);
+    log("nvpn "+this.daemon_online_check);
+    log("nvpn "+this.vpn_online_check);*/
+
+
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-available', () => {
-      this.tool_available= Unescape.create(SETTINGS.get_string("cmd-tool-available"));
+      this.tool_available= Unescape.convert(SETTINGS.get_string("cmd-tool-available"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-connected-check', () => {
-      this.tool_connected_check= Unescape.create(SETTINGS.get_string("cmd-tool-connected-check"));
+      this.tool_connected_check= Unescape.convert(SETTINGS.get_string("cmd-tool-connected-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-transition-check', () => {
-      this.tool_transition_check= Unescape.create(SETTINGS.get_string("cmd-tool-transition-check"));
+      this.tool_transition_check= Unescape.convert(SETTINGS.get_string("cmd-tool-transition-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-daemon-unreachable-check', () => {
-      this.daemon_unreachable_check= Unescape.create(SETTINGS.get_string("cmd-daemon-unreachable-check"));
+      this.daemon_unreachable_check= Unescape.convert(SETTINGS.get_string("cmd-daemon-unreachable-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-logged-check', () => {
-      this.tool_logged_check= Unescape.create(SETTINGS.get_string("cmd-tool-logged-check"));
+      this.tool_logged_check= Unescape.convert(SETTINGS.get_string("cmd-tool-logged-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-current-server-get', () => {
-      this.current_server_get= Unescape.create(SETTINGS.get_string("cmd-current-server-get"));
+      this.current_server_get= Unescape.convert(SETTINGS.get_string("cmd-current-server-get"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-server-place-connect', () => {
-      this.server_place_connect= Unescape.create(SETTINGS.get_string("cmd-server-place-connect"));
+      this.server_place_connect= Unescape.convert(SETTINGS.get_string("cmd-server-place-connect"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-server-disconnect', () => {
-      this.server_disconnect= Unescape.create(SETTINGS.get_string("cmd-server-disconnect"));
+      this.server_disconnect= Unescape.convert(SETTINGS.get_string("cmd-server-disconnect"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-daemon-online-check', () => {
-      this.daemon_online_check= Unescape.create(SETTINGS.get_string("cmd-daemon-online-check"));
+      this.daemon_online_check= Unescape.convert(SETTINGS.get_string("cmd-daemon-online-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-vpn-online-check', () => {
-      this.vpn_online_check= Unescape.create(SETTINGS.get_string("cmd-vpn-online-check"));
+      this.vpn_online_check= Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
     }));
   }
 
@@ -393,7 +436,7 @@ class NVPNMenu extends PanelMenu.Button{
   _init(){
     super._init(0.0, _("NordVPN"));
 
-    this._cmd= new Core_CMDs();
+    this._cmd= new Core_CMDs(this);
     this._cmd.init();
 
     this.SETT_SIGS= [];
@@ -569,7 +612,7 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_NVPN_connected(){
     // return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po ' [cC]onnected'").length===0);
-    return !(COMMAND_LINE_SYNC(this._cmd.tool_connected_check).length===0);
+    return (COMMAND_LINE_SYNC(this._cmd.tool_connected_check).length!==0);
   }
 
   /**
@@ -1061,13 +1104,13 @@ class NVPNMenu extends PanelMenu.Button{
     /** when the status is 'disconnected', check if there's a connection to a vpn */
     case NVPNMenu.STATUS.DISCONNECTED:
       // change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length!==0 );
-      change= ( COMMAND_LINE_SYNC(this._cmd.daemon_online_check).length!==0 );
+      change= ( COMMAND_LINE_SYNC(this._cmd.vpn_online_check).length!==0 );
 
       break;
     /** when the status is 'connected', chech if there's still a connection to a vpn */
     case NVPNMenu.STATUS.CONNECTED:
       // change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length===0 );
-      change= ( COMMAND_LINE_SYNC(this._cmd.daemon_online_check).length===0 );
+      change= ( COMMAND_LINE_SYNC(this._cmd.vpn_online_check).length===0 );
 
       /** if a change is detected in this case, a particular disposition has to be made:
        *  the country selection submenu has to be clear of any selection,

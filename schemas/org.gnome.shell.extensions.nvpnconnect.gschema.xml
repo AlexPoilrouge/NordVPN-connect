@@ -37,7 +37,7 @@
             <default>"nordvpn d"</default>
         </key>
         <key type="s" name="cmd-daemon-online-check">
-            <default>'systemctl is-active nordvpnd | grep "\bactive"'</default>
+            <default>"systemctl is-active nordvpnd | grep -Po active"</default>
         </key>
         <key type="s" name="cmd-vpn-online-check">
             <default>"ifconfig -a | grep tun0"</default>
