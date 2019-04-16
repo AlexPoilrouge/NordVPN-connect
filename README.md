@@ -59,6 +59,8 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
+This extension is also available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
+
 Once the 'nordvpn' CLI tool is installed, check the packaged daemon's status:
 
 	systemd status nordvpnd.service
@@ -108,7 +110,7 @@ and enter your NordVPN logins.
   This extension is supposed to react to the current state of the NordVPN server connection given by the 'nordvpn' CLI tool and the 'nordvpnd' systemd daemon. Therefore, you might need to use those tool to fix the issue.
 
 
-*** -> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r` ***
+***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
 
 
 ***
