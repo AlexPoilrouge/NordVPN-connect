@@ -739,7 +739,7 @@ class NVPNMenu extends PanelMenu.Button{
       if(this._submenu.LastSelectedPlaceName.length ===0){
         /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
          *  with a regex */
-        let rgx= /- ([a-z]*)[0-9]*.*$/g;
+        let rgx= /-([a-z]*)[0-9]*.*$/g;
         let arr= rgx.exec(server_txt);
         if((arr!==null) && (arr[1]!==undefined)){
           /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
