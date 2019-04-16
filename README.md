@@ -59,6 +59,8 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
+This extension is also available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
+
 Once the 'nordvpn' CLI tool is installed, check the packaged daemon's status:
 
 	systemd status nordvpnd.service
