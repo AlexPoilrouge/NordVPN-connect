@@ -1,6 +1,7 @@
 # README:
 
-'NordVPN Connect' gnome-shell extension
+'NordVPN Connect' gnome-shell extension.
+
 The natural basic necessary step before using this GNOME-Shell extension is, of course, to read this README in its entirety.
 
 
