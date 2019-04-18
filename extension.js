@@ -403,6 +403,7 @@ class Core_CMDs{
   }
 }
 
+
 let NVPNMenu = GObject.registerClass(
 /** Class that implements the dedicated status area of the extension
  *  and contains its main menu
@@ -474,6 +475,7 @@ class NVPNMenu extends PanelMenu.Button{
     this._id_c_click1= this.connect('button-press-event',
     /** when the panel is clicked, the extension performs a refresh of the menu's ui */
       function(){
+        log("[nvpn] it works! * click! *");
         if(!this.nvpn_monitor){
           this._update_status_and_ui();
         }
@@ -872,6 +874,7 @@ class NVPNMenu extends PanelMenu.Button{
       /** asynchronous disconnection call */
         COMMAND_LINE_ASYNC( cmd );
 
+
         this._waiting_state();
       }
 
@@ -901,6 +904,7 @@ class NVPNMenu extends PanelMenu.Button{
        *  handled */
       this._auto_connect_to= placeName;
       this._nordvpn_disconnect();
+      this.currentStatus= NVPNMenu.STATUS.TRANSITION;
     }
     /** if no live monitoring, the synchronous (re)connection must be called once the disconnection
      *  has been made */
@@ -1045,6 +1049,10 @@ class NVPNMenu extends PanelMenu.Button{
         this._vpn_timeout= null;
       }
     }
+	
+    // var today = new Date();
+    // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    // log("[nvpn] date: "+time);
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
     this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
@@ -1068,6 +1076,11 @@ class NVPNMenu extends PanelMenu.Button{
         }
     };
 
+    
+    // var today = new Date();
+    // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    // log("[nvpn] curr status "+ this.currentStatus + " @ "+time);
+
     switch(this.currentStatus){
     /** when state is 'logged out', check for login state */
     case NVPNMenu.STATUS.LOGGED_OUT:
@@ -1087,7 +1100,7 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'in transition', checks if this is still the case */
     case NVPNMenu.STATUS.TRANSITION:
-      change= (!(this._is_in_transition()) && this._auto_connect_to.length===0);
+      change= (!(this._is_in_transition()) /*&& this._auto_connect_to.length===0*/);
 
       /** if, while in transition, a change is detected, and if the attribute
        *  _auto_connect_to is set, then it means that a reconnection to the
@@ -1131,10 +1144,11 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     }
+    // log("[nvpn] change? "+change);
 
     /** if a change has been detected, a ui update is needed */
     if (change){
-      log("[nvpn] Change detected from "+this.currentStatus.toString());
+      // log("[nvpn] Change detected from "+this.currentStatus.toString());
       this._update_status_and_ui();
     }
   }

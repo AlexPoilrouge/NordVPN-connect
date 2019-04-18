@@ -54,6 +54,8 @@
           <object class="GtkSpinButton" id="NVPN_Sett_Spin_Refresh">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="tooltip_text" translatable="yes">The delay betwing each refreshing of the extension's status monitoring.
+You can't try increasing it, for performance issue? But you probably shouldn't change this value, idk.</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="hexpand">False</property>
@@ -76,6 +78,8 @@
           <object class="GtkLabel" id="NVPN_Sett_Label_Refresh">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="tooltip_text" translatable="yes">The delay betwing each refreshing of the extension's status monitoring.
+You can't try increasing it, for performance issue? But you probably shouldn't change this value, idk.</property>
             <property name="label" translatable="yes">Refresh delay (sec) :</property>
             <property name="xalign">0.30000001192092896</property>
           </object>
@@ -620,10 +624,96 @@ Only modify if you have a good understanding of what you're doing…</property>
       </packing>
     </child>
     <child>
-      <placeholder/>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">20</property>
+            <property name="margin_bottom">20</property>
+            <property name="label" translatable="yes">NordVPN_Connect</property>
+            <attributes>
+              <attribute name="style" value="normal"/>
+              <attribute name="weight" value="bold"/>
+              <attribute name="scale" value="3"/>
+            </attributes>
+            <style>
+              <class name="testlol"/>
+            </style>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">10</property>
+            <property name="margin_bottom">10</property>
+            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool.
+
+This extension is availabe on (in order of 'freshness' of the update):
+- &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect"&gt;GitHub&lt;/a&gt;
+- The &lt;a href="https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/"&gt;AUR&lt;/a&gt; ( for Archlinux users )
+- The &lt;a href="https://extensions.gnome.org/extension/1595/nordvpn-connect/"&gt;GNOME Extensions&lt;/a&gt; website
+
+You can check the github repository README for &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect#help"&gt;help&lt;/a&gt;.
+However, this is a personal project. Therefore, no feedback is processed, nor any support is provided by the developer.
+Contributions are, of course, always welcomed.</property>
+            <property name="use_markup">True</property>
+            <property name="justify">center</property>
+            <property name="wrap">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="name">3</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_top">20</property>
+            <property name="margin_bottom">3</property>
+            <property name="label" translatable="yes">&lt;i&gt;Alex Poilrouge&lt;/i&gt;</property>
+            <property name="use_markup">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="position">2</property>
+      </packing>
     </child>
     <child type="tab">
-      <placeholder/>
+      <object class="GtkImage">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="icon_name">help-about</property>
+      </object>
+      <packing>
+        <property name="position">2</property>
+        <property name="tab_fill">False</property>
+      </packing>
     </child>
   </object>
 </interface>
