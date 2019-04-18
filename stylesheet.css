@@ -1,46 +1,56 @@
 
 .helloworld-label {
-    font-size: 36px;
+    font-size: 12px;
     font-weight: bold;
     color: #ffffff;
-    background-color: rgba(10,10,10,0.7);
+    background-color: rgba(10,10,10,0.4);
     border-radius: 5px;
     padding: .5em;
 }
 
 .panel-status-menu-hbox{
-  font-size: 18px;
+  font-size: 12px;
+  border-radius: 5px;
+  padding: 2px;
+  margin: 3px;
 }
 
 .panel-status-menu-hbox-connected{
-  background-color: rgba(10,130,10,0.7);
-  font-size: 18px;
+  background-color: rgba(10,130,10,0.4);
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 2px;
+  margin: 3px;
 }
 
 .panel-status-menu-hbox-problem{
-  background-color: rgba(200,150,30,0.7);
-  font-size: 18px;
+  background-color: rgba(200,150,30,0.4);
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 2px;
+  margin: 3px;
 }
 
 .countries_submenu_label_item_selected_icon {
-    icon-size: 15px;
+    icon-size: 12px;
 }
 
 .nvpn-action-button{
   color: rgba(255,255,255,1.0);
   font-weight: bold;
   padding: 5px;
-  background-color: rgba(10,130,10,0.7);
+  border-radius: 5px;
+  background-color: rgba(10,130,10,0.4);
 }
 
 .nvpn-action-button:hover{
-  background-color: rgba(10,255,10,0.7)
+  background-color: rgba(10,255,10,0.4)
 }
 
 .nvpn-action-button:active{
   color: rgba(255,255,255,0.6);
   font-weight: normal;
-  background-color: rgba(10,127,10,0.7);
+  background-color: rgba(10,127,10,0.4);
   padding: 2px;
   border: 3px;
   border-color: rgba(130,130,130,0.5);
@@ -49,18 +59,19 @@
 .nvpn-action-button-dq{
   color: rgba(255,255,255,1.0);
   font-weight: bold;
+  font-size: 12px;
   padding: 5px;
-  background-color: rgba(130,10,10,0.7);
+  background-color: rgba(130,10,10,0.4);
 }
 
 .nvpn-action-button-dq:hover{
-  background-color: rgba(255,10,10,0.7)
+  background-color: rgba(255,10,10,0.4)
 }
 
 .nvpn-action-button-dq:active{
   color: rgba(255,255,255,0.6);
   font-weight: normal;
-  background-color: rgba(127,10,10,0.7);
+  background-color: rgba(127,10,10,0.4);
   padding: 2px;
   border: 3px;
   border-color: rgba(130,130,130,0.5);
@@ -70,17 +81,17 @@
   color: rgba(255,255,255,1.0);
   font-weight: bold;
   padding: 5px;
-  background-color: rgba(200,150,30,0.7);
+  background-color: rgba(200,150,30,0.4);
 }
 
 .nvpn-action-button-help:hover{
-  background-color: rgba(255,200,60,0.7);
+  background-color: rgba(255,200,60,0.4);
 }
 
 .nvpn-action-button-help:active{
   color: rgba(255,255,255,0.6);
   font-weight: normal;
-  background-color: rgba(127,100,30,0.7);
+  background-color: rgba(127,100,30,0.4);
   padding: 2px;
   border: 3px;
   border-color: rgba(130,130,130,0.5);
