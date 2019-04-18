@@ -11,9 +11,18 @@ const Gettext = imports.gettext.domain('gnome-shell-extensions-nvpnconnect');
 const _ = Gettext.gettext;
 
 
+/** Iniating gSettings access */
 let SETTINGS= Convenience.getSettings();
 
+/** Class that encapsulates most of the 'NordVPN_Connect' extension's settings
+ *  page.
+ */
 class NVPN_Settings{
+    /**
+     * Constructor.
+     * 
+     * Doesn't do much. Prepares fields and variables.
+     */
     constructor() {
         this._objects= {
             NVPN_Sett_Tabs: null,
@@ -46,9 +55,15 @@ class NVPN_Settings{
 
         this._id_cmd_change_triggering= null;
 
+        /** Contained for signal connection IDs for later discard of the gSettings elements */
         this.SETT_SIGS=[];
     }
 
+    /**
+     * Destructor.
+     * 
+     * Discards connections.
+     */
     destroy(){
         if(this._id_compact_toggle){
             this._objects.NVPN_Sett_Toggle_Compact.disconnect(this._id_compact_toggle);
@@ -81,30 +96,53 @@ class NVPN_Settings{
         }
     }
 
+    /**
+     * Builds the UI
+     * 
+     * @returns the main GTX widget to display in extension's 'settings' window
+     */
     build(){
+        /** This pages uses an UI file ('prefs.ui') generated with 'Glade'
+         *  Here, we need an instance of the Gtk Builder that will load the file
+         *  and build the UI from there.
+         */
         this.builder= new Gtk.Builder();
         this.builder.add_from_file(
             Me.dir.get_child("prefs.ui").get_path()
         );
 
+        /** Care was taken so that all the elements in the '_objects' dictionary field, 
+         *  all have the same name has the relevant corresponding objects in the '.ui' file.
+         *  This loop uses this to ensure that the fields in '_objects' are refering to the
+         *  UI elements of correcponding names.
+        */
         for (let o in this._objects) {
             this._objects[o] = this.builder.get_object(o);
         }
 
+        /** Calibrating the UI according to current gSettings state */
         this._initFromSettings();
 
+        /** Connecting UI elements with appropriate callbacks */
         this._initConnections();
 
+        /** Fill the UI 'Text entries' according to current gSettings state */
         this._preapreUI();
 
         return this._objects.NVPN_Sett_Tabs;
     }
 
+    /**
+     * Method that calibrates UI elements according to current gSettings state
+     */
     _initFromSettings(){
         this._objects.NVPN_Sett_Toggle_Compact.set_state(SETTINGS.get_boolean('compact-icon'));
         this._objects.NVPN_Sett_Spin_Refresh.set_value(SETTINGS.get_int('refresh-delay'));
     }
 
+    /**
+     * Method that connects UI elements signals to appropriate callbacks
+     */
     _initConnections(){
         this._id_compact_toggle=
             this._objects.NVPN_Sett_Toggle_Compact.connect(
@@ -149,6 +187,9 @@ class NVPN_Settings{
             );
     }
 
+    /**
+     * Method that fills the 'Text Entries' elements according to current gSettings state'
+     */
     _preapreUI(){
         let fillEntries= (gEntry, gsKey) => {
             gEntry.set_text(
@@ -260,8 +301,4 @@ function init() {
 
 function buildPrefsWidget() {
     return ui.build();
-}
-
-function reset_settings(b) {
-    SETTINGS.reset('compact-icon');
 }

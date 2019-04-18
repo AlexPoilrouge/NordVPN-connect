@@ -58,7 +58,7 @@ const Country_Dict= {
   al: "Albania", de: "Germany", pl: "Poland",
   ar: "Argentina", gr: "Greece", pt: "Portugal",
   au: "Australia", hk: "Hong_Kong", ro: "Romania",
-  at: "Austria", hu: "Hungary", ru: "Russia",
+  at: "Austria", hu: "Hungary", //ru: "Russia", (russia no longer availabe due to governmental reasons)
   az: "Azerbaijan", is: "Iceland", rs: "Serbia",
   be: "Belgium", in: "India", sg: "Singapore",
   ba: "Bosnia_And_Herzegovina", id: "Indonesia", sk: "Slovakia",
@@ -96,7 +96,6 @@ class PlaceItem extends PopupMenu.PopupBaseMenuItem{
 
     let label_item= new St.Label({style_class: 'countries_submenu_label_item', text: this.placeName});
     this.actor.add(label_item);
-    // log('[nvpn] creating placeitem for ' + str_Place);
     this.checkIcon.hide();
   }
 
@@ -209,7 +208,6 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
    * @method
    */
   _item_select(item){
-    // log("[nvpn] item{pn="+item.PlaceName+"}.select("+(item==this.cur_selected).toString()+")");
     /** if there is an item currently selected (data), unselect it (ui) */
     if(this.cur_selected!=null){
       this.cur_selected.select(false);
@@ -290,16 +288,36 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
 };
 
 
+/** Object that will be the access holder to this extension's gSettings */
 var SETTINGS;
 
+/**
+ *  Class that loads the core commands of this extension that are stored in the gSettings
+ *  It connects signals to allow any exterior change on them to take effect.
+ **/
 class Core_CMDs{
+  /**
+   *
+   * @param {*} parent Parent is use to directly connect this class with the instance
+   *                     of NVPNMenu using this instance of Core_CMDs (direct callbacks)
+   */
   constructor(parent=null){
+    // Store the id of the signal connections for disarding
     this.SETT_SIGS= [];
     this._parent= parent;
   }
 
+  /**
+   * Initiate all the values from the gSettings, and connect signals
+   * 
+   * 'SETTINGS' variable must be correctly intiated
+   */
   init(){
     let txt= "";
+    /** Here the 'Unescape.convert()' method is used since, in string read from gSettings',
+     *  special characters don't seem to be interpreted. This helps sets things right (hopefully)
+     *  if need be.
+     */
     this.tool_available= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-available")))?
                           txt : "hash nordvpn";
     this.tool_connected_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-connected-check")))?
@@ -320,17 +338,6 @@ class Core_CMDs{
                           txt : "systemctl is-active nordvpnd | grep '\bactive'";
     this.vpn_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check")))?
                           txt : "ifconfig -a | grep tun0";
-
-    /*log("nvpn "+this.tool_available);
-    log("nvpn "+this.tool_connected_check);
-    log("nvpn "+this.tool_transition_check);
-    log("nvpn "+this.daemon_unreachable_check);
-    log("nvpn "+this.tool_logged_check);
-    log("nvpn "+this.current_server_get);
-    log("nvpn "+this.server_place_connect);
-    log("nvpn "+this.server_disconnect);
-    log("nvpn "+this.daemon_online_check);
-    log("nvpn "+this.vpn_online_check);*/
 
 
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-available', () => {
@@ -395,6 +402,9 @@ class Core_CMDs{
     }));
   }
 
+  /**
+   * Destructor; discard connected signals
+   */
   destroy(){
     for(var i= 0; i<this.SETT_SIGS.length; ++i){
       if(this.SETT_SIGS[i])
@@ -403,7 +413,10 @@ class Core_CMDs{
   }
 }
 
-
+/**
+ * Since gnome-shell 3.32, this is needed on class that extends certain UI objects,
+ * including PanelMenu.Button
+ */
 let NVPNMenu = GObject.registerClass(
 /** Class that implements the dedicated status area of the extension
  *  and contains its main menu
@@ -437,9 +450,11 @@ class NVPNMenu extends PanelMenu.Button{
   _init(){
     super._init(0.0, _("NordVPN"));
 
+    /** Create and init the gSettings's core commands manager*/
     this._cmd= new Core_CMDs(this);
     this._cmd.init();
 
+    /** storing signal connectio ids for later discards */
     this.SETT_SIGS= [];
 
     /** @member {boolean} nvpn_monitor
@@ -473,10 +488,8 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** saving this idea for later disconnection of the signal during object's destruction */
     this._id_c_click1= this.connect('button-press-event',
-    /** when the panel is clicked, the extension performs a refresh of the menu's ui */
       function(){
-        log("[nvpn] it works! * click! *");
-        if(!this.nvpn_monitor){
+        if((!this.nvpn_monitor) || this.currentStatus<STATUS.CONNECTED){
           this._update_status_and_ui();
         }
       }.bind(this)
@@ -497,10 +510,6 @@ class NVPNMenu extends PanelMenu.Button{
     let label1= new St.Label({style_class: 'label-nvpn-menu', text: _("NordVPN")});
 
     hbox2.add_child(label1);
-
-    // log('[nvpn] is nvpn found? '+ this._is_NVPN_found().toString());
-    // log('[nvpn] is nvpn connected? '+ this._is_NVPN_connected().toString());
-    // log('[nvpn] nvpn status? '+ this._get_current_status().toString());
 
     /** this private member is the part of the server info that is an adaptable
      * text according to status */
@@ -560,6 +569,10 @@ class NVPNMenu extends PanelMenu.Button{
      *  according to the current state provided of the 'nordvpn tool' */
     this._update_status_and_ui();
 
+    /**
+     * Access the 'refresh-delay' gSettings and connects any change to ensure it will take effect
+     * within this extension
+     */
     this._refresh_delay= SETTINGS.get_int('refresh-delay');
     this.SETT_SIGS[1]= SETTINGS.connect('changed::refresh-delay', () => {
       this._refresh_delay= SETTINGS.get_int('refresh-delay');
@@ -570,8 +583,6 @@ class NVPNMenu extends PanelMenu.Button{
     /** call to the private method '_vpn_survey()' to start "the monitoring loop "
      *  that update the ui in case of a 'norvdpn' tool state change */
     this._vpn_survey();
-
-    // log('[nvpn] nvpn server? '+ this. _get_server_text_info());
   }
 
   /**
@@ -689,7 +700,9 @@ class NVPNMenu extends PanelMenu.Button{
     this._vpn_lock= true;
     /** use the '_get_current_status()' private method to set the 'currentStatus' attribute
      *  according to the 'nordvpn' command line tool's current state */
+    let oldStatus= this.currentStatus;
     this.currentStatus= this._get_current_status();
+    if(oldStatus===this.currentStatus) return;
 
     /** allows the ui menu to be open on user click */
     this.setSensitive(true);
@@ -748,7 +761,6 @@ class NVPNMenu extends PanelMenu.Button{
             * the country name from the found country code */
           let country= Country_Dict[arr[1]];
           if (country!==undefined){
-            // log('[nvpn] finding '+country);
             /** we use the country menu object's method 'select_from_name' to update its ui
              *  so that the found country name is marked as selected */
             this._submenu.select_from_name(country);
@@ -919,7 +931,6 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _button_clicked(){
-    // log('[nvpn] button clicked?');
     /** the apearance and behavior of the button changes according to the current status */
     switch(this.currentStatus){
     /** these states are not supposed to display the button, so nothing is done */
@@ -942,14 +953,12 @@ class NVPNMenu extends PanelMenu.Button{
       let strPlace= this._submenu.LastSelectedPlaceName;
       if(strPlace.length===0){
         this. _nordvpn_quickconnect();
-        // log('[nvpn] -> sh -c \"nordvpn c\"?');
       }
 
       break;
     /** allows to disconnect when status is 'connected' */
     case NVPNMenu.STATUS.CONNECTED:
       this._nordvpn_disconnect();
-        // log('[nvpn] -> sh -c \"nordvpn d\"?');
 
 
       break;
@@ -1003,7 +1012,6 @@ class NVPNMenu extends PanelMenu.Button{
    *  @param {string} placeName - the callback is supposed to give the name of the selected place as argument
    */
   _place_menu_new_selection(placeName){
-    // log("[nvpn] Clicked on " + placeName + " s= "+this.currentStatus.toString());
     /** Connection to this placeName if the current status is 'Disconnected' */
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       this._nordvpn_quickconnect(placeName);
@@ -1049,10 +1057,6 @@ class NVPNMenu extends PanelMenu.Button{
         this._vpn_timeout= null;
       }
     }
-	
-    // var today = new Date();
-    // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    // log("[nvpn] date: "+time);
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
     this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
@@ -1075,11 +1079,6 @@ class NVPNMenu extends PanelMenu.Button{
           _this._nordvpn_quickconnect(_this._auto_connect_to);
         }
     };
-
-    
-    // var today = new Date();
-    // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    // log("[nvpn] curr status "+ this.currentStatus + " @ "+time);
 
     switch(this.currentStatus){
     /** when state is 'logged out', check for login state */
@@ -1144,11 +1143,9 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     }
-    // log("[nvpn] change? "+change);
 
     /** if a change has been detected, a ui update is needed */
     if (change){
-      // log("[nvpn] Change detected from "+this.currentStatus.toString());
       this._update_status_and_ui();
     }
   }
@@ -1188,11 +1185,12 @@ let _indicator;
  * @function
  */
 function enable() {
-    SETTINGS = Convenience.getSettings();
-    
-    /** creating main object and attaching it to the top pannel */
-    _indicator= new NVPNMenu;
-    Main.panel.addToStatusArea('nvpn-menu', _indicator);
+  /** Iniating the gSettings access */
+  SETTINGS = Convenience.getSettings();
+  
+  /** creating main object and attaching it to the top pannel */
+  _indicator= new NVPNMenu;
+  Main.panel.addToStatusArea('nvpn-menu', _indicator);
 }
 
 /**
@@ -1200,7 +1198,7 @@ function enable() {
  * @function
  */
 function disable() {
-    /** destruction of the main object */
-    _indicator.destroy();
+  /** destruction of the main object */
+  _indicator.destroy();
 }
 

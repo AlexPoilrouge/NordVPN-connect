@@ -16,6 +16,14 @@ const usualEscapeSequences = {
 const fromHex = (str) => String.fromCodePoint(parseInt(str, 16));
 const fromOct = (str) => String.fromCodePoint(parseInt(str, 8));
 
+/**
+ * In certain cases, special characted (e.g. '\n') are not interpreted
+ * but are provided in a string as they were 2 seperate characters (i.e. '\' and 'n').
+ * 
+ * This function helps to sets things right.
+ * 
+ * @param {String} str 
+ */
 function convert(str) {
     return str.replace(jsEscapeRegex, (_, __, varHex, longHex, shortHex, octal, specialCharacter, python) => {
         if (varHex !== undefined) {
