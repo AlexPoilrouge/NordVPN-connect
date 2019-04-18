@@ -48,6 +48,15 @@ Additionally, the responsibility of any undesired effect the execution of this
 code might have on any system lies solely in the hands of the user.
 
 
+###### Availability
+
+This extension is available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
+
+It is also available via the *“ GNOME Extension ”* website: https://extensions.gnome.org/extension/1595/nordvpn-connect/
+
+However, the most up-to-date version is only guaranteed here, on GitHub.
+
+
 ## Installation prerequisites
 
 Since this is only a GNOME-Shell GUI for the 'nordvpn' command line tool, said
@@ -58,8 +67,6 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
-
-This extension is also available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
 
 Once the 'nordvpn' CLI tool is installed, check the packaged daemon's status:
 
@@ -111,6 +118,10 @@ and enter your NordVPN logins.
 
 
 ***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
+
+***I have a custom intallation of 'nordvpn' CLI tool / I don't use 'systemd' / whatever … Am I doomed?***
+
+  Pretty much. Howerver, since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, a *“ Settings ”* page has been added to the extensions. I contains a tab that allows you to change the core shell commands that allows to monitor and connect with the *nordvpn* CLI tool. But you're on your own from there, sorry.
 
 
 ***
