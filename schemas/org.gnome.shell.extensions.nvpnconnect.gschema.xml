@@ -22,7 +22,7 @@
             <default>"nordvpn status | grep -Po '[cC]onnecting'"</default>
         </key>
         <key type="s" name="cmd-daemon-unreachable-check">
-            <default>"nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'"</default>
+            <default>"nordvpn status | grep -Po '[cC]annot.*[dD]aemon'"</default>
         </key>
         <key type="s" name="cmd-tool-logged-check">
             <default>"echo '' | nordvpn login | grep -Po 'already logged'"</default>
@@ -37,7 +37,7 @@
             <default>"nordvpn d"</default>
         </key>
         <key type="s" name="cmd-daemon-online-check">
-            <default>"systemctl is-active nordvpnd | grep -Po active"</default>
+            <default>"echo \";`systemctl --user is-active nordvpnud`;`systemctl is-active nordvpnsd`;systemctl is-active nordvpnd\" | grep -Po \"(^;active;active;)|(;inactive;active$)\""</default>
         </key>
         <key type="s" name="cmd-vpn-online-check">
             <default>"ifconfig -a | grep tun0"</default>

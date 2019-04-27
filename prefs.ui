@@ -660,7 +660,7 @@ Only modify if you have a good understanding of what you're doing…</property>
             <property name="margin_right">5</property>
             <property name="margin_top">10</property>
             <property name="margin_bottom">10</property>
-            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool.
+            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.0.0-4).
 
 This extension is availabe on (in order of 'freshness' of the update):
 - &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect"&gt;GitHub&lt;/a&gt;
@@ -669,7 +669,7 @@ This extension is availabe on (in order of 'freshness' of the update):
 
 You can check the github repository README for &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect#help"&gt;help&lt;/a&gt;.
 However, this is a personal project. Therefore, no feedback is processed, nor any support is provided by the developer.
-Contributions are, of course, always welcomed.</property>
+Contributions are, of course, always welcome.</property>
             <property name="use_markup">True</property>
             <property name="justify">center</property>
             <property name="wrap">True</property>

@@ -489,7 +489,7 @@ class NVPNMenu extends PanelMenu.Button{
     /** saving this idea for later disconnection of the signal during object's destruction */
     this._id_c_click1= this.connect('button-press-event',
       function(){
-        if((!this.nvpn_monitor) || this.currentStatus<STATUS.CONNECTED){
+        if((!this.nvpn_monitor) || this.currentStatus< NVPNMenu.STATUS.CONNECTED){
           this._update_status_and_ui();
         }
       }.bind(this)
@@ -702,7 +702,7 @@ class NVPNMenu extends PanelMenu.Button{
      *  according to the 'nordvpn' command line tool's current state */
     let oldStatus= this.currentStatus;
     this.currentStatus= this._get_current_status();
-    if(oldStatus===this.currentStatus) return;
+    if(oldStatus===this.currentStatus){ this._vpn_lock= false; return; }
 
     /** allows the ui menu to be open on user click */
     this.setSensitive(true);

@@ -69,14 +69,15 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
-Once the 'nordvpn' CLI tool is installed, check the packaged daemon's status:
+Once the 'nordvpn' CLI tool is installed (assuming here, version `3.0.0`), check the packaged daemon's status:
 
-	systemd status nordvpnd.service
+    systemctl status nordvpnsd.service
+    systemctl --user status nordvpnud.service
     
 If the daemon isn't up and running, fix that:
 
-    systemd enable nordvpnd.service
-    systemd start nordvpnd.service
+    systemctl enable --now nordvpnsd.service
+    systemctl --user enable --now nordvpnud.service
     
 Now, set up your logins to the NordVPN service:
 
@@ -89,7 +90,9 @@ Now you should be able to use this extension.
 
 This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*, for all commits before (and including) commit *a0c1b1034e0a8518796e5490a4a8746fa20da506* (revert to this commit if encountering compatibility issues).
 
-This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for later commits.
+This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for commits before (and including) commit *cf7538c5bfe7a09547c2d5e87bfd1952538a2581*.
+
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for later commits.
 
 
 ## Help
@@ -102,14 +105,14 @@ This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the 
 
   Installing the 'nordvpn' CLI tool isn't enough. The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
   
-	systemd enable nordvpnd.service
-	systemd start nordvpnd.service
+    systemd enable --now nordvpnsd.service
+    systemd --user enable --now nordvpnud.service
 
 ***The extension says « tool not logged in », what's up?***
 
   You probably haven't set up your logins to the 'nordvpn' CLI tool. Open a terminal and type:
   
-	nordvpn login
+    nordvpn login
     
 and enter your NordVPN logins.
 
