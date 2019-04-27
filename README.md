@@ -53,7 +53,7 @@ code might have on any system lies solely in the hands of the user.
 
 This extension is available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
 
-It is also available via the *“ GNOME Extension ”* website: https://extensions.gnome.org/extension/1595/nordvpn-connect/
+It is also available via the *“ GNOME Extensions ”* website: https://extensions.gnome.org/extension/1595/nordvpn-connect/
 
 However, the most up-to-date version is only guaranteed here, on GitHub.
 
@@ -88,11 +88,24 @@ Now you should be able to use this extension.
 
 ###### Test
 
-This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*, for all commits before (and including) commit *a0c1b1034e0a8518796e5490a4a8746fa20da506* (revert to this commit if encountering compatibility issues).
+This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*, for all commits before (and including) commit `a0c1b1034e0a8518796e5490a4a8746fa20da506` (revert to this commit if encountering compatibility issues).
 
 This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for commits before (and including) commit *cf7538c5bfe7a09547c2d5e87bfd1952538a2581*.
 
 This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for later commits.
+
+
+## Misc.
+
+###### Extension settings page
+
+Since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, an *“ Extension Settings ”* page has been added.
+
+Like all other Gnome-shell extension (that provides shuch 'settings' page), there are several ways of accessing it:
+1. Install and use the *“ gnome-tweaks ”* tool. Then go to the `Extensions` tab. From there you should be able to access to extensions settings page, if there are any provided with corresponding extension.
+2. Go to the *“ GNOME Extensions ”* website, and visit the [*“ Installed Extensions ”* section](https://extensions.gnome.org/local/). From there you should be able to manage your installed extensions, provided your web browser had the *“ GNOME Shell Integration ”* plugin installed and enabled.
+3. Your Gnome environment *might* have been provided with the `gnome-shell-extension-prefs` tool. Invoke it from a terminal to manage your extensions.
+
 
 
 ## Help
@@ -123,7 +136,7 @@ and enter your NordVPN logins.
 
 ***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
 
-***I have a custom intallation of 'nordvpn' CLI tool / I don't use 'systemd' / whatever … Am I doomed?***
+***I have a custom installation of 'nordvpn' CLI tool / I don't use 'systemd' / whatever … Am I doomed?***
 
   Pretty much. Howerver, since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, a *“ Settings ”* page has been added to the extensions. I contains a tab that allows you to change the core shell commands that allows to monitor and connect with the *nordvpn* CLI tool. But you're on your own from there, sorry.
 
