@@ -23,7 +23,9 @@ const GLib = imports.gi.GLib;
 const Gettext = imports.gettext.domain('gnome-shell-extensions-nvpnconnect');
 const _ = Gettext.gettext;
 
+const Server= Me.imports.server;
 
+const BoxPointer = imports.ui.boxpointer;
 
 
 const COMMAND_SHELL= "/usr/bin/bash";
@@ -78,6 +80,17 @@ const Country_Dict= {
 };
 
 
+
+class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
+  constructor(){
+    super("",false);
+    this.actor.remove_child(this.label);
+    this.actor.remove_child(this._triangleBin);
+    this.actor.height= 0;
+  }
+};
+
+
 /**
  * Class that implements an item to be inserted int the 'PlaceMenu' menu.
  */
@@ -127,13 +140,13 @@ class PlaceItem extends PopupMenu.PopupBaseMenuItem{
  * Class that implements the submenu use to pick a server by clicking
  * on a country name
  */
-class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
+class PlacesMenu extends HiddenSubMenuMenuItemBase{
   /**
    * Initiate the attributes needed to maintain this menu
    * @method
    */
   constructor(){
-    super(_("Select country"), true);
+    super();
 
     /** this attribute will be use to store the 'callback' function
      *  that will be called whenever an item (i.e. country) of this submenu
@@ -286,6 +299,100 @@ class PlacesMenu extends PopupMenu.PopupSubMenuMenuItem{
     }
   }
 };
+
+
+class ServerSubMenu extends HiddenSubMenuMenuItemBase{
+  constructor(){
+    super();
+
+    this._err=false;
+
+    let hbox= new St.BoxLayout();
+
+    this.servEntry = new St.Entry({
+      style_class: 'search-entry',
+      can_focus: true,
+      hint_text: _('Enter server name (e.g.: us285, fr42, etc.)'),
+      track_hover: true,}
+    );
+
+    this.servEntry.get_clutter_text().connect( 'activate',
+      this._newServerEntry.bind(this)
+    );
+
+    this.servEntry.get_clutter_text().connect( 'text-changed',
+      () => {
+        if(this._err){
+          this.servEntry.style_class='nvpn-serv-entry';
+          this._err= false;
+        }
+      }
+    );
+    this.menu.connect('open-state-changed',
+      () => {
+        if(this._err){
+          this.servEntry.style_class='nvpn-serv-entry';
+          this._err= false;
+        }
+      }
+    );
+
+    hbox.add_child(this.servEntry);
+
+    let item= new PopupMenu.PopupBaseMenuItem({
+      reactive: false
+    });
+
+    item.actor.add(hbox);
+    this.menu.addMenuItem(item);
+  }
+
+  setSeverEntryText(txt){
+    let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
+    let arr= rgx.exec(txt);
+    if((arr!==null) && (arr[1]!==undefined)){
+      this.servEntry.set_text(arr[1]);
+    }
+  }
+
+  newServerEntry_callback(func= null){
+    this.newServer_cb= func;
+  }
+
+  _newServerEntry(){
+    log("nordvpn new server entry: "+this.servEntry.text);
+    let serv= this._getServerFromText(this.servEntry.text);
+    if(serv){
+      if(this.newServer_cb){
+        this.newServer_cb(this.servEntry.text);
+      }
+
+      this.menu.close(true);
+    }
+    else if(this.isEntryEmpty()){
+      this.menu.close(true);
+    }
+    else{
+      this.servEntry.style_class='nvpn-serv-entry-error';
+      this._err= true;
+    }
+  }
+
+  _getServerFromText(txt){
+    let ltxt= txt.toLowerCase();
+
+    let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
+    let arr= rgx.exec(ltxt);
+    if((arr!==null) && (arr[1]!==undefined)){
+      return arr[1];
+    }
+    else return undefined;
+  }
+
+  isEntryEmpty(){
+    return this.servEntry.text.length===0;
+  }
+}
 
 
 /** Object that will be the access holder to this extension's gSettings */
@@ -454,6 +561,7 @@ class NVPNMenu extends PanelMenu.Button{
     this._cmd= new Core_CMDs(this);
     this._cmd.init();
 
+
     /** storing signal connectio ids for later discards */
     this.SETT_SIGS= [];
 
@@ -489,7 +597,8 @@ class NVPNMenu extends PanelMenu.Button{
     /** saving this idea for later disconnection of the signal during object's destruction */
     this._id_c_click1= this.connect('button-press-event',
       function(){
-        if((!this.nvpn_monitor) || this.currentStatus< NVPNMenu.STATUS.CONNECTED){
+        this._update_server_name();
+        if((!this.nvpn_monitor) || this.currentStatus<NVPNMenu.STATUS.CONNECTED){
           this._update_status_and_ui();
         }
       }.bind(this)
@@ -525,6 +634,54 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(this.label_connection);
 
     this._main_menu.actor.add(vbox, { expand: true });
+
+
+
+    let hbox3= new St.BoxLayout();
+
+    let ic0= new St.Icon({icon_name:'find-location-symbolic'});
+    this.v3_button0= new St.Button({
+			reactive: true,
+			can_focus: true,
+      track_hover: true,
+			style_class: 'system-menu-action test',
+      child:ic0});
+    hbox3.add_child(this.v3_button0);
+    
+    let ic1= new St.Icon({icon_name:'network-server-symbolic'});
+    this.v3_button1= new St.Button({
+			reactive: true,
+			can_focus: true,
+      track_hover: true,
+			style_class: 'system-menu-action test',
+      child:ic1});
+    hbox3.add_child(this.v3_button1);
+
+    let ic2= new St.Icon({icon_name:'view-more-symbolic'});
+    let v3_button2= new St.Button({
+			reactive: true,
+			can_focus: true,
+      track_hover: true,
+			style_class: 'system-menu-action test',
+      child:ic2});
+    hbox3.add_child(v3_button2);
+
+
+    let _itemCurrent3= new PopupMenu.PopupBaseMenuItem({
+      reactive: false
+    });
+    _itemCurrent3.actor.add(hbox3, { expand: true, x_fill: false});
+    this.menu.addMenuItem(_itemCurrent3);
+
+    this._id_c_btn2= this.v3_button1.connect('clicked', this.cb_serverManagement.bind(this));
+    this._id_c_btn3= this.v3_button0.connect('clicked', this.cb_locationPick.bind(this));
+
+    this.tmp= new ServerSubMenu();
+
+    this.tmp.newServerEntry_callback(this.server_entry.bind(this));
+
+    this.menu.addMenuItem(this.tmp);
+
 
 
     this.menu.addMenuItem(this._main_menu,0);
@@ -568,6 +725,7 @@ class NVPNMenu extends PanelMenu.Button{
     /** call to the private '_update_status_and_ui()' method that updates the ui and the currentStatus
      *  according to the current state provided of the 'nordvpn tool' */
     this._update_status_and_ui();
+    this._update_server_name();
 
     /**
      * Access the 'refresh-delay' gSettings and connects any change to ensure it will take effect
@@ -595,6 +753,12 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.action_button.disconnect(this._id_c_btn1);
     this._id_c_btn1= 0;
+
+    this.action_button.disconnect(this._id_c_btn2);
+    this._id_c_btn2= 0;
+
+    this.action_button.disconnect(this._id_c_btn3);
+    this._id_c_btn3= 0;
 
     for(var i= 0; i<this.SETT_SIGS.length; ++i){
       if(this.SETT_SIGS[i])
@@ -739,8 +903,8 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.CONNECTED:
       this._label_status.text= _(" connected to");
 
-      let server_txt= this._get_server_text_info();
-      this.label_connection.text= server_txt;
+      this._update_server_name();
+      this.label_connection.text= "- "+this.server_name+" -";
       this.action_button.style_class= 'nvpn-action-button-dq';
       this.label_action_btn.text= _("Disconnect");
 
@@ -754,8 +918,8 @@ class NVPNMenu extends PanelMenu.Button{
       if(this._submenu.LastSelectedPlaceName.length ===0){
         /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
          *  with a regex */
-        let rgx= /-([a-z]*)[0-9]*.*$/g;
-        let arr= rgx.exec(server_txt);
+        let rgx= /([a-z]*)[0-9]*.*$/g;
+        let arr= rgx.exec(this.server_name);
         if((arr!==null) && (arr[1]!==undefined)){
           /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
             * the country name from the found country code */
@@ -801,6 +965,15 @@ class NVPNMenu extends PanelMenu.Button{
     }
     else{
       return "--";
+    }
+  }
+
+  _update_server_name(){
+    if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
+      this.server_name= COMMAND_LINE_SYNC(this._cmd.current_server_get).replace(/(\r\n\t|\n|\r\t)/gm,"");
+    }
+    else{
+      this.server_name= "";
     }
   }
 
@@ -949,10 +1122,14 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** allows to connect when status is 'disconnected' */
     case NVPNMenu.STATUS.DISCONNECTED:
-
-      let strPlace= this._submenu.LastSelectedPlaceName;
-      if(strPlace.length===0){
-        this. _nordvpn_quickconnect();
+      if(!(this.tmp.menu.isOpen) || this.tmp.isEntryEmpty()){
+        let strPlace= this._submenu.LastSelectedPlaceName;
+        if(strPlace.length===0){
+          this. _nordvpn_quickconnect();
+        }
+      }
+      else{
+        this.tmp._newServerEntry();
       }
 
       break;
@@ -1164,6 +1341,22 @@ class NVPNMenu extends PanelMenu.Button{
         this._vpn_survey();
       }
     }
+  }
+
+  cb_serverManagement(){
+    this.tmp.setSeverEntryText(this.server_name);
+
+    this.tmp.menu.toggle();
+  }
+
+  server_entry(txt){
+    log("nordvpn should connect to "+txt);
+
+    this._nordvpn_ch_connect(txt);
+  }
+
+  cb_locationPick(){
+    this._submenu.menu.toggle();
   }
 
 

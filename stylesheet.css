@@ -1,4 +1,6 @@
-
+.test{margin-left:10px;margin-right: 10px; }
+.meh{background-color: rgb(255, 255, 0);}
+.whatever{background-color: rgba(255,0,0,1);}
 .panel-status-menu-hbox{
   font-size: 17px;
   border-radius: 5px;
@@ -91,7 +93,6 @@
   border-color: rgba(130,130,130,0.5);
 }
 
-.testlol{
-  font-size: 50px;
+.nvpn-serv-entry-error{
+  color: rgba(255, 0, 0, 1.0);
 }
-
