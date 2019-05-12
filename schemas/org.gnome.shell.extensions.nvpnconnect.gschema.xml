@@ -42,5 +42,11 @@
         <key type="s" name="cmd-vpn-online-check">
             <default>"ifconfig -a | grep tun0"</default>
         </key>
+        <key type="s" name="cmd-option-set">
+            <default>"nordvpn set _%option%_ _%value%_"</default>
+        </key>
+        <key type="s" name="cmd-get-options">
+            <default>"nordvpn settings | sed -e :a -e N -e '$!ba' -e 's/\\\\n/;/g' | sed -e 's/: /:/g' | sed -e 's/ //g' | sed -e 's/-//g' | tr '[:upper:]' '[:lower:]'"</default>
+        </key>
     </schema>
 </schemalist>

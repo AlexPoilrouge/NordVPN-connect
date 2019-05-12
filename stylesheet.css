@@ -28,6 +28,10 @@
     icon-size: 15px;
 }
 
+.groups-submenu-label-item{
+  font-style: italic;
+}
+
 .nvpn-action-button{
   color: rgba(255,255,255,1.0);
   font-weight: bold;
@@ -95,4 +99,21 @@
 
 .nvpn-serv-entry-error{
   color: rgba(255, 0, 0, 1.0);
+}
+
+
+.opt-switcher-btn{
+  font-size: 13px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.opt-switcher-btn:hover,
+.opt-switcher-btn:focus {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 12px;
+  padding-right: 12px;
 }

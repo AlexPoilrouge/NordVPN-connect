@@ -23,7 +23,7 @@ const GLib = imports.gi.GLib;
 const Gettext = imports.gettext.domain('gnome-shell-extensions-nvpnconnect');
 const _ = Gettext.gettext;
 
-const Server= Me.imports.server;
+const SubMenus= Me.imports.subMenus;
 
 const BoxPointer = imports.ui.boxpointer;
 
@@ -79,321 +79,15 @@ const Country_Dict= {
   ge: "Georgia", no: "Norway", vn: "Vietnam"
 };
 
-
-
-class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
-  constructor(){
-    super("",false);
-    this.actor.remove_child(this.label);
-    this.actor.remove_child(this._triangleBin);
-    this.actor.height= 0;
-  }
-};
-
-
-/**
- * Class that implements an item to be inserted int the 'PlaceMenu' menu.
- */
-class PlaceItem extends PopupMenu.PopupBaseMenuItem{
-  /**
-   * Constructor, also initializes the UI for the item
-   */
-  constructor(str_Place){
-    super ();
-
-    this.placeName= str_Place;
-
-    this.checkIcon = new St.Icon({  icon_name: 'network-vpn-symbolic',
-                                style_class: 'countries_submenu_label_item_selected_icon' });
-    this.actor.add(this.checkIcon);
-
-    let label_item= new St.Label({style_class: 'countries_submenu_label_item', text: this.placeName});
-    this.actor.add(label_item);
-    this.checkIcon.hide();
-  }
-
-  /**
-   * method that marks the item (ui) as (un)selected
-   * @method
-   * @param {boolean} b - select if ture, unselect otherwise
-   */
-  select(b=true){
-    if (b){
-      this.checkIcon.show();
-    }
-    else{
-      this.checkIcon.hide();
-    }
-  }
-
-  /**
-   * Getter for the (displayed) text of this item
-   * @method
-   * @returns {string} - the text displayed by this item, as a string
-   */
-  get PlaceName(){
-    return this.placeName;
-  }
-};
-
-/**
- * Class that implements the submenu use to pick a server by clicking
- * on a country name
- */
-class PlacesMenu extends HiddenSubMenuMenuItemBase{
-  /**
-   * Initiate the attributes needed to maintain this menu
-   * @method
-   */
-  constructor(){
-    super();
-
-    /** this attribute will be use to store the 'callback' function
-     *  that will be called whenever an item (i.e. country) of this submenu
-     *  is selected */
-    this.select_cb= null;
-    /** attribute used to point on the item that is currently 'selected' */
-    this.cur_selected=null;
-
-    /** this attribute is a list that will be used to store the 'ids' generated
-     *  when a signal connection is made with an item (in private method 'add_place()')
-     *  so that these ids may be reused later to handle all the signal disonnections for
-     *  all the items during this menu's destruction */
-    this._ids_c_items= [];
-  }
-
-  /**
-   * Destructor. Makes sure to disconnect all the signal connection made
-   * for all the added items
-   * @method
-   */
-  destroy(){
-    let children= this.menu._getMenuItems();
-    let diff= 0;
-    for(let i=0; i<this.menu.length; ++i){
-      let item= children[i];
-      if(item!==undefined){
-        item.disconnect(this._ids_c_items[i-diff]);
-      }
-      else{
-        ++diff;
-      }
-    }
-
-    super.destroy();
-  }
-
-  /**
-   * Method to add a new country as an item to this menu
-   * @method
-   * @param {string} str_Place - the displayed name of the item (i.e. the country's name)
-   */
-  add_place(str_Place){
-    /** creating the new item as an instance of 'PlaceItem' class */
-    let item= new PlaceItem(str_Place);
-    /** adding this item to the menu */
-    this.menu.addMenuItem(item);
-
-    /** setting the callback for when our item is click by the user, while not forgetting
-     *  to store the 'connect id' for a later disconnection before destruction */
-    let t= this;
-    this._ids_c_items.push(
-      item.connect('activate', this._item_select.bind(this,item))
-    );
-  }
-
-  /**
-   * Method to set the function that will be used as callback when an item is clicked.
-   * @param {function} func - a function respecting this signature: void func(string)
-   *   during the callbakc, the parameter passed to func will be the clicked item text
-   *   (i.e. country name) passed as a string
-   */
-  select_callback(func=null){
-    this.select_cb= func;
-  }
-
-  /**
-   * Private method that is called when an item is click.
-   * When the item is clicked, a callback to this method is made, with the said item
-   * passed as argument. The method makes the necessary ui update and the menu's data
-   * required adjustments, before calling the real callback function (pointed via the
-   * attribute 'select_cb').
-   * @method
-   */
-  _item_select(item){
-    /** if there is an item currently selected (data), unselect it (ui) */
-    if(this.cur_selected!=null){
-      this.cur_selected.select(false);
-    }
-
-    /** if the item clicked is the one currently selected (data), then it is deselected (ui & data) */
-    if(item==this.cur_selected){
-      this.cur_selected= null;
-      item.select(false);
-    }
-    /** otherwise, if the clicked is different from the one currently selected (data),
-     *  make it the currently selected item (data) and select it (ui) */
-    else{
-      this.cur_selected= item;
-      item.select();
-    }
-
-    /** make the requested call back (function pointed by attribute 'select_db'),
-     *  with the currently selected item as string argument (empty string if nothing
-     *  currently selected */
-    this.select_cb(this.LastSelectedPlaceName);
-  }
-
-  /**
-   * Getter to access the currently selected item in this country menu.
-   * @method
-   * @returns {string} coutnry name currently selected, empty string if nothing selected */
-  get LastSelectedPlaceName(){
-    if (this.cur_selected!=null){
-      return this.cur_selected.PlaceName;
-    }
-    else {
-      return "";
-    }
-  }
-
-  /**
-   * Method that unselects (ui and data) the currently selected country item
-   * (if there is one)
-   * @method
-   */
-  unselect_no_cb(){
-    if (this.cur_selected!=null){
-      this.cur_selected.select(false);
-      this.cur_selected= null;
-    }
-  }
-
-  /**
-   * Method that allows to select an item by passing its (diplayed) text/name as argument.
-   * @method
-   * @param {string} placeName - the text of the item to be selected (data & ui). Of course it must
-   *      be exactly matching, if no item with matching name in this menu, nothing will be selected.
-   */
-  select_from_name(placeName){
-    /** browse every item in the menu */
-    let children= this.menu._getMenuItems();
-    for(let i=0; i<this.menu.length; ++i){
-      let item= children[i];
-      /** if this item text matches the 'placeName' argument,
-       *  it is selected (ui & data) */
-      if((item!==undefined) && (item.PlaceName===placeName)){
-        /** if there already is a current selected item, firstly deselect it */
-        if(this.cur_select!=null){
-          this.cur_selected.select(false);
-        }
-        item.select();
-        this.cur_selected= item;
-
-        /** can't select multiple items, therefore once a match is met, ends the loop */
-        break;
-      }
-      else if (item===undefined) {
-        log("[nvpn] Error: got item (n=" + i.toString() + ") undefined looking for \"" + placeName + "\"...");
-      }
-    }
-  }
-};
-
-
-class ServerSubMenu extends HiddenSubMenuMenuItemBase{
-  constructor(){
-    super();
-
-    this._err=false;
-
-    let hbox= new St.BoxLayout();
-
-    this.servEntry = new St.Entry({
-      style_class: 'search-entry',
-      can_focus: true,
-      hint_text: _('Enter server name (e.g.: us285, fr42, etc.)'),
-      track_hover: true,}
-    );
-
-    this.servEntry.get_clutter_text().connect( 'activate',
-      this._newServerEntry.bind(this)
-    );
-
-    this.servEntry.get_clutter_text().connect( 'text-changed',
-      () => {
-        if(this._err){
-          this.servEntry.style_class='nvpn-serv-entry';
-          this._err= false;
-        }
-      }
-    );
-    this.menu.connect('open-state-changed',
-      () => {
-        if(this._err){
-          this.servEntry.style_class='nvpn-serv-entry';
-          this._err= false;
-        }
-      }
-    );
-
-    hbox.add_child(this.servEntry);
-
-    let item= new PopupMenu.PopupBaseMenuItem({
-      reactive: false
-    });
-
-    item.actor.add(hbox);
-    this.menu.addMenuItem(item);
-  }
-
-  setSeverEntryText(txt){
-    let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
-    let arr= rgx.exec(txt);
-    if((arr!==null) && (arr[1]!==undefined)){
-      this.servEntry.set_text(arr[1]);
-    }
-  }
-
-  newServerEntry_callback(func= null){
-    this.newServer_cb= func;
-  }
-
-  _newServerEntry(){
-    log("nordvpn new server entry: "+this.servEntry.text);
-    let serv= this._getServerFromText(this.servEntry.text);
-    if(serv){
-      if(this.newServer_cb){
-        this.newServer_cb(this.servEntry.text);
-      }
-
-      this.menu.close(true);
-    }
-    else if(this.isEntryEmpty()){
-      this.menu.close(true);
-    }
-    else{
-      this.servEntry.style_class='nvpn-serv-entry-error';
-      this._err= true;
-    }
-  }
-
-  _getServerFromText(txt){
-    let ltxt= txt.toLowerCase();
-
-    let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
-    let arr= rgx.exec(ltxt);
-    if((arr!==null) && (arr[1]!==undefined)){
-      return arr[1];
-    }
-    else return undefined;
-  }
-
-  isEntryEmpty(){
-    return this.servEntry.text.length===0;
-  }
-}
-
+const Group_List=[
+  "Africa,_The_Middle_East_And_India",
+  "Asia_Pacific",
+  "Europe",
+  "The_Americas",
+  "Dedicated_IP",
+  "P2P",
+  "Double_VPN",
+];
 
 /** Object that will be the access holder to this extension's gSettings */
 var SETTINGS;
@@ -445,6 +139,10 @@ class Core_CMDs{
                           txt : "systemctl is-active nordvpnd | grep '\bactive'";
     this.vpn_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check")))?
                           txt : "ifconfig -a | grep tun0";
+    this.option_set= (txt=Unescape.convert(SETTINGS.get_string("cmd-option-set")))?
+                          txt : "nordvpn set _%option%_ _%value%_";
+    this.get_options= (txt=Unescape.convert(SETTINGS.get_string("cmd-get-options")))?
+                          txt : "nordvpn settings | sed -e :a -e N -e '$!ba' -e 's/\\n/;/g' | sed -e 's/: /:/g' | sed -e 's/ //g' | sed -e 's/-//g' | tr '[:upper:]' '[:lower:]'";
 
 
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-available', () => {
@@ -503,6 +201,18 @@ class Core_CMDs{
     }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-vpn-online-check', () => {
       this.vpn_online_check= Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
+    }));
+    this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-option-set', () => {
+      this.option_set= Unescape.convert(SETTINGS.get_string("cmd-option-set"));
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
+    }));
+    this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-get-options', () => {
+      this.get_options= Unescape.convert(SETTINGS.get_string("cmd-get-options"));
       if(this._parent){
         this._parent._update_status_and_ui();
       }
@@ -633,7 +343,7 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(hbox2);
     vbox.add_child(this.label_connection);
 
-    this._main_menu.actor.add(vbox, { expand: true });
+    this._main_menu.actor.add(vbox, {expand: true, x_fill: false});
 
 
 
@@ -658,13 +368,13 @@ class NVPNMenu extends PanelMenu.Button{
     hbox3.add_child(this.v3_button1);
 
     let ic2= new St.Icon({icon_name:'view-more-symbolic'});
-    let v3_button2= new St.Button({
+    this.v3_button2= new St.Button({
 			reactive: true,
 			can_focus: true,
       track_hover: true,
 			style_class: 'system-menu-action test',
       child:ic2});
-    hbox3.add_child(v3_button2);
+    hbox3.add_child(this.v3_button2);
 
 
     let _itemCurrent3= new PopupMenu.PopupBaseMenuItem({
@@ -675,12 +385,21 @@ class NVPNMenu extends PanelMenu.Button{
 
     this._id_c_btn2= this.v3_button1.connect('clicked', this.cb_serverManagement.bind(this));
     this._id_c_btn3= this.v3_button0.connect('clicked', this.cb_locationPick.bind(this));
+    this._id_c_btn4= this.v3_button2.connect('clicked', this.cb_options.bind(this));;
 
-    this.tmp= new ServerSubMenu();
+    this.tmp= new SubMenus.ServerSubMenu();
 
     this.tmp.newServerEntry_callback(this.server_entry.bind(this));
 
     this.menu.addMenuItem(this.tmp);
+
+
+    this.optionsSM= new SubMenus.OptionsSubMenu();
+
+    this.optionsSM.set_optionChangeCallBack(this.option_changed.bind(this));
+
+    this.menu.addMenuItem(this.optionsSM);
+    
 
 
 
@@ -691,7 +410,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** this private member is the implementation of the submenu that allows to select
      *  a nordvpn server by clicking on the country */
-    this._submenu= new PlacesMenu();
+    this._submenu= new SubMenus.PlacesMenu();
     this.menu.addMenuItem(this._submenu);
 
     /** when an item of this submenu (i.e. a place name) is selected,
@@ -741,6 +460,10 @@ class NVPNMenu extends PanelMenu.Button{
     /** call to the private method '_vpn_survey()' to start "the monitoring loop "
      *  that update the ui in case of a 'norvdpn' tool state change */
     this._vpn_survey();
+
+    this.menu.actor.width= hbox3.get_preferred_width(-1)[1]+
+                            this.tmp.menu.actor.get_preferred_width(-1)[1];
+
   }
 
   /**
@@ -759,6 +482,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.action_button.disconnect(this._id_c_btn3);
     this._id_c_btn3= 0;
+
+    this.action_button.disconnect(this._id_c_btn4);
+    this._id_c_btn4= 0;
 
     for(var i= 0; i<this.SETT_SIGS.length; ++i){
       if(this.SETT_SIGS[i])
@@ -915,7 +641,7 @@ class NVPNMenu extends PanelMenu.Button{
        *  country corresponding to the current connected server as select */
       this._submenu.actor.show();
       /** e.g. if the country server connection menu has no country currently selected */
-      if(this._submenu.LastSelectedPlaceName.length ===0){
+      // if(this._submenu.LastSelectedPlaceName.length ===0){
         /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
          *  with a regex */
         let rgx= /([a-z]*)[0-9]*.*$/g;
@@ -930,7 +656,7 @@ class NVPNMenu extends PanelMenu.Button{
             this._submenu.select_from_name(country);
           }
         }
-      }
+      // }
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -1080,7 +806,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _nordvpn_ch_connect(placeName=""){
-    if(placeName.length!==0){
+    if(placeName){
       /** setting the private attribute '_auto_connect_to' to signify that a reconnection
        *  will have to be made, to that place, after the disconnection.
        *  In practice, the reconnection will be handled by the "live monitoring" ( '_vpn_check()'
@@ -1174,6 +900,10 @@ class NVPNMenu extends PanelMenu.Button{
     let country_list= this. _get_countries_list();
     let tsm= this._submenu;
 
+    Group_List.forEach(function(elmt){
+      tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
+    });
+
     /** foreach element in this list, it is added as an item to the submenu */
     country_list.forEach(function(elmt){
       /** using the 'PlacesMenu' object's method 'addPlace' to add this country name to
@@ -1189,6 +919,7 @@ class NVPNMenu extends PanelMenu.Button{
    *  @param {string} placeName - the callback is supposed to give the name of the selected place as argument
    */
   _place_menu_new_selection(placeName){
+    log("nordvpn place selection "+placeName);
     /** Connection to this placeName if the current status is 'Disconnected' */
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       this._nordvpn_quickconnect(placeName);
@@ -1350,13 +1081,59 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   server_entry(txt){
-    log("nordvpn should connect to "+txt);
+    let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
+    let arr= rgx.exec(this.server_name);
+    if((!arr) || (txt!==arr[1])){
+      this._nordvpn_ch_connect(txt);
+    }
+  }
 
-    this._nordvpn_ch_connect(txt);
+  option_changed(option, txt){
+    let cmd= this._cmd.option_set
+              .replace("_%option%_", option)
+              .replace("_%value%_", txt);
+
+    log("nordvpn changing option with > "+cmd);
+
+    COMMAND_LINE_SYNC( cmd );
+  }
+
+  updateOptionsMenu(){
+    let cmd= this._cmd.get_options;
+
+    log("nordvpn accessing option with > "+cmd);
+
+    let res= COMMAND_LINE_SYNC( cmd );
+
+    log("nordvpn … and returning: "+res);
+
+
+    let params= {};
+    let optionsTxt= res.split(';');
+    for(var i=0; i<optionsTxt.length; ++i){
+      let k_v= optionsTxt[i].split(':');
+
+      let k= k_v[0].replace(/[^0-9a-z]/gi, '');
+      let v= k_v[1];
+      v= (v==="enabled" || v==="true" || v==="1" || v==="on")? true
+          : (v==="disabled" || v==="false" || v==="0" || v==="off")? false
+            : v;
+
+      params[k]= v;
+      log("nordvpn params['"+k+']= '+v);
+    }
+
+    this.optionsSM.updateFromOpt(params);
   }
 
   cb_locationPick(){
     this._submenu.menu.toggle();
+  }
+
+  cb_options(){
+    this.updateOptionsMenu();
+
+    this.optionsSM.menu.toggle();
   }
 
 

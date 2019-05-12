@@ -45,6 +45,8 @@ class NVPN_Settings{
             NVPN_Sett_Entry_Disconnect: null,
             NVPN_Sett_Entry_Daemon_Online_Check: null,
             NVPN_Sett_Entry_VPN_Online: null,
+            NVPN_Sett_Entry_Option_Set: null,
+            NVPN_Sett_Entry_Get_Options: null,
             NVPN_Sett_Button_Default: null,
             NVPN_Sett_Button_Reset: null,
             NVPN_Sett_Button_Apply: null,
@@ -207,6 +209,8 @@ class NVPN_Settings{
         fillEntries(this._objects.NVPN_Sett_Entry_Disconnect, 'cmd-server-disconnect');
         fillEntries(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         fillEntries(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
+        fillEntries(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
+        fillEntries(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
 
         let s= this._objects.NVPN_Sett_Switch_Cmd_Change.get_state();
         this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(s);
@@ -247,6 +251,8 @@ class NVPN_Settings{
         chToDef(this._objects.NVPN_Sett_Entry_Disconnect, 'cmd-server-disconnect');
         chToDef(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         chToDef(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
+        chToDef(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
+        chToDef(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
@@ -268,6 +274,8 @@ class NVPN_Settings{
         chToRst(this._objects.NVPN_Sett_Entry_Disconnect, 'cmd-server-disconnect');
         chToRst(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         chToRst(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
+        chToRst(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
+        chToRst(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
     }
 
     _sig_Cmd_change_apply(){
@@ -285,6 +293,8 @@ class NVPN_Settings{
         applyCh(this._objects.NVPN_Sett_Entry_Disconnect, 'cmd-server-disconnect');
         applyCh(this._objects.NVPN_Sett_Entry_Daemon_Online_Check, 'cmd-daemon-online-check');
         applyCh(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
+        applyCh(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
+        applyCh(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
