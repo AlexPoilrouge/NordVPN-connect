@@ -30,6 +30,8 @@ const BoxPointer = imports.ui.boxpointer;
 
 const COMMAND_SHELL= "/usr/bin/bash";
 
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.0";
+
 /**
  * Calls for a given shell command in a synchronous way
  * @function
@@ -79,6 +81,9 @@ const Country_Dict= {
   ge: "Georgia", no: "Norway", vn: "Vietnam"
 };
 
+/**
+ * The list of all the 'groups' that the CLI tool can connect to
+ */
 const Group_List=[
   "Africa,_The_Middle_East_And_India",
   "Asia_Pacific",
@@ -136,13 +141,15 @@ class Core_CMDs{
     this.server_disconnect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-disconnect")))?
                           txt : "nordvpn d";
     this.daemon_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-daemon-online-check")))?
-                          txt : "systemctl is-active nordvpnd | grep '\bactive'";
+                          txt : "echo \";`systemctl --user is-active nordvpnud`;`systemctl is-active nordvpnsd`;systemctl is-active nordvpnd\" | grep -Po \"(^;active;active;)|(;inactive;active$)\"";
     this.vpn_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check")))?
                           txt : "ifconfig -a | grep tun0";
     this.option_set= (txt=Unescape.convert(SETTINGS.get_string("cmd-option-set")))?
                           txt : "nordvpn set _%option%_ _%value%_";
     this.get_options= (txt=Unescape.convert(SETTINGS.get_string("cmd-get-options")))?
                           txt : "nordvpn settings | sed -e :a -e N -e '$!ba' -e 's/\\n/;/g' | sed -e 's/: /:/g' | sed -e 's/ //g' | sed -e 's/-//g' | tr '[:upper:]' '[:lower:]'";
+    this.get_version= (txt=Unescape.convert(SETTINGS.get_string("cmd-get-version")))?
+                          txt : "nordvpn --version | grep -Po \"([0-9]\\.?)+[0-9]\"";
 
 
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-available', () => {
@@ -346,7 +353,10 @@ class NVPNMenu extends PanelMenu.Button{
     this._main_menu.actor.add(vbox, {expand: true, x_fill: false});
 
 
-
+    /** Adding the buttons that will respectively show/hide the submenus
+     *  corresponding to the 'Location/group connection picker', the 
+     *  'server specifier' and the 'option toggles'
+     */
     let hbox3= new St.BoxLayout();
 
     let ic0= new St.Icon({icon_name:'find-location-symbolic'});
@@ -377,28 +387,53 @@ class NVPNMenu extends PanelMenu.Button{
     hbox3.add_child(this.v3_button2);
 
 
-    let _itemCurrent3= new PopupMenu.PopupBaseMenuItem({
+    this._itemSubmenusButtons= new PopupMenu.PopupBaseMenuItem({
       reactive: false
     });
-    _itemCurrent3.actor.add(hbox3, { expand: true, x_fill: false});
-    this.menu.addMenuItem(_itemCurrent3);
+    this._itemSubmenusButtons.actor.add(hbox3, { expand: true, x_fill: false});
+    this.menu.addMenuItem(this._itemSubmenusButtons);
 
     this._id_c_btn2= this.v3_button1.connect('clicked', this.cb_serverManagement.bind(this));
     this._id_c_btn3= this.v3_button0.connect('clicked', this.cb_locationPick.bind(this));
     this._id_c_btn4= this.v3_button2.connect('clicked', this.cb_options.bind(this));;
 
-    this.tmp= new SubMenus.ServerSubMenu();
-
-    this.tmp.newServerEntry_callback(this.server_entry.bind(this));
-
-    this.menu.addMenuItem(this.tmp);
 
 
-    this.optionsSM= new SubMenus.OptionsSubMenu();
+    /** this private member is the implementation of the submenu that allows to select
+     *  a nordvpn server by clicking on the country */
+    this._submenuPlaces= new SubMenus.PlacesMenu();
+    
+    this.menu.addMenuItem(this._submenuPlaces);
 
-    this.optionsSM.set_optionChangeCallBack(this.option_changed.bind(this));
+    /** when an item of this submenu (i.e. a place name) is selected,
+     *  the '_place_menu_new_selection()' method will be called (no argument). */
+    this._submenuPlaces.select_callback(this._place_menu_new_selection.bind(this));
 
-    this.menu.addMenuItem(this.optionsSM);
+    /** call to private method that fill the 'country submenu' with all the required country name */
+    this._fill_country_submenu();
+
+
+    /** this private member is the implementation of the submenu that allows to select
+     *  to input a server name to connect to it */
+    this._submenuServer= new SubMenus.ServerSubMenu();
+    
+    /** when a server name is entered,
+     *  the 'server_entry()' method will be called (server name as argument). */
+    this._submenuServer.newServerEntry_callback(this.server_entry.bind(this));
+
+    this.menu.addMenuItem(this._submenuServer);
+
+
+    /** this private member is the implementation of the submenu that allows to select
+     *  to toggle different option of the nordvpn tool */
+    this._submenuOptions= new SubMenus.OptionsSubMenu();
+
+    /** when an option is toggled,
+     *  the 'option_changed()' method will be called
+     *  (the option name (string) and its new value (string) as arguments).*/
+    this._submenuOptions.set_optionChangeCallBack(this.option_changed.bind(this));
+
+    this.menu.addMenuItem(this._submenuOptions);
     
 
 
@@ -407,18 +442,6 @@ class NVPNMenu extends PanelMenu.Button{
     /** adding a sperator int his menu to separate the 'information display' part
      *  from the 'connection interface' part*/
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-    /** this private member is the implementation of the submenu that allows to select
-     *  a nordvpn server by clicking on the country */
-    this._submenu= new SubMenus.PlacesMenu();
-    this.menu.addMenuItem(this._submenu);
-
-    /** when an item of this submenu (i.e. a place name) is selected,
-     *  the '_place_menu_new_selection()' method will be called (no argument). */
-    this._submenu.select_callback(this._place_menu_new_selection.bind(this));
-
-    /** call to private method that fill the 'country submenu' with all the required country name */
-    this._fill_country_submenu();
 
     /** creating the menu item that contains the 'connection' menu button */
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
@@ -436,6 +459,32 @@ class NVPNMenu extends PanelMenu.Button{
 
     _itemCurrent2.actor.add(vbox2, { expand: true });
     this.menu.addMenuItem(_itemCurrent2);
+
+    /** Adding the menu item that displays a message when the CLI tool version
+     * doesn't match the expected version number */
+    let cur_ver= this._getCliToolCurrentVersion();
+    this._versionChecker= new SubMenus.VersionChecker(NORDVPN_TOOL_EXPECTED_VERSION, cur_ver);
+    
+    this.menu.addMenuItem(this._versionChecker);
+
+    /** Choosing to show the message or not according to the Gnome Settings
+     * current or changing state, and if the the nordvpn CLI tool is 
+     * effectively installed */
+    if(!SETTINGS.get_boolean('version-check') || !this._is_NVPN_found()){
+      this._versionChecker.actor.hide();
+    }
+    this.SETT_SIGS[2]= SETTINGS.connect('changed::version-check', () => {
+      if(SETTINGS.get_boolean('version-check')
+          && (this._versionChecker.compareResult()<0)
+          && (this._is_NVPN_found()))
+      {
+        this._versionChecker.actor.show();
+      }
+      else{
+        this._versionChecker.actor.hide();
+      }
+    });
+
 
     /** @member {enum} currentStatus
      *  member that stored the current status designating the current state of the interaction
@@ -462,7 +511,7 @@ class NVPNMenu extends PanelMenu.Button{
     this._vpn_survey();
 
     this.menu.actor.width= hbox3.get_preferred_width(-1)[1]+
-                            this.tmp.menu.actor.get_preferred_width(-1)[1];
+                            this._submenuServer.menu.actor.get_preferred_width(-1)[1];
 
   }
 
@@ -495,7 +544,42 @@ class NVPNMenu extends PanelMenu.Button{
       this._cmd.destroy();
     }
 
+    this._submenuPlaces.destroy();
+    this._submenuServer.destroy();
+    this._submenuOptions.destroy();
+
     super.destroy();
+  }
+
+  /** Private method that fetchs the current version of the NordVPN CLI tool
+   *  by invoking the appropriate command
+   *  @method
+   *  @returns {string} the string that matches the found version ("0.0" if not found)
+   */
+  _getCliToolCurrentVersion(){
+    let txt= (this._is_NVPN_found)? COMMAND_LINE_SYNC(this._cmd.get_version)
+              :"0.0";
+    return txt;
+  }
+
+  /** Private method used to hide or show the submenus and the associated buttons
+   *  when need be.
+   *  @method
+   *  @param {boolean} b - Whether to show or not the submenus
+   */
+  _submenusVisible(b){
+    if(b){
+      this._submenuPlaces.actor.show();
+      this._submenuServer.actor.show();
+      this._submenuOptions.actor.show();
+      this._itemSubmenusButtons.actor.show();
+    }
+    else{
+      this._submenuPlaces.actor.hide();
+      this._submenuServer.actor.hide();
+      this._submenuOptions.actor.hide();
+      this._itemSubmenusButtons.actor.hide();
+    }
   }
 
   /**
@@ -617,8 +701,8 @@ class NVPNMenu extends PanelMenu.Button{
       this._panel_hbox.style_class='panel-status-menu-hbox-problem';
       this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
-      /** country server connection menu disabled */
-      this._submenu.actor.hide();
+      /** submenus hidden */
+      this._submenusVisible(false);
 
       break;
     case NVPNMenu.STATUS.TRANSITION:
@@ -637,9 +721,8 @@ class NVPNMenu extends PanelMenu.Button{
       this._panel_hbox.style_class='panel-status-menu-hbox-connected';
       this._panel_icon.icon_name= 'network-vpn-symbolic';
 
-      /** enbales the country server connection menu and update the ui to shows the
-       *  country corresponding to the current connected server as select */
-      this._submenu.actor.show();
+      /** enbales the submenus to show*/
+      this._submenusVisible(true);
       /** e.g. if the country server connection menu has no country currently selected */
       // if(this._submenu.LastSelectedPlaceName.length ===0){
         /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
@@ -653,7 +736,7 @@ class NVPNMenu extends PanelMenu.Button{
           if (country!==undefined){
             /** we use the country menu object's method 'select_from_name' to update its ui
              *  so that the found country name is marked as selected */
-            this._submenu.select_from_name(country);
+            this._submenuPlaces.select_from_name(country);
           }
         }
       // }
@@ -671,10 +754,10 @@ class NVPNMenu extends PanelMenu.Button{
       this._panel_hbox.style_class='panel-status-menu-hbox';
       this._panel_icon.icon_name= 'action-unavailable-symbolic';
 
-      this._submenu.actor.show();
+      this._submenusVisible(true);
       /** call to the 'unselect_no_cb()' private method to clear the country server connection menu
        *  ui from any selected country */
-      this._submenu.unselect_no_cb();
+      this._submenuPlaces.unselect_no_cb();
 
       break;
     }
@@ -848,14 +931,14 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** allows to connect when status is 'disconnected' */
     case NVPNMenu.STATUS.DISCONNECTED:
-      if(!(this.tmp.menu.isOpen) || this.tmp.isEntryEmpty()){
-        let strPlace= this._submenu.LastSelectedPlaceName;
+      if(!(this._submenuServer.menu.isOpen) || this._submenuServer.isEntryEmpty()){
+        let strPlace= this._submenuPlaces.LastSelectedPlaceName;
         if(strPlace.length===0){
           this. _nordvpn_quickconnect();
         }
       }
       else{
-        this.tmp._newServerEntry();
+        this._submenuServer._newServerEntry();
       }
 
       break;
@@ -898,7 +981,7 @@ class NVPNMenu extends PanelMenu.Button{
   _fill_country_submenu(){
     /** get the country name list by calling the private method '_get_countries_list()' */
     let country_list= this. _get_countries_list();
-    let tsm= this._submenu;
+    let tsm= this._submenuPlaces;
 
     Group_List.forEach(function(elmt){
       tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
@@ -1038,7 +1121,7 @@ class NVPNMenu extends PanelMenu.Button{
        *  '_auto_connect_to' is a non empty string list) then lauchnes a connection to the target country server (designated
        *  by the value of '_auto_connect_to') */
       if(change){
-        this._submenu.unselect_no_cb();
+        this._submenuPlaces.unselect_no_cb();
 
         if(this._auto_connect_to.length!==0){
            _reconnection();
@@ -1060,6 +1143,7 @@ class NVPNMenu extends PanelMenu.Button{
 
   /**
    *  Method the enables/diables the 'live monitoring'
+   *  @method
    *  @param {boolean} b - should be enabled?
    */
   set_monitoring(b){
@@ -1074,12 +1158,22 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  /** Method that set the value of the server specifier entry according to the
+   *  current server the tool is connected to  
+   *  @method
+   */
   cb_serverManagement(){
-    this.tmp.setSeverEntryText(this.server_name);
+    this._submenuServer.setSeverEntryText(this.server_name);
 
-    this.tmp.menu.toggle();
+    this._submenuServer.menu.toggle();
   }
 
+  /** Method used as a callback when one the server entry enters a new server to connect to.
+   *  If server name valid, initiate connection to this server
+   *  @method
+   *  @param {string} txt - the string that represents the name of the server
+   *                      (string must be in correct format)
+   */
   server_entry(txt){
     let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
     let arr= rgx.exec(this.server_name);
@@ -1088,12 +1182,16 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  /** Method used as a callback the option submenus interaction is to induce
+   *  a change in siad options.
+   *  @method
+   *  @param {object} option - the option to modify
+   *  @param {object} txt - string representing the new value of this option
+  */
   option_changed(option, txt){
     let cmd= this._cmd.option_set
               .replace("_%option%_", option)
               .replace("_%value%_", txt);
-
-    log("nordvpn changing option with > "+cmd);
 
     COMMAND_LINE_SYNC( cmd );
   }
@@ -1123,17 +1221,17 @@ class NVPNMenu extends PanelMenu.Button{
       log("nordvpn params['"+k+']= '+v);
     }
 
-    this.optionsSM.updateFromOpt(params);
+    this._submenuOptions.updateFromOpt(params);
   }
 
   cb_locationPick(){
-    this._submenu.menu.toggle();
+    this._submenuPlaces.menu.toggle();
   }
 
   cb_options(){
     this.updateOptionsMenu();
 
-    this.optionsSM.menu.toggle();
+    this._submenuOptions.menu.toggle();
   }
 
 

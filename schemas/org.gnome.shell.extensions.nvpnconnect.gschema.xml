@@ -48,5 +48,13 @@
         <key type="s" name="cmd-get-options">
             <default>"nordvpn settings | sed -e :a -e N -e '$!ba' -e 's/\\\\n/;/g' | sed -e 's/: /:/g' | sed -e 's/ //g' | sed -e 's/-//g' | tr '[:upper:]' '[:lower:]'"</default>
         </key>
+        <key type="s" name="cmd-get-version">
+            <default>"nordvpn --version | grep -Eo '([0-9]\\.?)+[0-9]'"</default>
+        </key>
+        <key type="b" name="version-check">
+            <default>true</default>
+            <summary>If true check installed Nordvpn CLI tools version against expect version</summary>
+            <description>Should the 'nordvpn' command version be checked?</description>
+        </key>
     </schema>
 </schemalist>

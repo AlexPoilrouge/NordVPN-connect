@@ -117,3 +117,19 @@
   padding-left: 12px;
   padding-right: 12px;
 }
+
+.nordvpn-version-warn{
+  color: white;
+  font-size: 11px;
+  background-color: rgba(200, 100, 10,1.0);
+  padding: 5px;
+  border-radius: 5px;
+
+  border: 1px;
+  border-style: dashed;
+  border-color: white;
+}
+
+.nordvpn-version-warn:hover{
+  background-color: rgba(133, 66, 8, 0.7);
+}

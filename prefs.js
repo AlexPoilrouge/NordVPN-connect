@@ -31,6 +31,7 @@ class NVPN_Settings{
             NVPN_Sett_Label_Compact: null,
             NVPN_Sett_Spin_Refresh: null,
             NVPN_Sett_Label_Refresh: null,
+            NVPN_Sett_Toggle_Version: null,
 
             NVPN_Sett_Switch_Cmd_Change: null,
             NVPN_Sett_Grid2: null,
@@ -47,6 +48,7 @@ class NVPN_Settings{
             NVPN_Sett_Entry_VPN_Online: null,
             NVPN_Sett_Entry_Option_Set: null,
             NVPN_Sett_Entry_Get_Options: null,
+            NVPN_Sett_Entry_Get_Version: null,
             NVPN_Sett_Button_Default: null,
             NVPN_Sett_Button_Reset: null,
             NVPN_Sett_Button_Apply: null,
@@ -54,6 +56,7 @@ class NVPN_Settings{
 
         this._id_compact_toggle= null;
         this._id_delay_change= null;
+        this._id_version_check_toggle= null;
 
         this._id_cmd_change_triggering= null;
 
@@ -74,6 +77,10 @@ class NVPN_Settings{
         if(this._id_delay_change){
             this._objects.NVPN_Sett_Spin_Refresh.disconnect(this._id_delay_change);
             this._id_delay_change= null;
+        }
+        if(this._id_version_check_toggle){
+            this._objects.NVPN_Sett_Toggle_Version.disconnect(this._id_version_check_toggle);
+            this._id_version_check_toggle= null;
         }
         if(_id_cmd_change_triggering){
             this._objects.NVPN_Sett_Switch_Cmd_Change.disconnect(this._id_cmd_change_triggering);
@@ -140,6 +147,7 @@ class NVPN_Settings{
     _initFromSettings(){
         this._objects.NVPN_Sett_Toggle_Compact.set_state(SETTINGS.get_boolean('compact-icon'));
         this._objects.NVPN_Sett_Spin_Refresh.set_value(SETTINGS.get_int('refresh-delay'));
+        this._objects.NVPN_Sett_Toggle_Version.set_state(SETTINGS.get_boolean('version-check'));
     }
 
     /**
@@ -162,6 +170,15 @@ class NVPN_Settings{
             );
         this.SETT_SIGS[1]= SETTINGS.connect('changed::refresh-delay', () =>{
             this._objects.NVPN_Sett_Spin_Refresh.set_value(SETTINGS.get_int('refresh-delay'));
+        });
+
+        this._id_version_check_toggle=
+            this._objects.NVPN_Sett_Toggle_Version.connect(
+                "state-set",
+                Lang.bind(this, this._sig_Version_check_set)
+            );
+        this.SETT_SIGS[2]= SETTINGS.connect('changed::version-check', ()=>{
+            this._objects.NVPN_Sett_Toggle_Version.set_state(SETTINGS.get_boolean('version-check'));
         });
 
         this._id_cmd_change_triggering=
@@ -211,6 +228,7 @@ class NVPN_Settings{
         fillEntries(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
         fillEntries(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         fillEntries(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
+        fillEntries(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
 
         let s= this._objects.NVPN_Sett_Switch_Cmd_Change.get_state();
         this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(s);
@@ -220,6 +238,10 @@ class NVPN_Settings{
 
     _sig_Compact_state_set(item, state, user_data){
         SETTINGS.set_boolean('compact-icon', state);
+    }
+
+    _sig_Version_check_set(item, state, user_data){
+        SETTINGS.set_boolean('version-check', state);
     }
     
     _sig_Referesh_value_changed(item, user_data){
@@ -253,6 +275,7 @@ class NVPN_Settings{
         chToDef(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
         chToDef(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         chToDef(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
+        chToDef(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
@@ -276,6 +299,7 @@ class NVPN_Settings{
         chToRst(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
         chToRst(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         chToRst(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
+        chToRst(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
     }
 
     _sig_Cmd_change_apply(){
@@ -295,6 +319,7 @@ class NVPN_Settings{
         applyCh(this._objects.NVPN_Sett_Entry_VPN_Online, 'cmd-vpn-online-check');
         applyCh(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         applyCh(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
+        applyCh(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
