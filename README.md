@@ -20,11 +20,12 @@ Ultimately, this extension should be replaced by any GUI app, NordVPN might offi
 ###### ToDo?
 
 On the off change, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
-- [ ] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
+- [x] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
 - [x] Add a 'settings' page for this extension.
-- [ ] Add the possibility to type in the name of the server (e.g.: de145, uk123, fr067) the user wants to connect to.
+- [x] Add the possibility to type in the name of the server (e.g.: de145, uk123, fr067) the user wants to connect to.
 - [ ] Add the possibility to pick server by choosing a city (instead of country).
-
+- [ ] Add the remaining *set custom DNS* feature to the extension.
+- [ ] Add the possibility to 'fav' a server
 
 ## Disclaimer
 
@@ -58,7 +59,9 @@ It is also available via the *“ GNOME Extensions ”* website: https://exten
 However, the most up-to-date version is only guaranteed here, on GitHub.
 
 
-## Installation prerequisites
+## Installation
+
+###### Prerequisites
 
 Since this is only a GNOME-Shell GUI for the 'nordvpn' command line tool, said
 tool must be installed before anything else. This extension is destined for
@@ -93,6 +96,26 @@ This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the 
 This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for commits before (and including) commit *cf7538c5bfe7a09547c2d5e87bfd1952538a2581*.
 
 This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for later commits.
+
+
+###### Install
+
+If you've cloned or downloaded this extension from github, copy the content of its root directory to a new directory: `~/.local/share/gnome-shell/extensions/NordVPN_Connect@poilrouge.fr`.
+
+Then, activate the extension (if needed).
+
+
+From the start, a command line install should look like this:
+
+`git clone https://github.com/AlexPoilrouge/NordVPN-connect.git`
+
+`mkdir ~/.local/share/gnome-shell/extensions/NordVPN_Connect@poilrouge.fr`
+
+`cp NordVPN-connect/* ~/.local/share/gnome-shell/extensions/NordVPN_Connect@poilrouge.fr/`
+
+( May not be necessary ):
+
+`gnome-shell-extension-tool -e NordVPN_Connect@poilrouge.fr`
 
 
 ## Misc.
