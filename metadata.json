@@ -1,7 +1,7 @@
 {
 	"gettext-domain": "gnome-shell-extensions-nvpnconnect",
 	"name": "NordVPN Connect",
-	"description": "Unofficial Gnome-Shell Extension to provide an GUI for the official NordVPN CLI Tool.",
+	"description": "Unofficial Gnome-Shell Extension to provide a GUI for the official NordVPN CLI Tool.",
 	"url": "https://github.com/AlexPoilrouge/NordVPN-connect",
 	"uuid": "NordVPN_Connect@poilrouge.fr",
 	"settings-schema": "org.gnome.shell.extensions.nvpnconnect",
