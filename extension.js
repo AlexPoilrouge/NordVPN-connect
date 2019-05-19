@@ -1002,7 +1002,6 @@ class NVPNMenu extends PanelMenu.Button{
    *  @param {string} placeName - the callback is supposed to give the name of the selected place as argument
    */
   _place_menu_new_selection(placeName){
-    log("nordvpn place selection "+placeName);
     /** Connection to this placeName if the current status is 'Disconnected' */
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
       this._nordvpn_quickconnect(placeName);
@@ -1199,11 +1198,7 @@ class NVPNMenu extends PanelMenu.Button{
   updateOptionsMenu(){
     let cmd= this._cmd.get_options;
 
-    log("nordvpn accessing option with > "+cmd);
-
     let res= COMMAND_LINE_SYNC( cmd );
-
-    log("nordvpn … and returning: "+res);
 
 
     let params= {};
@@ -1218,7 +1213,6 @@ class NVPNMenu extends PanelMenu.Button{
             : v;
 
       params[k]= v;
-      log("nordvpn params['"+k+']= '+v);
     }
 
     this._submenuOptions.updateFromOpt(params);

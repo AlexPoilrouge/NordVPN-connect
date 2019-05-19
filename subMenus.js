@@ -141,7 +141,7 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
       let diff= 0;
       for(let i=0; i<this.menu.length; ++i){
         let item= children[i];
-        if(item!==undefined){
+        if( (item instanceof PlaceItem) && (item!==undefined) ){
           item.disconnect(this._ids_c_items[i-diff]);
         }
         else{
