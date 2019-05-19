@@ -30,7 +30,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 const COMMAND_SHELL= "/usr/bin/bash";
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.0";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
 
 /**
  * Calls for a given shell command in a synchronous way
@@ -92,6 +92,7 @@ const Group_List=[
   "Dedicated_IP",
   "P2P",
   "Double_VPN",
+  "Onion_Over_VPN",
 ];
 
 /** Object that will be the access holder to this extension's gSettings */
