@@ -312,22 +312,25 @@ class NVPNMenu extends PanelMenu.Button{
     this._panel_hbox.add_child(this.label_nvpn);
     this.actor.add_child(this._panel_hbox);
 
-    /** saving this idea for later disconnection of the signal during object's destruction */
-    this._id_c_click1= this.connect('button-press-event',
-      function(){
-        this._update_server_name();
-        if((!this.nvpn_monitor) || this.currentStatus<NVPNMenu.STATUS.CONNECTED){
-          this._update_status_and_ui();
-        }
-      }.bind(this)
-    );
-
     /** this private member implements the menu that appears when user clicks on the top
      * panel's indicator */
     this._main_menu = new PopupMenu.PopupBaseMenuItem({
             /** elements will not be interacive by default */
             reactive: false
         });
+
+    /** saving this idea for later disconnection of the signal during object's destruction */
+    this._id_c_click1= this.connect('button-press-event',
+      function(){
+        /** only usefull if menu is opening */
+        if(this.menu.isOpen){
+          this._update_server_name();
+          if((!this.nvpn_monitor) || this.currentStatus<NVPNMenu.STATUS.CONNECTED){
+            this._update_status_and_ui();
+          }
+        }
+      }.bind(this)
+    );
 
     /** vertical box layout, the first item of our menu, that will contain all
      * server information ui elements */
@@ -1196,12 +1199,14 @@ class NVPNMenu extends PanelMenu.Button{
     COMMAND_LINE_SYNC( cmd );
   }
 
+  /** Method that updates the 'options' submenus */
   updateOptionsMenu(){
     let cmd= this._cmd.get_options;
 
     let res= COMMAND_LINE_SYNC( cmd );
 
-
+    /** Generating the anonymous object as a dictionnary
+     *  of all option names assiociated to their value*/
     let params= {};
     let optionsTxt= res.split(';');
     for(var i=0; i<optionsTxt.length; ++i){
@@ -1216,15 +1221,24 @@ class NVPNMenu extends PanelMenu.Button{
       params[k]= v;
     }
 
+    /** updating the options submenu given the configuration that
+     *  has just been generated
+     */
     this._submenuOptions.updateFromOpt(params);
   }
 
+  /** Callback method, toggles 'location pick' submenu */
   cb_locationPick(){
     this._submenuPlaces.menu.toggle();
   }
 
+  /** Callback method, update and toggles 'options' submenu */
   cb_options(){
-    this.updateOptionsMenu();
+    /** no need to update the 'options' submenu,
+     *  if said submenu is closing*/
+    if(!this._submenuOptions.menu.isOpen){
+      this.updateOptionsMenu();
+    }
 
     this._submenuOptions.menu.toggle();
   }

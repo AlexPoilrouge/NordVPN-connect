@@ -133,3 +133,15 @@
 .nordvpn-version-warn:hover{
   background-color: rgba(133, 66, 8, 0.7);
 }
+
+.dns-entry-error{
+  color: rgb(255, 128, 0);
+}
+
+.dns-entry-validated{
+  color: rgb(128, 255, 0);
+}
+
+.dns-cybersec-warning{
+  font-size: 11px;
+}

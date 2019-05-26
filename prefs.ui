@@ -794,7 +794,7 @@ X.X.X…</property>
             <property name="margin_right">5</property>
             <property name="margin_top">10</property>
             <property name="margin_bottom">10</property>
-            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.0.0-4).
+            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.0.1-1).
 
 This extension is availabe on (in order of 'freshness' of the update):
 - &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect"&gt;GitHub&lt;/a&gt;

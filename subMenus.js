@@ -3,6 +3,10 @@ const Atk= imports.gi.Atk;
 const St = imports.gi.St;
 
 const PopupMenu = imports.ui.popupMenu;
+const Pango = imports.gi.Pango;
+
+const Gtk = imports.gi.Gtk;
+const GObject = imports.gi.GObject;
 
 
 
@@ -456,6 +460,8 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
    */
     destroy(){
         this._switch.actor.disconnect(this._c_id);
+
+        super.destroy();
     }
 
     /** Method that that 'toggles' or 'switch' the current state of the item
@@ -628,6 +634,355 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     }
 }
 
+
+/** Class that implements a DNS text entry line as a submenu item */
+class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
+  /** Constructor
+   *  @method
+   *  @param {string} text - the displayed name of the item
+   */
+  constructor(text){
+    super();
+
+    this.actor.reactive= false;
+
+    this.label = new St.Label({ text: text, });
+    this.actor.label_actor= this.label;
+    this.actor.add_child(this.label);
+
+    /** this attribute allows to save the previous entered text,
+     *  so that, if the user types something indalid, the text can
+     *  immediately be reverted. This allows to mainain a constant
+     *  valid entry */
+    this._oldText="..."
+    this._validated= false;
+    this._auto= false;
+
+    this.entry= new St.Entry({
+      can_focus: true,
+      text: this._oldText,
+      track_hover: true,
+    });
+    this._statusBin = new St.Bin({x_fill: true, x_align: St.Align.END });
+    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    this._statusBin.child= this.entry;
+
+    /** When ever the user enter's new text… */
+    this._idc1= this.entry.get_clutter_text().connect('text-changed', (txt) =>
+      {
+        /** the current text is processed and enforce valid format */
+        let r= this._processText(txt.text);
+
+        /** if it's valid, this new text is the new displayed entry*/
+        if(r){
+          this.entry.set_text(r);
+          this._oldText= r;
+        }
+        /** if invalid, the entry text reverts to previous state */
+        else{
+          this.entry.set_text(this._oldText);
+        }
+        
+        /** if the 'new text change', was done by human intervention,
+         *  then if text doesn't matche an entire DNS adress,
+         *  make necessar display adjustments*/
+        if(!this._auto){
+          this.entry.style_class= (this.DNSTextCheck(this.entry.get_text()))?
+                                    ''
+                                  : 'dns-entry-error';
+        }
+        this._auto= false;
+
+        /** newly entered text means no validation has been made on it */
+        this._validated= false;
+      }
+    );
+
+    /** When enter is pressed withing the entry line input… */
+    this._idc2= this.entry.get_clutter_text().connect('activate', () =>
+      {
+        /** the current entry text is checked */
+        let txt= this.entry.get_text();
+        let check= this.DNSTextCheck(txt);
+
+        /** if the text matchtes an entire valid dns adress format,
+         *  visual adjustments are made */
+        this.entry.style_class= (check)? 'dns-entry-validated' : 'dns-entry-error';
+
+        /** and if so, approriate signal is emitted, and
+         *  entry is marked as validated */
+        this._validated= check;
+        if(check){
+          this.emit('validated-dns-text', txt)
+        }
+        /** otherwise, the entry is cleared of any inputed text*/
+        else{
+          this._clearText();
+        }
+      }
+    );
+
+    /** When text is deleted… */
+    this._idc3= this.entry.get_clutter_text().connect('delete-text', () => 
+      {
+        /** if this text has previously been validated,
+         *  the entry inputed text is cleared*/
+        if(this._validated){
+          this._clearText();
+        }
+      }
+    );
+  }
+
+  /** Destructor
+   *  @method
+   */
+  destroy(){
+    if(this._idc1)
+      this.entry.get_clutter_text().disconnect(this._idc1);
+    if(this._idc2)
+      this.entry.get_clutter_text().disconnect(this._idc2);
+    if(this._idc3)
+      this.entry.get_clutter_text().disconnect(this._idc3);
+
+    super.destroy();
+  }
+
+  /** Method that determines if given text match DNS adress format
+   *  @method
+   * 
+   *  DNS adress format:
+   *    'N1.N2.N3.N4'
+   *  where Nk is an interger within the [0,255] range
+   * 
+   *  @param {string} txt - the text to match
+   *  @return {boolean} wheter or not the text matches DNS adress format
+   */
+  DNSTextCheck(txt){
+    return (
+      ((/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)
+        .exec(this.entry.get_text())
+      ) !== null
+    );
+  }
+
+  /** Private method process a given partial DNS address to enforce formating
+   *  @method
+   *  @param {string} newText - the text to process
+   *  @return {string} - the reformated (if needed) text if given text was valid,
+   *                    an empty string if invalid (not matching parial DNS address format)
+   */
+  _processText(newText){
+    if(newText===this._oldText) return newText;
+
+    let r= (/^([0-9]{1,3})?\.([0-9]{1,3})?\.([0-9]{1,3})?\.([0-9]{1,3})?/g)
+              .exec(newText);
+    
+
+    /** if not match or not all field were either matched correctly or 
+     *  empty, returns the old state*/
+    if(r===null || r.length<5) return this._oldText;
+
+    /** reformat text by ensuring all numbers are within
+     *  the [0,255] range
+     */
+    let txt= "";
+    for(var i= 1; i<5; ++i){
+      if(r[i]){
+        let t= parseInt(r[i]);
+        txt+= (t<0)? "0" : (t>255)? "255" : t.toString();
+      }
+
+      if(i<4) txt+= '.';
+    }
+
+    return txt;
+  }
+
+  /** Private method that clears all the inputed text within the entry.
+   *  @method
+   * 
+   *  emits the 'dns-text-cleared' signal
+   */
+  _clearText(){
+    /** default text is '...', _oldText is also reset*/
+    this._oldText= "...";
+    this.entry.set_text("...");
+
+    /** mark as unvalidated with  no decoration */
+    this._validated= false;
+    this.entry.style_class= '';
+
+
+    this.emit('dns-text-cleared');
+  }
+
+  /** Method to programatically change the content of the dns entry
+   *  text.
+   *  @method
+   *  @param {string} txt - the new text to put into the entry
+   */
+  setTxt(txt){
+    /** mark has not entered manually */
+    this._auto= true;
+    if(txt){
+      this.entry.set_text(txt);
+      /** a valid entered text via this method is marked as validated */
+      this._validated= true;
+    }
+    else{
+      this.entry.set_text('...');
+    }
+  }
+};
+
+/** Regisering this item as a GObjetect in order
+ *  to use signals via the 'emit' method
+ */
+let OptionsSubDNSItemContainer = GObject.registerClass(
+{
+  Signals: {
+    'new-DNS-config': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
+/** Class that implements the container of the several (3) DNS entires needed */
+class OptionsSubDNSItemContainer extends GObject.Object{
+  /** Constructor
+   *  @method
+   *  @param {string} name - the genric name of the items
+   *  @param {object} optionSubMenu - the submenu in which to add the dns entries
+   *  @param {integer} num - default value: 3 ; the number of entries to create*/
+  _init(name, optionSubMenu, num= 3){
+    super._init();
+    this.menu= optionSubMenu;
+
+    this._entries= [];
+    this._DNSAdresses= [];
+    this._entry_SIGS= [];
+
+    /** Anonymous funciton to add entry items to the menu and connect signals */
+    let dnsItemAdd= (num, it=-1) => {
+      let r= new OptionsSubDNSItem(name + " " +num);
+      this.menu.addMenuItem(r);
+
+      this._entries.push(r);
+
+      /** Whenever a new valid DNS entry is entered or cleared,
+       *  the new dns config must be generated and emitted (_newDNSCofig())*/
+      this._entry_SIGS.push([r, r.connect('validated-dns-text', (item, dnsTxt) => {
+        this._DNSAdresses[num+it]= dnsTxt;
+
+        this._newDNSConfig();
+      })]);
+
+      this._entry_SIGS.push([r, r.connect('dns-text-cleared', () => {
+        delete this._DNSAdresses[num+it];
+
+        this._newDNSConfig();
+      })]);
+
+      return r;
+    }
+
+    for(var i=1; i<=num; ++i){
+      dnsItemAdd(i);
+    }
+  }
+
+  /** Destructor
+   *  @method
+   */
+  _onDestroy(){
+    for(var i= 0; i<this._entry_SIGS.length; ++i){
+      let t= this._entry_SIGS[i];
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1])
+      }
+    }
+    for(var i=0; i<this._entries.length; ++i){
+      let t= this._entries[i];
+      if(t){
+        t.destroy();
+      }
+    }
+
+    super.destroy();
+  }
+
+  /** Private method that generated and emit the current
+   *  DNS confiruration
+   */
+  _newDNSConfig(){
+    let txt= "";
+
+    for(var i= 0; i<this._DNSAdresses.length; ++i){
+      let t= this._DNSAdresses[i];
+      if(t){
+        txt+= t + " ";
+      }
+    }
+
+    txt= (txt.split(/\w+/).length>1)? txt : 'disabled';
+
+    this.emit('new-DNS-config', txt);
+  }
+
+
+  /** Generic method to change dns configuration
+   *  @method
+   *  @param {string} v - the value of the dns configuration
+   *  
+   * A DNS configuration is a string object containing 1 to 3 DNS
+   * address correctli formated, sperated by a space character
+   */
+  setValue(v){
+    let _v= v.replace(/(\r\n|\n|\r)/gm, "");
+    /** if value is 'disabled', means that there is not dns set,
+     *  all entries texts are disarded
+     */
+    if(_v==='disabled'){
+      for(var i= 0; i<this._entries.length; ++i){
+        let item= this._entries[i];
+        if(item){
+          item.setTxt('');
+        }
+      }
+    }
+    /** otherwise… */
+    else{
+      /** dns address are isolated*/
+      let values= _v.split(/,\s*/);
+      let l= values.length;
+
+      /** each of them fills an entry */
+      for(var i= 0; i<l; ++i){
+        let t= values[i];
+        if(t){
+          let item= this._entries[i];
+          if(item){
+            item.setTxt(t);
+          }
+        }
+      }
+
+      /** and the remaining entries texts (if existing) are discarded */
+      let L= this._entries.length;
+      if(l<L){
+        for(var i= 0; i<(L-l); ++i){
+          let item= this._entries[l+i];
+          if(item){
+            item.setTxt('');
+          }
+        }
+      }
+    }
+  }
+}
+);
+
 /** Class that implements  the submenu where appears the toggle for the
  *  different options offered by the CLI tool.
  */
@@ -658,6 +1013,11 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     */
     this['cybersec']= addSwitchItem("CyberSec", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('cybersec',state.toString());
+
+      let dns= this['dns'];
+      if(dns && state){
+        dns.setValue('disabled');
+      }
     });
     this['killswitch']= addSwitchItem("Kill Switch", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('killswitch',state.toString());
@@ -685,6 +1045,43 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
                     )]
                   );
     this['protocol']= item;
+  
+    /** speartor in the submenu */
+    let separator= new PopupMenu.PopupSeparatorMenuItem();
+    this.menu.addMenuItem(separator);
+
+    /** Adding the 3 DNS entries */
+    let dns= new OptionsSubDNSItemContainer("DNS", this.menu);
+    /** What to do when a new (and valid) DNS configuration has been entered */
+    this._toggSigs.push([dns, dns.connect( 'new-DNS-config', (obj, txt)=>
+                    {
+                      if(this._optCh_cb) this._optCh_cb('dns', txt);
+
+                      /** Enabling DNS, disables the CyberSec option
+                       * (has specified by the CLI app itself)*/
+                      let cs= this['cybersec'];
+                      if(txt!=="disabled" && cs){
+                        cs.setValue(false);
+                      }
+                    }
+                  )]
+                );
+    this['dns']= dns;
+
+
+    /** Adding a text message that warns about the DNS-CyberSec
+     *  exclusions */
+    let txtItem=  new PopupMenu.PopupBaseMenuItem({reactive: false,});
+    
+    this._panel_hbox= new St.BoxLayout();
+    let label1= new St.Label({style_class:'dns-cybersec-warning',});
+    label1.text= "Note: Setting DNS disables CyberSec and vice versa.";
+    label1.get_clutter_text().set_line_wrap(true);
+
+    this._panel_hbox.add_child(label1);
+    txtItem.actor.add_child(this._panel_hbox);
+
+    this.menu.addMenuItem(txtItem);
   }
 
   /** Destructor
@@ -701,6 +1098,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['autoconnect'].destroy();
     this['notify'].destroy();
     this['protocol'].destroy();
+    this['dns'].destroy();
   }
 
   /** Method that allows to specified a given function as a given callback when
