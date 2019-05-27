@@ -36,6 +36,7 @@ class NVPN_Settings{
             NVPN_Sett_Switch_Cmd_Change: null,
             NVPN_Sett_Grid2: null,
             NVPN_Sett_ButBox_Change_Cmd_Confirm: null,
+            NVPN_Sett_Entry_Command_Shell: null,
             NVPN_Sett_Entry_Available_Tool: null,
             NVPN_Sett_Entry_Connected_Check:null,
             NVPN_Sett_Entry_Transition_Check: null,
@@ -216,6 +217,7 @@ class NVPN_Settings{
             );
         }
         
+        fillEntries(this._objects.NVPN_Sett_Entry_Command_Shell, 'cmd-shell');
         fillEntries(this._objects.NVPN_Sett_Entry_Available_Tool, 'cmd-tool-available');
         fillEntries(this._objects.NVPN_Sett_Entry_Connected_Check, 'cmd-tool-connected-check');
         fillEntries(this._objects.NVPN_Sett_Entry_Transition_Check, 'cmd-tool-transition-check');
@@ -263,6 +265,7 @@ class NVPN_Settings{
             );
         }
 
+        chToDef(this._objects.NVPN_Sett_Entry_Command_Shell, 'cmd-shell');
         chToDef(this._objects.NVPN_Sett_Entry_Available_Tool, 'cmd-tool-available');
         chToDef(this._objects.NVPN_Sett_Entry_Connected_Check, 'cmd-tool-connected-check');
         chToDef(this._objects.NVPN_Sett_Entry_Transition_Check, 'cmd-tool-transition-check');
@@ -287,6 +290,7 @@ class NVPN_Settings{
             );
         };
 
+        chToRst(this._objects.NVPN_Sett_Entry_Command_Shell, 'cmd-shell');
         chToRst(this._objects.NVPN_Sett_Entry_Available_Tool, 'cmd-tool-available');
         chToRst(this._objects.NVPN_Sett_Entry_Connected_Check, 'cmd-tool-connected-check');
         chToRst(this._objects.NVPN_Sett_Entry_Transition_Check, 'cmd-tool-transition-check');
@@ -307,6 +311,7 @@ class NVPN_Settings{
             SETTINGS.set_string(gsKey, gEntry.get_text());
         };
 
+        applyCh(this._objects.NVPN_Sett_Entry_Command_Shell, 'cmd-shell');
         applyCh(this._objects.NVPN_Sett_Entry_Available_Tool, 'cmd-tool-available');
         applyCh(this._objects.NVPN_Sett_Entry_Connected_Check, 'cmd-tool-connected-check');
         applyCh(this._objects.NVPN_Sett_Entry_Transition_Check, 'cmd-tool-transition-check');

@@ -729,10 +729,59 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
   }
 }
 
+
+
+class MessageItem extends PopupMenu.PopupBaseMenuItem{
+  constructor(txt){
+    super("");
+
+    this.actor.reactive= false;
+
+    let hbox= new St.BoxLayout({});
+    this.label1= new St.Label({});
+
+    this.label1.text= txt;
+
+
+    this.label1.get_clutter_text().set_line_wrap(true);
+
+    this._button= new St.Button({child:this.label1, 
+                                style_class: 'nordvpn-version-warn'});
+
+    hbox.add_child(this._button);
+
+    this.actor.add(hbox, { expand: true });
+
+    /** message disapears when clicked */
+    this._idc= this._button.connect('clicked', () => {this.actor.hide();}); 
+  }
+
+  /** Destructor
+   *  @method
+   */
+  destroy(){
+    this.disconnect(this._idc);
+
+    super.destroy();
+  }
+
+  hide(){
+    this.actor.hide();
+  }
+
+  show(){
+    this.actor.show();
+  }
+
+  setText(txt){
+    this.label1.text= txt;
+  }
+}
+
 /** Class that implements the menu item that shows a message when
  *  expected given version doesn't match actual given version
  */
-class VersionChecker extends PopupMenu.PopupBaseMenuItem{
+class VersionChecker extends MessageItem{
   /** Enumerator for the possible result of versions comparison
    *  @readonly
    *  @enum {number}
@@ -753,13 +802,9 @@ class VersionChecker extends PopupMenu.PopupBaseMenuItem{
   constructor(expectedVer, actualVer){
     super(""); 
 
-    this.actor.reactive= false;
-
     this._expectedVersion= expectedVer;
     this._actualVersion= actualVer;
 
-    let hbox= new St.BoxLayout({});
-    let label1= new St.Label({});
     
     /** sets the display message according to comparision result */
     this._res= this._compare();
@@ -794,20 +839,7 @@ class VersionChecker extends PopupMenu.PopupBaseMenuItem{
     }
 
 
-    label1.text= txt;
-
-
-    label1.get_clutter_text().set_line_wrap(true);
-
-    this._button= new St.Button({child:label1, 
-                                style_class: 'nordvpn-version-warn'});
-
-    hbox.add_child(this._button);
-
-    this.actor.add(hbox, { expand: true });
-
-    /** message disapears when clicked */
-    this._idc= this._button.connect('clicked', () => {this.actor.hide();});
+    this.setText(txt);
 
     /** if actual version newer of older, no message displayed */
     if( !this._res || this._res>=0){
@@ -820,8 +852,6 @@ class VersionChecker extends PopupMenu.PopupBaseMenuItem{
    *  @method
    */
   destroy(){
-    this.disconnect(this._idc);
-
     super.destroy();
   }
 

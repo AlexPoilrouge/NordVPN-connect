@@ -28,7 +28,6 @@ const SubMenus= Me.imports.subMenus;
 const BoxPointer = imports.ui.boxpointer;
 
 
-const COMMAND_SHELL= "/usr/bin/bash";
 
 const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
 
@@ -36,21 +35,29 @@ const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
  * Calls for a given shell command in a synchronous way
  * @function
  * @param {string} cmd - the shell command to execute
+ * @param {string} shell - shell that will execute the command (default: "/bin/bash")
+ *                        if null, undefined or empty, acts as default call (system dependant)
  * @param {number} descriptor - 1 (default) for the function to return the stdout output,
  *                              2 for stderr.
  * @returns {string} the stddout of the command's exectuion as a string
  */
-function COMMAND_LINE_SYNC(cmd, descriptor=1){
-  return ByteArray.toString(GLib.spawn_command_line_sync(COMMAND_SHELL + " -c \""+ cmd + "\"")[(descriptor>=2)?2:1]);
+function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
+  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
+  let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
+  return ByteArray.toString(GLib.spawn_command_line_sync(command)[(descriptor>=2)?2:1]);
 }
 
 /**
  * Calls for a given shell command in an asynchronous way
  * @function
  * @param {string} cmd - the shell command to execute
+ * @param {string} shell - shell that will execute the command (default: "/bin/bash")
+ *                        if null, undefined or empty, acts as default call (system dependant)
  */
-function COMMAND_LINE_ASYNC(cmd){
-  GLib.spawn_command_line_async(COMMAND_SHELL + " -c \""+ cmd + "\"");
+function COMMAND_LINE_ASYNC(cmd, shell="/bin/bash"){
+  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
+  let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
+  GLib.spawn_command_line_async(command);
 }
 
 /**
@@ -125,6 +132,8 @@ class Core_CMDs{
      *  special characters don't seem to be interpreted. This helps sets things right (hopefully)
      *  if need be.
      */
+    this.command_shell= (txt=Unescape.convert(SETTINGS.get_string("cmd-shell")))?
+                          txt : "/bin/bash";
     this.tool_available= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-available")))?
                           txt : "hash nordvpn";
     this.tool_connected_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-connected-check")))?
@@ -153,6 +162,13 @@ class Core_CMDs{
                           txt : "nordvpn --version | grep -Po \"([0-9]\\.?)+[0-9]\"";
 
 
+    this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-shell', () => {
+      this.command_shell= Unescape.convert(SETTINGS.get_string("cmd-shell"));
+      this._shell_valid= this.command_shell_found();
+      if(this._parent){
+        this._parent._update_status_and_ui();
+      }
+    }));
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-tool-available', () => {
       this.tool_available= Unescape.convert(SETTINGS.get_string("cmd-tool-available"));
       if(this._parent){
@@ -225,6 +241,10 @@ class Core_CMDs{
         this._parent._update_status_and_ui();
       }
     }));
+
+    this._shell_valid= this.command_shell_found();
+
+    log("nordvpn shell ok? "+ this._shell_valid)
   }
 
   /**
@@ -235,6 +255,41 @@ class Core_CMDs{
       if(this.SETT_SIGS[i])
         SETTINGS.disconnect(this.SETT_SIGS[i]);
     }
+  }
+
+  exec_sync(cmdKey, params={}, descriptor= 1){
+    let command= this[cmdKey];
+
+    if(!command || !this._shell_valid) return undefined;
+
+    for(var k in params){
+      command= command.replace("_%"+k+"%_", params[k]);
+    }
+  
+    return COMMAND_LINE_SYNC(command, this.command_shell, descriptor);
+  }
+
+  exec_async(cmdKey, params={}){
+    let command= this[cmdKey];
+
+    if(!command || !this._shell_valid) return undefined;
+
+    for(var k in params){
+      command= command.replace("_%"+k+"%_", params[k]);
+    }
+    COMMAND_LINE_ASYNC(command, this.command_shell);
+
+    return true;
+  }
+
+  /**
+   * Method that checks if set command shell is accessible
+   * @method
+   * @return {boolean}
+   */
+  command_shell_found(){
+    let t= COMMAND_LINE_SYNC("which "+this.command_shell, "", 2);
+    return !(t.includes("which: no ") || t.includes("not found"));
   }
 }
 
@@ -487,6 +542,15 @@ class NVPNMenu extends PanelMenu.Button{
     });
 
 
+    this._shell_checker= new SubMenus.MessageItem(
+      "Extension can't use the given shell \""+this._cmd.command_shell
+      + "\".\nTry setting another shell (or change its path) within this "
+      + "extension's settings page"
+    );
+
+    this.menu.addMenuItem(this._shell_checker);
+
+
     /** @member {enum} currentStatus
      *  member that stored the current status designating the current state of the interaction
      *  with the 'nordvpn' tool */
@@ -558,7 +622,8 @@ class NVPNMenu extends PanelMenu.Button{
    *  @returns {string} the string that matches the found version ("0.0" if not found)
    */
   _getCliToolCurrentVersion(){
-    let txt= (this._is_NVPN_found)? COMMAND_LINE_SYNC(this._cmd.get_version)
+    let t= this._cmd.exec_sync('get_version');
+    let txt= (t!==undefined && t!==null && this._is_NVPN_found)? t
               :"0.0";
     return txt;
   }
@@ -590,7 +655,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_NVPN_found(){
     // return (COMMAND_LINE_SYNC('hash nordvpn',2).length === 0);
-    return (COMMAND_LINE_SYNC(this._cmd.tool_available, 2).length === 0);
+    let t= this._cmd.exec_sync('command_shell', {}, 2);
+    return (t !== undefined && t !== null)? (t.length === 0) : false;
   }
 
   /**
@@ -600,7 +666,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_NVPN_connected(){
     // return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po ' [cC]onnected'").length===0);
-    return (COMMAND_LINE_SYNC(this._cmd.tool_connected_check).length!==0);
+    let t= this._cmd.exec_sync('tool_connected_check');
+    return (t !== undefined && t !== null)? (t.length!==0) : false;
   }
 
   /**
@@ -611,7 +678,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_in_transition(){
     // return (COMMAND_LINE_SYNC("nordvpn status | grep -Po '[cC]onnecting'").length!==0);
-    return (COMMAND_LINE_SYNC(this._cmd.tool_transition_check).length!==0);
+    let t= this._cmd.exec_sync('tool_transition_check');
+    return (t !== undefined && t !== null)? (t.length!==0) : false;
   }
 
   /**
@@ -622,7 +690,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_daemon_unreachable(){
     // return !(COMMAND_LINE_SYNC("nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'").length===0);
-    return !(COMMAND_LINE_SYNC(this._cmd.daemon_unreachable_check).length===0);
+    let t= this._cmd.exec_sync('daemon_unreachable_check');
+    return (t !== undefined && t !== null)? !(t.length===0) : false;
   }
 
   /**
@@ -632,7 +701,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _is_user_logged_in(){
     // return (COMMAND_LINE_SYNC("echo '' | nordvpn login | grep -Po 'already logged'").length!==0);
-    return (COMMAND_LINE_SYNC(this._cmd.tool_logged_check).length!==0);
+    let t= this._cmd.exec_sync('tool_logged_check');
+    return (t !== undefined && t !== null)? (t.length!==0) : false;
   }
 
   /**
@@ -669,6 +739,9 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _update_status_and_ui(){
+    if(this._cmd.command_shell_found()){ this._shell_checker.hide(); }
+    else{ this._shell_checker.show(); }
+
     /** if the ui is lock, for reasons such as a connexion command is being passed, then abort */
     if(this._vpn_lock) return;
     /** the ui update locks other potential update, until it's done*/
@@ -768,10 +841,11 @@ class NVPNMenu extends PanelMenu.Button{
 
   _get_server_text_info(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
-      return "-"+
-          // COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
-          COMMAND_LINE_SYNC(this._cmd.current_server_get).replace(/(\r\n\t|\n|\r\t)/gm,"")
-              +" -" ;
+      let t= this._cmd.exec_sync('current_server_get');
+      //return COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
+      return (t!==undefined && t!==null)? 
+              "-"+ t.replace(/(\r\n\t|\n|\r\t)/gm,"")+" -"
+            : "- -";
     }
     else{
       return "--";
@@ -780,7 +854,10 @@ class NVPNMenu extends PanelMenu.Button{
 
   _update_server_name(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
-      this.server_name= COMMAND_LINE_SYNC(this._cmd.current_server_get).replace(/(\r\n\t|\n|\r\t)/gm,"");
+      let t= this._cmd.exec_sync('current_server_get');
+      this.server_name= (t!==undefined && t!==null)?
+                          t.replace(/(\r\n\t|\n|\r\t)/gm,"")
+                        : "";
     }
     else{
       this.server_name= "";
@@ -806,8 +883,6 @@ class NVPNMenu extends PanelMenu.Button{
    * @param {string} placeName - optional, the place name (i.e. country, server, ...) to connect to
    */
   _nordvpn_quickconnect(placeName=""){
-    // let cmd= "nordvpn c " + placeName;
-    let cmd= this._cmd.server_place_connect.replace("_%target%_", placeName);
     /** if the live monitoring of the vpn connection state in on (through the boolean
      *  attribute 'nvpn_monitor') */
     if(this.nvpn_monitor){
@@ -824,9 +899,9 @@ class NVPNMenu extends PanelMenu.Button{
       }
       else{
         /** asynchronous connection call */
-        COMMAND_LINE_ASYNC( cmd );
+        let t= this._cmd.exec_async('server_place_connect', {'target': placeName});
 
-        this._waiting_state();
+        if(t!==undefined && t!==null) this._waiting_state();
       }
 
       /** if there is a reconnection, it is done with the connection step, or there is none to begin
@@ -839,7 +914,7 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** (if no live monitoring) synchronous connection call (freezes the ui in the
        *  meantime) */
-      COMMAND_LINE_SYNC( cmd );
+      this._cmd.exec_sync('server_place_connect', {'target': placeName});
     }
   }
 
@@ -848,8 +923,6 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _nordvpn_disconnect(){
-    // let cmd= "nordvpn d";
-    let cmd= this._cmd.server_disconnect;
     /** if the live monitoring of the vpn connection state in on (through the boolean
      *  attribute 'nvpn_monitor') */
     if(this.nvpn_monitor){
@@ -867,10 +940,10 @@ class NVPNMenu extends PanelMenu.Button{
       }
       else{
       /** asynchronous disconnection call */
-        COMMAND_LINE_ASYNC( cmd );
+        let t= this._cmd.exec_async( 'server_disconnect' );
 
 
-        this._waiting_state();
+        if(t!==undefined && t!==null ) this._waiting_state();
       }
 
       /** unlocking ui updates */
@@ -879,7 +952,7 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** (if no live monitoring) synchronous disconnection call (freezes the ui in the
        *  meantime) */
-      COMMAND_LINE_SYNC( cmd );
+      this._cmd.exec_sync('server_disconnect');
     }
   }
 
@@ -1071,6 +1144,8 @@ class NVPNMenu extends PanelMenu.Button{
         }
     };
 
+    let t= undefined;
+
     switch(this.currentStatus){
     /** when state is 'logged out', check for login state */
     case NVPNMenu.STATUS.LOGGED_OUT:
@@ -1085,7 +1160,8 @@ class NVPNMenu extends PanelMenu.Button{
     /** when the status is 'daemon not operating', makes a check for the availabily of this deamon */
     case NVPNMenu.STATUS.DAEMON_DOWN:
       // change= ( COMMAND_LINE_SYNC("systemctl is-active nordvpnd | grep '\bactive'").length!==0 );
-      change= ( COMMAND_LINE_SYNC(this._cmd.daemon_online_check).length!==0 );
+      t= this._cmd.exec_sync('daemon_online_check');
+      change= ( t!==undefined && t!==null && t.length!==0 );
 
       break;
     /** when the status is 'in transition', checks if this is still the case */
@@ -1107,13 +1183,15 @@ class NVPNMenu extends PanelMenu.Button{
     /** when the status is 'disconnected', check if there's a connection to a vpn */
     case NVPNMenu.STATUS.DISCONNECTED:
       // change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length!==0 );
-      change= ( COMMAND_LINE_SYNC(this._cmd.vpn_online_check).length!==0 );
+      t= this._cmd.exec_sync('vpn_online_check');
+      change= ( t!==undefined && t!==null && t.length!==0 );
 
       break;
     /** when the status is 'connected', chech if there's still a connection to a vpn */
     case NVPNMenu.STATUS.CONNECTED:
       // change= ( COMMAND_LINE_SYNC("ifconfig -a | grep tun0").length===0 );
-      change= ( COMMAND_LINE_SYNC(this._cmd.vpn_online_check).length===0 );
+      t= this._cmd.exec_sync('vpn_online_check');
+      change= ( t!==undefined && t!==null && t.length===0 );
 
       /** if a change is detected in this case, a particular disposition has to be made:
        *  the country selection submenu has to be clear of any selection,
@@ -1189,34 +1267,28 @@ class NVPNMenu extends PanelMenu.Button{
    *  @param {object} txt - string representing the new value of this option
   */
   option_changed(option, txt){
-    let cmd= this._cmd.option_set
-              .replace("_%option%_", option)
-              .replace("_%value%_", txt);
-
-    COMMAND_LINE_SYNC( cmd );
+    let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
   }
 
   updateOptionsMenu(){
-    let cmd= this._cmd.get_options;
+    let res= this._cmd.exec_sync('get_options');
+    if (res!==undefined && res!==null){
+      let params= {};
+      let optionsTxt= res.split(';');
+      for(var i=0; i<optionsTxt.length; ++i){
+        let k_v= optionsTxt[i].split(':');
 
-    let res= COMMAND_LINE_SYNC( cmd );
+        let k= k_v[0].replace(/[^0-9a-z]/gi, '');
+        let v= k_v[1];
+        v= (v==="enabled" || v==="true" || v==="1" || v==="on")? true
+            : (v==="disabled" || v==="false" || v==="0" || v==="off")? false
+              : v;
 
+        params[k]= v;
+      }
 
-    let params= {};
-    let optionsTxt= res.split(';');
-    for(var i=0; i<optionsTxt.length; ++i){
-      let k_v= optionsTxt[i].split(':');
-
-      let k= k_v[0].replace(/[^0-9a-z]/gi, '');
-      let v= k_v[1];
-      v= (v==="enabled" || v==="true" || v==="1" || v==="on")? true
-          : (v==="disabled" || v==="false" || v==="0" || v==="off")? false
-            : v;
-
-      params[k]= v;
+      this._submenuOptions.updateFromOpt(params);
     }
-
-    this._submenuOptions.updateFromOpt(params);
   }
 
   cb_locationPick(){
