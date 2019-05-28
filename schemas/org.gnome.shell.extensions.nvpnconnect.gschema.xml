@@ -12,6 +12,9 @@
             <range min="1" max="60"/>
             <default>2</default>
         </key>
+        <key type="s" name="cmd-shell">
+            <default>"/bin/bash"</default>
+        </key>
         <key type="s" name="cmd-tool-available">
             <default>"hash nordvpn"</default>
         </key>

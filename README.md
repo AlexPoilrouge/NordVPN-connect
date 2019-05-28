@@ -163,6 +163,12 @@ and enter your NordVPN logins.
 
   Pretty much. Howerver, since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, a *“ Settings ”* page has been added to the extensions. I contains a tab that allows you to change the core shell commands that allows to monitor and connect with the *nordvpn* CLI tool. But you're on your own from there, sorry.
 
+***Yo, the extension say's there's a pickle with my 'shell' or something… Da fox?***
+
+  This extension, by default, uses `bash` to run its core commands. The default path it uses is `/bin/bash`. However, if that doesn't fit with your install, you can try changing the default shell within the "*Advanced*" tab, located in the extensions '*[settings](#extension-settings-page)*' page (only possible since commit `28bbe2bb0178c8e6325683585b5268fa454798a0`, i.e. version 7 of the extension).
+
+
+
 
 ***
 
