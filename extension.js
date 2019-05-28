@@ -356,23 +356,26 @@ class NVPNMenu extends PanelMenu.Button{
     /** the icon in the top panel area (may change according to current status)*/
     this._panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
                                style_class: 'system-status-icon' });
-    this._panel_hbox.add_child(this._panel_icon);
+    this._panel_hbox.add(this._panel_icon);
 
     /** 'NVPN' panel text label*/
-    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN '});
+    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN ',});
     this.label_nvpn.visible= !(SETTINGS.get_boolean('compact-icon'));
     this.SETT_SIGS[0]= SETTINGS.connect('changed::compact-icon', () => {
       this.label_nvpn.visible= (!SETTINGS.get_boolean('compact-icon'));
     });
-    this._panel_hbox.add_child(this.label_nvpn);
+    this._panel_hbox.add(this.label_nvpn, {y_fill: false, y_align: St.Align.MIDDLE});
     this.actor.add_child(this._panel_hbox);
 
     /** saving this idea for later disconnection of the signal during object's destruction */
     this._id_c_click1= this.connect('button-press-event',
       function(){
-        this._update_server_name();
-        if((!this.nvpn_monitor) || this.currentStatus<NVPNMenu.STATUS.CONNECTED){
-          this._update_status_and_ui();
+        /** only usefull if menu is opening */
+        if(this.menu.isOpen){
+          this._update_server_name();
+          if((!this.nvpn_monitor) && this.currentStatus<NVPNMenu.STATUS.CONNECTED){
+            this._update_status_and_ui();
+          }
         }
       }.bind(this)
     );
@@ -420,7 +423,7 @@ class NVPNMenu extends PanelMenu.Button{
 			reactive: true,
 			can_focus: true,
       track_hover: true,
-			style_class: 'system-menu-action test',
+			style_class: 'system-menu-action sub-menu-btn',
       child:ic0});
     hbox3.add_child(this.v3_button0);
     
@@ -429,7 +432,7 @@ class NVPNMenu extends PanelMenu.Button{
 			reactive: true,
 			can_focus: true,
       track_hover: true,
-			style_class: 'system-menu-action test',
+			style_class: 'system-menu-action sub-menu-btn',
       child:ic1});
     hbox3.add_child(this.v3_button1);
 
@@ -438,7 +441,7 @@ class NVPNMenu extends PanelMenu.Button{
 			reactive: true,
 			can_focus: true,
       track_hover: true,
-			style_class: 'system-menu-action test',
+			style_class: 'system-menu-action sub-menu-btn',
       child:ic2});
     hbox3.add_child(this.v3_button2);
 
