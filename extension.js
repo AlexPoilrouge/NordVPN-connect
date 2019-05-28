@@ -42,7 +42,6 @@ const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
  * @returns {string} the stddout of the command's exectuion as a string
  */
 function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
-  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
   let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
   return ByteArray.toString(GLib.spawn_command_line_sync(command)[(descriptor>=2)?2:1]);
 }
@@ -55,7 +54,6 @@ function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
  *                        if null, undefined or empty, acts as default call (system dependant)
  */
 function COMMAND_LINE_ASYNC(cmd, shell="/bin/bash"){
-  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
   let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
   GLib.spawn_command_line_async(command);
 }
@@ -243,8 +241,6 @@ class Core_CMDs{
     }));
 
     this._shell_valid= this.command_shell_found();
-
-    log("nordvpn shell ok? "+ this._shell_valid)
   }
 
   /**
