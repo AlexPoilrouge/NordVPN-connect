@@ -31,7 +31,7 @@
             <default>"echo '' | nordvpn login | grep -Po 'already logged'"</default>
         </key>
         <key type="s" name="cmd-current-server-get">
-            <default>'nordvpn status | grep -Po \'Current server: .*\\..*\\..*\' | cut -d: -f2 | cut -d\' \' -f2'</default>
+            <default>"nordvpn status"</default>
         </key>
         <key type="s" name="cmd-server-place-connect">
             <default>"nordvpn c _%target%_"</default>

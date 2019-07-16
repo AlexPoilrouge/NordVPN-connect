@@ -8,6 +8,9 @@ const Pango = imports.gi.Pango;
 const Gtk = imports.gi.Gtk;
 const GObject = imports.gi.GObject;
 
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+
 
 
 /**
@@ -186,6 +189,12 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
     select_callback(func=null){
       this.select_cb= func;
     }
+
+    unselect_current(){
+      if(this.cur_selected!=null){
+        this.cur_selected.select(false);
+      }
+    }
   
     /**
      * Private method that is called when an item is click.
@@ -197,9 +206,7 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
      */
     _item_select(item){
       /** if there is an item currently selected (data), unselect it (ui) */
-      if(this.cur_selected!=null){
-        this.cur_selected.select(false);
-      }
+      this.unselect_current();
   
       /** if the item clicked is the one currently selected (data), then it is deselected (ui & data) */
       if(item===this.cur_selected){
@@ -278,6 +285,443 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
 }
 
 /**
+ * Class that implements a data manager for handling
+ * favourite servers.
+ * Stores, adds, removes and writes & reads favs on disk
+ */
+class FavHandler{
+  /**
+   * Constructor
+   * 
+   * @param {string} path the path of the json file that stores the faved servers
+   */
+  constructor(path){
+    this._path= path;
+
+    this._dataObj= null;
+
+    this._iterator= 0;
+  }
+
+  /**
+   * Is the handler ready to be used
+   * (favs data correctly loaded)
+   * 
+   * @returns {boolean} ready or not
+   */
+  isReady(){
+    return (this._dataObj!==null) && (this._dataObj!==undefined);
+  }
+
+  /**https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/GLib.html#expand
+   * https://rockon999.pages.gitlab.gnome.org/gjs-guide/tutorials/gjs-basic-file-operations.html#getting-a-gio-file-instance
+   */
+  /**
+   * Method that loads the faved servers from the json fav file
+   */
+  load(){
+    let file= Gio.file_new_for_path(this._path);
+
+    /** checks if containing directory exists, if not, creates it */
+    if(!file.get_parent().query_exists(null)){
+      file.get_parent().make_directory_with_parents(null);
+    }
+
+    /** checks if fav json file exists, if not, creates it */
+    if(!file.query_exists(null)){
+      file.create(Gio.FileCreateFlags.NONE, null);
+    }
+
+    /** loads file content */
+    let [res, cont]= file.load_contents(null);
+
+    /** if success parses the JSON data into an Object */
+    if(res){
+      let json= (Object.entries(cont).length === 0)?
+                  {}
+                : JSON.parse(cont);
+      if(json){
+        this._dataObj= json;
+      }
+    }
+  }
+
+  /**
+   * Method that saves the current state of the favs data
+   * on disk, into JSON form
+   */
+  save(){
+    var dataStream= "{}";
+    if(this._dataObj){
+      dataStream= JSON.stringify(this._dataObj, null, '\t');
+    }
+
+    if(GLib.file_test(this._path, GLib.FileTest.EXISTS)){
+      GLib.file_set_contents(this._path, dataStream);
+    }
+  }
+
+  /**
+   * Adds a new server to the favs
+   * 
+   * @param {string} server the server name 
+   * @param {string} country the country of the server
+   * @param {string} city the city of the server
+   */
+  add(server, country, city){
+    if(this._dataObj){
+      this._dataObj[server]= country+", "+city;
+    }
+  }
+
+  /**
+   * Removes a server from the favs
+   * 
+   * @param {string} server the name of the faved server to remove 
+   */
+  remove(server){
+    if(this._dataObj){
+      delete this._dataObj[server];
+    }
+  }
+
+  /**
+   * Checks if a servers is already faved
+   * 
+   * @param {string} server name of the tested server
+   * 
+   * @returns {boolean} whether of not the server is already faved 
+   */
+  isFaved(server){
+    return ((this._dataObj) && (this._dataObj[server]!==undefined));
+  }
+
+  /**
+   * How many faved servers?
+   * 
+   * @returns {integer} the number of currently faved servers
+   */
+  getNumber(){
+    return (this._dataObj)? Object.keys(this._dataObj).length : 0;
+  }
+
+  /**
+   * Method for iterating purpous.
+   * 
+   * Gets the first iteration within the fav list
+   * (the internalt iterator is pointing at the begining)
+   * 
+   * @returns {object} a couple [k, i] with k the server name, and i its info
+   *    returns undefined if nothing / empty
+   */
+  first(){
+    if(!this._dataObj) return undefined;
+
+    this._iterator= 0;
+    if(this.getNumber()>0){
+      let k= Object.keys(this._dataObj)[0];
+      return [k,this._dataObj[k]];
+    }
+    else{
+      return undefined;
+    }
+  }
+
+  /**
+   * Method for itterating purpous
+   * 
+   * Advance to the next iteration within the fav list
+   * (the internal iterator is incremented)
+   * 
+   * @returns {object} a couple [k, i] with k the server name, and i its info
+   *    return undefined if nothing (i.e. the previous iteration was the last one)
+   */
+  next(){
+    if(this._dataObj) return undefined;
+
+    if(this.getNumber()>(++this._iterator)){
+      let k= Object.keys(this._dataObj)[this._iterator];
+      return [k,this._dataObj[k]];
+    }
+    else{
+      return undefined;
+    }
+  }
+};
+
+/**
+ * Class that implements faved server as a GUI menu item
+ */
+class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * Constructor
+   * 
+   * @param {string} servName the faved server name
+   * @param {string} infos infos about server
+   */
+  constructor(servName, infos){
+    super({style_class: 'server-fav',});
+    this.tLabel= new St.Label({text: servName+" - "+infos.slice(0,13)+((infos.length>13)?'…':'')});
+    this.actor.add(this.tLabel, {expand: true, x_fill: false});
+
+    this._servName= servName;
+    this._infos= infos;
+    
+    let btnIcon = new St.Icon({ icon_name: 'edit-delete-symbolic',
+                               style_class: 'system-status-icon' });
+
+    this._button= new St.Button({
+          child: btnIcon,
+          reactive: true,
+          can_focus: true,
+          track_hover: true,
+          style_class: 'system-menu-action fav-delete-btn',
+    });
+
+    this._statusBin = new St.Bin({ x_align: St.Align.END, });
+    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    this._statusBin.child= this._button;
+
+    /** signal 'delete-fav' is emmited when the delete button is clicked */
+    this._idc1= this._button.connect('clicked', () => {
+      this.emit('delete-fav', this._servName);
+    })
+  }
+
+  /**
+   * destructor
+   */
+  destroy(){
+    this._button.disconnect(this._idc1);
+
+    super.destroy();
+  }
+
+  get key(){
+    return this._servName;
+  }
+
+  get infos(){
+    return this._infos;
+  }
+
+  set infos(infos){
+    this._infos= infos;
+    this.tLabel.text= this._servName+" - "+this._infos;
+  }
+}
+
+
+/** Regisering this item as a GObject in order
+ *  to use signals via the 'emit' method
+ */
+let FavoriteStacker = GObject.registerClass(
+{
+  Signals: {
+    'server-fav-connect': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
+/**
+ * Class that implements the part of the gui menu
+ * where the faved servers are displyed
+ */
+class FavoriteStacker extends GObject.Object{
+  /**
+   * 
+   * @param {object} submenu the parent submenu
+   * @param {string} favPath the path of the file that contains faved server JSON format
+   */
+  _init(submenu, favPath){
+    super._init();
+
+    this._parentMenu= submenu;
+
+    this._startPos= this._parentMenu.menu._getMenuItems().length;
+
+    this.FAV_SIGS= [];
+
+    this._currentServInfo= {server: "", city: "", country: ""};
+
+    let label= new St.Label({text: "----- Favorites -----",});
+    let hbox= new St.BoxLayout();
+    let item= new PopupMenu.PopupBaseMenuItem({reactive: false});
+    hbox.add(label);
+    item.actor.add(hbox, { expand: true, x_fill: false});
+
+    this._parentMenu.menu.addMenuItem(item);
+
+    /** button to add current server as favourite */
+    let btnLabel= new St.Label({text: "Add current as favorite",});
+
+    this._button= new St.Button({
+                      child: btnLabel,
+                      reactive: true,
+                      can_focus: true,
+                      track_hover: true,
+                      style_class: 'system-menu-action add-fav-button',
+    });
+    this._button.set_toggle_mode(true);
+    /** hidden by default */
+    this._button.hide();
+
+    let btnItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
+    btnItem.actor.add(this._button, { expand: true, x_fill: false});
+
+    this._parentMenu.menu.addMenuItem(btnItem);
+
+    /** loading from disk and handling the favs */
+    this._favHandler= new FavHandler(favPath);
+    this._favHandler.load();
+
+    /** fill menu with existing favs */
+    this._generateItemList();
+
+    /** when 'add favourite' button is clicked,
+     * add the server (with its infos) as a fav
+     */
+    this._idc1= this._button.connect('clicked', () => {
+      let serv= this._currentServInfo;
+      if(serv && serv.server){
+        if(!this._favHandler.isFaved(serv.server)){
+          this._favHandler.add(serv.server, serv.city, serv.country);
+          this._favHandler.save();
+          this._addFavItem(serv.server, serv.city+", "+serv.country);
+
+          /** only to update the display state of the button
+           *  (if the current serv is added, it should diseappear)*/
+          this.currentServer= serv;
+        }
+        else{
+          let r= this._parentMenu.menu._getMenuItems().find((item)=>{
+            if(item instanceof FavedServerItem){
+              return (item instanceof FavedServerItem) &&
+                      item.key===serv.server;
+            }
+          });
+
+          if(r){
+            r.infos= "????, ????";
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Called on destruction
+   * 
+   * cleans signals
+   */
+  _onDestroy(){
+    for(var i= 0; i<this.FAV_SIGS.length; ++i){
+      let t= this.FAV_SIGS[i];
+
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1]);
+      }
+    }
+
+    if(this._idc1){
+      this._button.disconnect(this._idc1);
+      this._idc1= 0;
+    }
+
+    super.destroy();
+  }
+
+  /**
+   * Private method that adds all loaded & stored faved servers as gui items
+   */
+  _generateItemList(){
+    if(this._favHandler){
+      for(var t=this._favHandler.first(); t!==undefined; t=this._favHandler.next()){
+        this._addFavItem(t[0], t[1]);
+      }
+    }
+  }
+
+  /** 
+   * Private method that adds a faved server as a gui item
+   * 
+   * @param {string} serv the server name
+   * @param {string} info the server infos
+  */
+  _addFavItem(serv, info){
+    let favItem= new FavedServerItem(serv, info);
+
+    this._parentMenu.menu.addMenuItem(favItem);
+
+    /** whenever a fav server's menu item is clicked,
+     * the signal 'server-fav-connect' is emitted
+     */
+    this.FAV_SIGS.push([favItem, favItem.connect('activate', () => {
+      this.emit('server-fav-connect', favItem.key);
+    })]);
+
+    /** whenever a fav server's menu item's delete button is clicked,
+     * it is removed from the fav data handler (changes written on disk)
+     * the menu item is removed and its signal disconnected
+     */
+    this.FAV_SIGS.push([favItem, favItem.connect('delete-fav', (item, servName) => {
+      this._favHandler.remove(servName);
+      this._favHandler.save();
+
+      var i= -1;
+      do{
+        i= this.FAV_SIGS.findIndex((e) => {
+          return e[0]==item;
+        });
+        if(i>=0){
+          let elmt= this.FAV_SIGS[i];
+          if(elmt && elmt[0] && elmt[1]){
+            elmt[0].disconnect(elmt[1]);
+          }
+          this.FAV_SIGS[i]= undefined;
+          this.FAV_SIGS= this.FAV_SIGS.slice(0,i).concat(
+                          (this.FAV_SIGS.length>(i+1))?
+                            this.FAV_SIGS.slice((i+1))
+                            : []
+          );
+        }
+      }
+      while(i>=0);
+      
+      item.destroy();
+
+      /** only to update the display state of the button
+       *  (if the current serv was fav, and has been delete, it should reappear)*/
+      this.currentServer= this._currentServInfo;
+    })]);
+  }
+
+  /**
+   * accessor (write) to change the current server.
+   * if this server is already faved, we hide the 'add as favourite' button
+   * that becomes, de facto, redundant
+   * 
+   * @param {object} serverInfo object that contains a 'server' field, for the server name
+   *    (and a 'infos' field)
+   */
+  set currentServer(serverInfo){
+    if(this._favHandler.isFaved(serverInfo.server) || !this._currentServInfo){
+      this._button.hide();
+    }
+    else{
+      this._button.show();
+    }
+    this._currentServInfo= serverInfo;
+  }
+
+  get currentServer(){
+    return this._currentServInfo;
+  }
+}
+);
+
+/**
  * Class that implements the submenu from which the user can type in directly
  *  a server name
  */
@@ -297,30 +741,30 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         let hbox= new St.BoxLayout();
 
         this.servEntry = new St.Entry({
-        style_class: 'search-entry',
-        can_focus: true,
-        hint_text: _('Enter server name'),
-        track_hover: true,}
+          style_class: 'search-entry',
+          can_focus: true,
+          hint_text: _('Enter server name'),
+          track_hover: true,}
         );
 
         this.SIGS_ID= [];
         this.SIGS_ID[0]= this.servEntry.get_clutter_text().connect( 'activate',
-        this._newServerEntry.bind(this)
+          this._newServerEntry.bind(this)
         );
 
         this.SIGS_ID[1]= this.servEntry.get_clutter_text().connect( 'text-changed',
         () => {
             if(this._err){
-            this.servEntry.style_class='nvpn-serv-entry';
-            this._err= false;
+              this.servEntry.style_class='nvpn-serv-entry';
+              this._err= false;
             }
         }
         );
         this.SIGS_ID[2]= this.menu.connect('open-state-changed',
         () => {
             if(this._err){
-            this.servEntry.style_class='nvpn-serv-entry';
-            this._err= false;
+              this.servEntry.style_class='nvpn-serv-entry';
+              this._err= false;
             }
         }
         );
@@ -328,13 +772,25 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         hbox.add_child(this.servEntry);
 
         let item= new PopupMenu.PopupBaseMenuItem({
-        reactive: false
+          reactive: false
         });
 
         item.actor.add(hbox, { expand: true, x_fill: false});
         this.menu.addMenuItem(item);
 
         this.servEntry.width= 150;
+
+
+        let separator= new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
+
+        this.fav= new FavoriteStacker(this, ".config/nordvpn/nordvpn_connect/fav.json");
+        this.SIGS_ID[3]= this.fav.connect('server-fav-connect', (item, servName)=>{
+          log("nordvpn uchehiii "+servName);
+          this.emit('server-fav-connect', servName);
+        });
+
+        //this.fav.currentServer= "oui";
     }
   
   /** Destructor
@@ -344,17 +800,21 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[0]);
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[1]);
     this.menu.disconnect(this.SIGS_ID[2]);
+    this.fav.disconnect(this.SIGS_ID[3]);
 
     super.destroy();
   }
 
   /** Method to call to fill the content of the server text entry */
-  setSeverEntryText(txt){
+  setSeverEntryText(serverName, city=undefined, country=undefined){
     /** checks the format before filling the entry */
     let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
-    let arr= rgx.exec(txt);
+    let arr= rgx.exec(serverName);
     if((arr!==null) && (arr[1]!==undefined)){
       this.servEntry.set_text(arr[1]);
+
+      //this.fav.currentServer= arr[1];
+      this.fav.currentServer= {server: arr[1], city: (city?city:""), country: (country?country:"")};
     }
   }
 
@@ -371,12 +831,13 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
    *    a raise the error flag (without callback) if need be.
    */
   _newServerEntry(){
+    log("nordvpn Newserver Entry");
     /** if entered text checks the format requirement */
     let serv= this._getServerFromText(this.servEntry.text);
     if(serv){
         /** callback (if function set) */
         if(this.newServer_cb){
-        this.newServer_cb(this.servEntry.text);
+          this.newServer_cb(this.servEntry.text);
         }
 
         /** menu closes */
@@ -836,7 +1297,7 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
   }
 };
 
-/** Regisering this item as a GObjetect in order
+/** Regisering this item as a GObject in order
  *  to use signals via the 'emit' method
  */
 let OptionsSubDNSItemContainer = GObject.registerClass(
@@ -937,6 +1398,10 @@ class OptionsSubDNSItemContainer extends GObject.Object{
    *  
    * A DNS configuration is a string object containing 1 to 3 DNS
    * address correctli formated, sperated by a space character
+   */
+  /**TODO
+   * WARNING!!
+   * v.replace(/(\r\n|\n|\r)/gm, ""); crashes when whitelist exists
    */
   setValue(v){
     let _v= v.replace(/(\r\n|\n|\r)/gm, "");
@@ -1128,8 +1593,15 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
 }
 
 
-
+/** class that implements a inforative message as a gui
+ * menu item
+ */
 class MessageItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * constructor
+   * 
+   * @param {string} txt message to display
+   */
   constructor(txt){
     super("");
 

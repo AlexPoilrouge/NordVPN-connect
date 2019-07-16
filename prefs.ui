@@ -405,7 +405,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       <object class="GtkEntry" id="NVPN_Sett_Entry_Server_Get">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="tooltip_text" translatable="yes">Shell command which std output is the server (form 'ccnnn.nordvpn.com', c= char, n= num)  to which the nordvpn CLI tool is connected to.</property>
+                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the 'nordvpn status' command.</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
                         <property name="hexpand">True</property>
@@ -549,11 +549,11 @@ Only modify if you have a good understanding of what you're doing…</property>
                         <property name="width_request">200</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Shell command which std output is the server (form 'ccnnn.nordvpn.com', c= char, n= num)  to which the nordvpn CLI tool is connected to.</property>
+                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the 'nordvpn status' command.</property>
                         <property name="halign">start</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="label" translatable="yes">Return the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to:</property>
+                        <property name="label" translatable="yes">Return the status of the  current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to:</property>
                         <property name="use_markup">True</property>
                         <property name="wrap">True</property>
                       </object>
