@@ -13,7 +13,7 @@ It also provides basic info about the current status of said connection: whether
 or not there is connection and, if so, to which server.
 Of course, this requires the 'nordvpn' command line tool, and all necessary
 dependencies and requirements to be installed as well. To that effect check out
-NordVPN's corresponding page: `https://nordvpn.com/download/linux/`
+NordVPN's corresponding page: https://nordvpn.com/download/linux/
 
 Ultimately, this extension should be replaced by any GUI app, NordVPN might officially release for Linux desktop.
 
@@ -53,9 +53,9 @@ code might have on any system lies solely in the hands of the user.
 
 ###### Availability
 
-This extension is available in the AUR: `https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/`
+This extension is available in the AUR: https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/
 
-It is also available via the *“ GNOME Extensions ”* website: `https://extensions.gnome.org/extension/1595/nordvpn-connect/`
+It is also available via the *“ GNOME Extensions ”* website: https://extensions.gnome.org/extension/1595/nordvpn-connect/
 
 However, the most up-to-date version is only guaranteed here, on GitHub.
 
@@ -68,10 +68,10 @@ Since this is only a GNOME-Shell GUI for the 'nordvpn' command line tool, said
 tool must be installed before anything else. This extension is destined for
 **systemd distributions only!**
 
-If you're on a debian based distribution, checkout this page: `https://nordvpn.com/download/linux/`
+If you're on a debian based distribution, checkout this page: https://nordvpn.com/download/linux/
 
 If you're on an archlinux based distribution, this tool *might* be available in
-the AUR: `https://aur.archlinux.org/packages/nordvpn-bin/`
+the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
 Once the 'nordvpn' CLI tool is installed (assuming here, version `3.0.0`), check the packaged daemon's status:
 
