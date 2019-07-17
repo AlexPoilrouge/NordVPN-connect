@@ -4,6 +4,7 @@
 
 The natural basic necessary step before using this GNOME-Shell extension is, of course, to read this README in its entirety.
 
+![connection and place menu](img/applet_places.png) ![connection and server menu](img/applet_server.png) ![connection and server menu](img/applet_settings.png)
 
 ## About
 
