@@ -1270,7 +1270,7 @@ class NVPNMenu extends PanelMenu.Button{
     if(!this.nvpn_monitor) return;
 
     /** if no lock, on or by the ui update */
-    if(!this._vpn_lock){
+    //if(!this._vpn_lock){
       /** calls the '_vpn_check()' private method, that checks said potential changes, and makes
        *  update or connection calls if necessary */
       this._vpn_check();
@@ -1280,7 +1280,7 @@ class NVPNMenu extends PanelMenu.Button{
         Mainloop.source_remove(this._vpn_timeout);
         this._vpn_timeout= null;
       }
-    }
+    //}
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
     this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
@@ -1430,6 +1430,11 @@ class NVPNMenu extends PanelMenu.Button{
   */
   option_changed(option, txt){
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
+
+    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.serverName){
+      log("nordvpn attempt at reconnect @"+this.server_info.serverName);
+      this._nordvpn_ch_connect(this.server_info.serverName);
+    }
   }
 
   /** Method that updates the 'options' submenus */

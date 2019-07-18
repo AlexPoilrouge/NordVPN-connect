@@ -11,6 +11,8 @@ const GObject = imports.gi.GObject;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
+const ByteArray = imports.byteArray;
+
 
 
 /**
@@ -339,7 +341,7 @@ class FavHandler{
     if(res){
       let json= (Object.entries(cont).length === 0)?
                   {}
-                : JSON.parse(cont);
+                : JSON.parse(ByteArray.toString(cont));
       if(json){
         this._dataObj= json;
       }
@@ -437,7 +439,7 @@ class FavHandler{
    *    return undefined if nothing (i.e. the previous iteration was the last one)
    */
   next(){
-    if(this._dataObj) return undefined;
+    if(!this._dataObj) return undefined;
 
     if(this.getNumber()>(++this._iterator)){
       let k= Object.keys(this._dataObj)[this._iterator];
@@ -786,7 +788,6 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
 
         this.fav= new FavoriteStacker(this, ".config/nordvpn/nordvpn_connect/fav.json");
         this.SIGS_ID[3]= this.fav.connect('server-fav-connect', (item, servName)=>{
-          log("nordvpn uchehiii "+servName);
           this.emit('server-fav-connect', servName);
         });
 
@@ -831,7 +832,6 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
    *    a raise the error flag (without callback) if need be.
    */
   _newServerEntry(){
-    log("nordvpn Newserver Entry");
     /** if entered text checks the format requirement */
     let serv= this._getServerFromText(this.servEntry.text);
     if(serv){
