@@ -26,6 +26,11 @@
   margin-bottom: 2px;
 }
 
+.label-server-info{
+  font-size: 12px;
+  font-style: italic;
+}
+
 .countries_submenu_label_item_selected_icon {
     icon-size: 15px;
 }
@@ -140,4 +145,41 @@
 
 .nordvpn-version-warn:hover{
   background-color: rgba(133, 66, 8, 0.7);
+}
+
+.dns-entry-error{
+  color: rgb(255, 128, 0);
+}
+
+.dns-entry-validated{
+  color: rgb(128, 255, 0);
+}
+
+.dns-cybersec-warning{
+  font-size: 11px;
+}
+
+.add-fav-button{
+  padding: 5px;
+}
+
+.add-fav-button:hover{
+  padding: 6px;
+}
+
+.server-fav{
+  background-color: rgba(0,0,0,0.1);
+}
+
+.server-fav:hover{
+  background-color: rgba(255,255,255,0.1);
+}
+
+.fav-delete-btn{
+  padding: 3px;
+}
+
+.fav-delete-btn:hover{
+  padding: 4px;
+  background-color: rgba(255,255,255,0.2);
 }

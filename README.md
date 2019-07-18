@@ -20,13 +20,14 @@ Ultimately, this extension should be replaced by any GUI app, NordVPN might offi
 
 ###### ToDo?
 
-On the off change, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
+On the off chance, such GUI app isn't released for Linux in the near future. Some welcome ameliorations to this extension would be:
+
 - [x] Add more of the 'nordvpn' CLI tool features in this extension such as an 'AutoConnect' toggle, a protocol (UDP/TCP) picked and a 'CyberSec' feature toggle.
 - [x] Add a 'settings' page for this extension.
 - [x] Add the possibility to type in the name of the server (e.g.: de145, uk123, fr067) the user wants to connect to.
 - [ ] Add the possibility to pick server by choosing a city (instead of country).
-- [ ] Add the remaining *set custom DNS* feature to the extension.
-- [ ] Add the possibility to 'fav' a server
+- [x] Add the remaining *set custom DNS* feature to the extension.
+- [x] Add the possibility to 'fav' a server
 
 ## Disclaimer
 
@@ -126,10 +127,10 @@ From the start, a command line install should look like this:
 Since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, an *“ Extension Settings ”* page has been added.
 
 Like all other Gnome-shell extension (that provides shuch 'settings' page), there are several ways of accessing it:
+
 1. Install and use the *“ gnome-tweaks ”* tool. Then go to the `Extensions` tab. From there you should be able to access to extensions settings page, if there are any provided with corresponding extension.
 2. Go to the *“ GNOME Extensions ”* website, and visit the [*“ Installed Extensions ”* section](https://extensions.gnome.org/local/). From there you should be able to manage your installed extensions, provided your web browser had the *“ GNOME Shell Integration ”* plugin installed and enabled.
 3. Your Gnome environment *might* have been provided with the `gnome-shell-extension-prefs` tool. Invoke it from a terminal to manage your extensions.
-
 
 
 ## Help

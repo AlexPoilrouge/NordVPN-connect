@@ -42,7 +42,6 @@ const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
  * @returns {string} the stddout of the command's exectuion as a string
  */
 function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
-  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
   let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
   return ByteArray.toString(GLib.spawn_command_line_sync(command)[(descriptor>=2)?2:1]);
 }
@@ -55,7 +54,6 @@ function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
  *                        if null, undefined or empty, acts as default call (system dependant)
  */
 function COMMAND_LINE_ASYNC(cmd, shell="/bin/bash"){
-  log("nordvpn CMD_ASYNC '"+cmd+"' in ["+shell+"]");
   let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
   GLib.spawn_command_line_async(command);
 }
@@ -102,6 +100,104 @@ const Group_List=[
   "Onion_Over_VPN",
 ];
 
+/**
+ * Class that allows to store and extract infos about the currently
+ * connected server from the 'status' textual output of the CLI tool.
+ */
+class ServerInfos{
+  constructor(){
+    this.reset();
+  }
+
+  /**
+   * Method that (re)initializes the data
+   */
+  reset(){
+    this._connected= false;
+    this._current_serv= undefined;
+    this._country= undefined;
+    this._city= undefined;
+    this._ip= [undefined, undefined, undefined, undefined];
+    this._protocol= false;
+    this._transfer= {recv: {data: 0, unit: 'B'}, sent: {data: 0, unit: 'B'}};
+    this._uptime= "unknown";
+  }
+
+
+  isConnected(){ return this._connected; }
+
+  get serverName(){return (this._current_serv)?this._current_serv:"";}
+  get country(){return this._country;}
+  get city(){return this._city;}
+  get ip(){return this._ip;}
+
+  isUDP(){return !(this._protocol);}
+
+  get transferData(){return this._transfer;}
+  get uptimeInfoString(){return this._uptime;}
+
+  /**
+   * Method that extracts information about the server and stores it.
+   * The text information is expected to be (at least partially) matching
+   * the format of the output of the 'nordvpn status' command
+   * 
+   * @param {string} txt text containing matching the 'nordvpn status' output
+   *  from which to extract the server informations
+   */
+  process(txt){
+    this.reset();
+
+    let lines= txt.split('\n');
+
+    lines.forEach( (line)=>{
+        var r= null;
+        if( (r=/^[Ss]tatus:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._connected= r[1].match(/[Cc]onnected/)!=null;
+        }
+        else if( (r=/^[Cc]urrent\s*[Ss]erver:\s*(.*)$/.exec(line)) && r.length>1 ){
+          r= r[1].match(/^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/);
+          this._current_serv= (r && r.length>0)? r[0] : undefined;
+        }
+        else if( (r=/^[Cc]ountry:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._country= (r[1])?r[1]:'';
+        }
+        else if( (r=/^[Cc]ity:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._city= (r[1])?r[1]:'';
+        }
+        else if( (r=/^.*IP:\s*(.*)$/.exec(line)) && r.length>1 ){
+          if( (r=r[1].match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)) ){
+            var i=0;
+            r[0].split('.').forEach( (strn) => {
+              this._ip[i]= parseInt(strn);
+              ++i;
+            });
+          }
+        }
+        else if( (r=/^.*[Pp]rotocol:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._protocol= ( r[1] && r[1]==='TCP' );
+        }
+        else if( (r=/^.*[Tt]ransfer:\s*(.*)$/.exec(line)) && r.length>1 ){
+          if( (r=/^([0-9]+(\.[0-9]*)?)\s([PTGMK]i)?B\sreceived,\s*([0-9]+(\.[0-9]*)?)\s([PTGMK]i)?B\ssent.*$/.exec(r[1])) && r.length>6){
+            if(r[1] && r[3] && r[4] && r[6]){
+              let r_data= parseFloat(r[1]);
+              let s_data= parseFloat(r[4]);
+
+              if(r_data && s_data){
+                this._transfer.recv.data= r_data;
+                this._transfer.recv.unit= r[3]+'B';
+                this._transfer.sent.data= s_data;
+                this._transfer.sent.unit= r[6]+'B';
+              }
+            }
+          }
+        }
+        else if( (r=/^.*[Uu]ptime:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._uptime= r[1];
+        }
+    });
+  }
+}
+
 /** Object that will be the access holder to this extension's gSettings */
 var SETTINGS;
 
@@ -145,7 +241,7 @@ class Core_CMDs{
     this.tool_logged_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-logged-check")))?
                           txt : "echo '' | nordvpn login | grep -Po 'already logged'";
     this.current_server_get= (txt=Unescape.convert(SETTINGS.get_string("cmd-current-server-get")))?
-                          txt : "nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2";
+                          txt : "nordvpn status";
     this.server_place_connect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-place-connect")))?
                           txt : "nordvpn c _%target%_";
     this.server_disconnect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-disconnect")))?
@@ -243,8 +339,6 @@ class Core_CMDs{
     }));
 
     this._shell_valid= this.command_shell_found();
-
-    log("nordvpn shell ok? "+ this._shell_valid)
   }
 
   /**
@@ -338,6 +432,9 @@ class NVPNMenu extends PanelMenu.Button{
     /** storing signal connectio ids for later discards */
     this.SETT_SIGS= [];
 
+
+    this.server_info= new ServerInfos();
+
     /** @member {boolean} nvpn_monitor
      *  whether or not the extension monitors the state of the connection to
      *  nordvpn servers
@@ -372,7 +469,7 @@ class NVPNMenu extends PanelMenu.Button{
       function(){
         /** only usefull if menu is opening */
         if(this.menu.isOpen){
-          this._update_server_name();
+          this._update_displayed_server_infos(true);
           if((!this.nvpn_monitor) && this.currentStatus<NVPNMenu.STATUS.CONNECTED){
             this._update_status_and_ui();
           }
@@ -410,6 +507,35 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(this.label_connection);
 
     this._main_menu.actor.add(vbox, {expand: true, x_fill: false});
+
+
+
+    /**
+     * Adding the text elements that will display the infos
+     * about the currently connected server
+     */
+    let vbox3= new St.BoxLayout({style_class: 'nvpn-menu-vbox3'});
+    vbox3.set_vertical(true);
+
+    this._location_label= new St.Label({style_class: 'label-server-info', text: '*,*', x_align: St.Align.END});
+    vbox3.add_child(this._location_label);
+    this._ip_label= new St.Label({style_class: 'label-server-info', text: "Shown IP: .... []", x_align: St.Align.END});
+    vbox3.add_child(this._ip_label);
+    this._transfer_label= new St.Label({style_class: 'label-server-info', text: "↑ - ; ↓ - ", x_align: St.Align.END});
+    vbox3.add_child(this._transfer_label);
+    this._uptime_label= new St.Label({style_class: 'label-server-info', text: "uptime: ", x_align: St.Align.END});
+    vbox3.add_child(this._uptime_label);
+
+    this._serverInfosItem= new PopupMenu.PopupBaseMenuItem({
+      reactive: false
+    });
+
+    this._serverInfosItem.actor.add(vbox3, {expand: true, x_fill: true});
+
+    this.menu.addMenuItem(this._serverInfosItem);
+    this._serverInfosItem.actor.hide();
+
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
 
     /** Adding the buttons that will respectively show/hide the submenus
@@ -493,6 +619,11 @@ class NVPNMenu extends PanelMenu.Button{
     this._submenuOptions.set_optionChangeCallBack(this.option_changed.bind(this));
 
     this.menu.addMenuItem(this._submenuOptions);
+
+    /** when a fav'd server has been clicked,
+     *  a call to the '_serv_fav_cliked()' method
+     */
+    this._id_sm_1= this._submenuServer.connect('server-fav-connect', this._serv_fav_cliked.bind(this));
     
 
 
@@ -560,8 +691,8 @@ class NVPNMenu extends PanelMenu.Button{
     this.currentStatus= NVPNMenu.STATUS.DISCONNECTED;
     /** call to the private '_update_status_and_ui()' method that updates the ui and the currentStatus
      *  according to the current state provided of the 'nordvpn tool' */
-    this._update_status_and_ui();
-    this._update_server_name();
+    this._update_status_and_ui()
+    this._update_displayed_server_infos(true);
 
     /**
      * Access the 'refresh-delay' gSettings and connects any change to ensure it will take effect
@@ -602,6 +733,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.action_button.disconnect(this._id_c_btn4);
     this._id_c_btn4= 0;
+
+    this._submenuServer.disconnect(this._id_sm_1);
+    this._id_sm_1= 0;
 
     for(var i= 0; i<this.SETT_SIGS.length; ++i){
       if(this.SETT_SIGS[i])
@@ -758,6 +892,9 @@ class NVPNMenu extends PanelMenu.Button{
     /** allows the ui menu to be open on user click */
     this.setSensitive(true);
 
+    /** update infos about the current server */
+    this._update_displayed_server_infos(true);
+
     /** the following switch-case allows to update the relevant UI element according to the
      *  newly obtained value of the 'currentStatus' attribute */
     switch(this.currentStatus){
@@ -790,8 +927,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.CONNECTED:
       this._label_status.text= _(" connected to");
 
-      this._update_server_name();
-      this.label_connection.text= "- "+this.server_name+" -";
+      this.label_connection.text= "- "+this.server_info.serverName+" -";
       this.action_button.style_class= 'nvpn-action-button-dq';
       this.label_action_btn.text= _("Disconnect");
 
@@ -805,7 +941,8 @@ class NVPNMenu extends PanelMenu.Button{
         /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
          *  with a regex */
         let rgx= /([a-z]*)[0-9]*.*$/g;
-        let arr= rgx.exec(this.server_name);
+        //let arr= rgx.exec(this.server_name);
+        let arr= rgx.exec(this.server_info.serverName);
         if((arr!==null) && (arr[1]!==undefined)){
           /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
             * the country name from the found country code */
@@ -842,29 +979,45 @@ class NVPNMenu extends PanelMenu.Button{
     this._vpn_lock= false;
   }
 
-  _get_server_text_info(){
+  /**
+   * Private method that updates the stored data
+   * about the currently connected server
+   */
+  _update_server_info(){
     if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
       let t= this._cmd.exec_sync('current_server_get');
-      //return COMMAND_LINE_SYNC("nordvpn status | grep -Po 'Current server: .*\\..*\\..*' | cut -d: -f2 | cut -d' ' -f2").replace(/(\r\n\t|\n|\r\t)/gm,"")
-      return (t!==undefined && t!==null)? 
-              "-"+ t.replace(/(\r\n\t|\n|\r\t)/gm,"")+" -"
-            : "- -";
+      this.server_info.process(t);
     }
     else{
-      return "--";
+      this.server_info.reset();
     }
   }
 
-  _update_server_name(){
-    if(this.currentStatus === NVPNMenu.STATUS.CONNECTED){
-      let t= this._cmd.exec_sync('current_server_get');
-      this.server_name= (t!==undefined && t!==null)?
-                          t.replace(/(\r\n\t|\n|\r\t)/gm,"")
-                        : "";
+  /**
+   * Private method that updates the displayed data
+   * about the currently connected server, according
+   * to the current state of the stored data
+   * 
+   * @param {boolean} updateData set to true if the stored
+   *  data about the server should be update (with a call to
+   *  the '_update_server_info()' method) 
+   */
+  _update_displayed_server_infos(updateData=false){
+    if(updateData){
+      this._update_server_info();
     }
-    else{
-      this.server_name= "";
-    }
+
+    this._location_label.text= '* '+this.server_info.city+' ,'+this.server_info.country+' *';
+    this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.')+" ["+(this.server_info.isUDP()?"udp":"tcp")+"]";
+    this._transfer_label.text= "↑ "+this.server_info.transferData.sent.data+" "+this.server_info.transferData.sent.unit+
+                                " ; ↓ "+this.server_info.transferData.recv.data+" "+this.server_info.transferData.recv.unit;
+    this._uptime_label.text= "uptime: "+this.server_info.uptimeInfoString;
+
+    /**
+     * this data is only to be displayed (shown/visible) when the server is connected
+     */
+    if(this.server_info.isConnected()) this._serverInfosItem.actor.show();
+    else this._serverInfosItem.actor.hide();
   }
 
   /**
@@ -1084,6 +1237,10 @@ class NVPNMenu extends PanelMenu.Button{
       this._nordvpn_quickconnect(placeName);
     }
     else{
+      if(this._submenuPlaces){
+        this._submenuPlaces.unselect_current();
+      }
+
       /** if the current status is 'connected' */
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
         /** and, if the placeName is not empty, a 'reconnection' has to be made, using the
@@ -1113,7 +1270,7 @@ class NVPNMenu extends PanelMenu.Button{
     if(!this.nvpn_monitor) return;
 
     /** if no lock, on or by the ui update */
-    if(!this._vpn_lock){
+    //if(!this._vpn_lock){
       /** calls the '_vpn_check()' private method, that checks said potential changes, and makes
        *  update or connection calls if necessary */
       this._vpn_check();
@@ -1123,7 +1280,7 @@ class NVPNMenu extends PanelMenu.Button{
         Mainloop.source_remove(this._vpn_timeout);
         this._vpn_timeout= null;
       }
-    }
+    //}
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
     this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
@@ -1244,7 +1401,8 @@ class NVPNMenu extends PanelMenu.Button{
    *  @method
    */
   cb_serverManagement(){
-    this._submenuServer.setSeverEntryText(this.server_name);
+    //this._submenuServer.setSeverEntryText(this.server_name);
+    this._submenuServer.setSeverEntryText(this.server_info.serverName, this.server_info.city, this.server_info.country);
 
     this._submenuServer.menu.toggle();
   }
@@ -1257,7 +1415,8 @@ class NVPNMenu extends PanelMenu.Button{
    */
   server_entry(txt){
     let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
-    let arr= rgx.exec(this.server_name);
+    //let arr= rgx.exec(this.server_name);
+    let arr= rgx.exec(this.server_info.serverName);
     if((!arr) || (txt!==arr[1])){
       this._nordvpn_ch_connect(txt);
     }
@@ -1271,11 +1430,19 @@ class NVPNMenu extends PanelMenu.Button{
   */
   option_changed(option, txt){
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
+
+    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.serverName){
+      log("nordvpn attempt at reconnect @"+this.server_info.serverName);
+      this._nordvpn_ch_connect(this.server_info.serverName);
+    }
   }
 
+  /** Method that updates the 'options' submenus */
   updateOptionsMenu(){
     let res= this._cmd.exec_sync('get_options');
     if (res!==undefined && res!==null){
+    /** Generating the anonymous object as a dictionnary
+     *  of all option names assiociated to their value*/
       let params= {};
       let optionsTxt= res.split(';');
       for(var i=0; i<optionsTxt.length; ++i){
@@ -1290,18 +1457,38 @@ class NVPNMenu extends PanelMenu.Button{
         params[k]= v;
       }
 
+    /** updating the options submenu given the configuration that
+     *  has just been generated
+     */
       this._submenuOptions.updateFromOpt(params);
     }
   }
 
+  /** Callback method, toggles 'location pick' submenu */
   cb_locationPick(){
     this._submenuPlaces.menu.toggle();
   }
 
+  /** Callback method, update and toggles 'options' submenu */
   cb_options(){
-    this.updateOptionsMenu();
+    /** no need to update the 'options' submenu,
+     *  if said submenu is closing*/
+    if(!this._submenuOptions.menu.isOpen){
+      this.updateOptionsMenu();
+    }
 
     this._submenuOptions.menu.toggle();
+  }
+
+  /**
+   * Callback for when a favourite server is clicked (presumably for connection)
+   *  
+   * @param {string} serv the server name to which try and connect
+   */
+  _serv_fav_cliked(item, serv){
+    if(serv){
+      this._place_menu_new_selection(serv);
+    }
   }
 
 

@@ -31,7 +31,7 @@
             <default>"echo '' | nordvpn login | grep -Po 'already logged'"</default>
         </key>
         <key type="s" name="cmd-current-server-get">
-            <default>'nordvpn status | grep -Po \'Current server: .*\\..*\\..*\' | cut -d: -f2 | cut -d\' \' -f2'</default>
+            <default>"nordvpn status"</default>
         </key>
         <key type="s" name="cmd-server-place-connect">
             <default>"nordvpn c _%target%_"</default>
@@ -58,6 +58,11 @@
             <default>true</default>
             <summary>If true check installed Nordvpn CLI tools version against expect version</summary>
             <description>Should the 'nordvpn' command version be checked?</description>
+        </key>
+        <key type="b" name="settings-change-reconnect">
+            <default>false</default>
+            <summary>If true, reconnects every time settings are changed within the extension</summary>
+            <description>Reconnect when settings change?</description>
         </key>
     </schema>
 </schemalist>

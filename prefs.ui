@@ -120,6 +120,36 @@ You can't try increasing it, for performance issue? But you probably shouldn't c
             <property name="top_attach">2</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkSwitch" id="NVPN_Sett_Toggle_Option_Reconnect">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="hexpand">False</property>
+            <property name="vexpand">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="NVPN_Sett_Label_Option_Reconnect">
+            <property name="width_request">100</property>
+            <property name="height_request">80</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+            <property name="label" translatable="yes">Server reconnect when settings change</property>
+            <property name="xalign">0.30000001192092896</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">3</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child type="tab">
@@ -405,7 +435,7 @@ Only modify if you have a good understanding of what you're doing…</property>
                       <object class="GtkEntry" id="NVPN_Sett_Entry_Server_Get">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="tooltip_text" translatable="yes">Shell command which std output is the server (form 'ccnnn.nordvpn.com', c= char, n= num)  to which the nordvpn CLI tool is connected to.</property>
+                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the 'nordvpn status' command.</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
                         <property name="hexpand">True</property>
@@ -549,11 +579,11 @@ Only modify if you have a good understanding of what you're doing…</property>
                         <property name="width_request">200</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Shell command which std output is the server (form 'ccnnn.nordvpn.com', c= char, n= num)  to which the nordvpn CLI tool is connected to.</property>
+                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the 'nordvpn status' command.</property>
                         <property name="halign">start</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="label" translatable="yes">Return the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to:</property>
+                        <property name="label" translatable="yes">Return the status of the  current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to:</property>
                         <property name="use_markup">True</property>
                         <property name="wrap">True</property>
                       </object>
@@ -826,7 +856,7 @@ X.X.X…</property>
             <property name="margin_right">5</property>
             <property name="margin_top">10</property>
             <property name="margin_bottom">10</property>
-            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.0.0-4).
+            <property name="label" translatable="yes">This a gnome-shell extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.0.1-1).
 
 This extension is availabe on (in order of 'freshness' of the update):
 - &lt;a href="https://github.com/AlexPoilrouge/NordVPN-connect"&gt;GitHub&lt;/a&gt;

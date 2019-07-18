@@ -3,6 +3,15 @@ const Atk= imports.gi.Atk;
 const St = imports.gi.St;
 
 const PopupMenu = imports.ui.popupMenu;
+const Pango = imports.gi.Pango;
+
+const Gtk = imports.gi.Gtk;
+const GObject = imports.gi.GObject;
+
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+
+const ByteArray = imports.byteArray;
 
 
 
@@ -182,6 +191,12 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
     select_callback(func=null){
       this.select_cb= func;
     }
+
+    unselect_current(){
+      if(this.cur_selected!=null){
+        this.cur_selected.select(false);
+      }
+    }
   
     /**
      * Private method that is called when an item is click.
@@ -193,9 +208,7 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
      */
     _item_select(item){
       /** if there is an item currently selected (data), unselect it (ui) */
-      if(this.cur_selected!=null){
-        this.cur_selected.select(false);
-      }
+      this.unselect_current();
   
       /** if the item clicked is the one currently selected (data), then it is deselected (ui & data) */
       if(item===this.cur_selected){
@@ -274,6 +287,443 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
 }
 
 /**
+ * Class that implements a data manager for handling
+ * favourite servers.
+ * Stores, adds, removes and writes & reads favs on disk
+ */
+class FavHandler{
+  /**
+   * Constructor
+   * 
+   * @param {string} path the path of the json file that stores the faved servers
+   */
+  constructor(path){
+    this._path= path;
+
+    this._dataObj= null;
+
+    this._iterator= 0;
+  }
+
+  /**
+   * Is the handler ready to be used
+   * (favs data correctly loaded)
+   * 
+   * @returns {boolean} ready or not
+   */
+  isReady(){
+    return (this._dataObj!==null) && (this._dataObj!==undefined);
+  }
+
+  /**https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/GLib.html#expand
+   * https://rockon999.pages.gitlab.gnome.org/gjs-guide/tutorials/gjs-basic-file-operations.html#getting-a-gio-file-instance
+   */
+  /**
+   * Method that loads the faved servers from the json fav file
+   */
+  load(){
+    let file= Gio.file_new_for_path(this._path);
+
+    /** checks if containing directory exists, if not, creates it */
+    if(!file.get_parent().query_exists(null)){
+      file.get_parent().make_directory_with_parents(null);
+    }
+
+    /** checks if fav json file exists, if not, creates it */
+    if(!file.query_exists(null)){
+      file.create(Gio.FileCreateFlags.NONE, null);
+    }
+
+    /** loads file content */
+    let [res, cont]= file.load_contents(null);
+
+    /** if success parses the JSON data into an Object */
+    if(res){
+      let json= (Object.entries(cont).length === 0)?
+                  {}
+                : JSON.parse(ByteArray.toString(cont));
+      if(json){
+        this._dataObj= json;
+      }
+    }
+  }
+
+  /**
+   * Method that saves the current state of the favs data
+   * on disk, into JSON form
+   */
+  save(){
+    var dataStream= "{}";
+    if(this._dataObj){
+      dataStream= JSON.stringify(this._dataObj, null, '\t');
+    }
+
+    if(GLib.file_test(this._path, GLib.FileTest.EXISTS)){
+      GLib.file_set_contents(this._path, dataStream);
+    }
+  }
+
+  /**
+   * Adds a new server to the favs
+   * 
+   * @param {string} server the server name 
+   * @param {string} country the country of the server
+   * @param {string} city the city of the server
+   */
+  add(server, country, city){
+    if(this._dataObj){
+      this._dataObj[server]= country+", "+city;
+    }
+  }
+
+  /**
+   * Removes a server from the favs
+   * 
+   * @param {string} server the name of the faved server to remove 
+   */
+  remove(server){
+    if(this._dataObj){
+      delete this._dataObj[server];
+    }
+  }
+
+  /**
+   * Checks if a servers is already faved
+   * 
+   * @param {string} server name of the tested server
+   * 
+   * @returns {boolean} whether of not the server is already faved 
+   */
+  isFaved(server){
+    return ((this._dataObj) && (this._dataObj[server]!==undefined));
+  }
+
+  /**
+   * How many faved servers?
+   * 
+   * @returns {integer} the number of currently faved servers
+   */
+  getNumber(){
+    return (this._dataObj)? Object.keys(this._dataObj).length : 0;
+  }
+
+  /**
+   * Method for iterating purpous.
+   * 
+   * Gets the first iteration within the fav list
+   * (the internalt iterator is pointing at the begining)
+   * 
+   * @returns {object} a couple [k, i] with k the server name, and i its info
+   *    returns undefined if nothing / empty
+   */
+  first(){
+    if(!this._dataObj) return undefined;
+
+    this._iterator= 0;
+    if(this.getNumber()>0){
+      let k= Object.keys(this._dataObj)[0];
+      return [k,this._dataObj[k]];
+    }
+    else{
+      return undefined;
+    }
+  }
+
+  /**
+   * Method for itterating purpous
+   * 
+   * Advance to the next iteration within the fav list
+   * (the internal iterator is incremented)
+   * 
+   * @returns {object} a couple [k, i] with k the server name, and i its info
+   *    return undefined if nothing (i.e. the previous iteration was the last one)
+   */
+  next(){
+    if(!this._dataObj) return undefined;
+
+    if(this.getNumber()>(++this._iterator)){
+      let k= Object.keys(this._dataObj)[this._iterator];
+      return [k,this._dataObj[k]];
+    }
+    else{
+      return undefined;
+    }
+  }
+};
+
+/**
+ * Class that implements faved server as a GUI menu item
+ */
+class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * Constructor
+   * 
+   * @param {string} servName the faved server name
+   * @param {string} infos infos about server
+   */
+  constructor(servName, infos){
+    super({style_class: 'server-fav',});
+    this.tLabel= new St.Label({text: servName+" - "+infos.slice(0,13)+((infos.length>13)?'…':'')});
+    this.actor.add(this.tLabel, {expand: true, x_fill: false});
+
+    this._servName= servName;
+    this._infos= infos;
+    
+    let btnIcon = new St.Icon({ icon_name: 'edit-delete-symbolic',
+                               style_class: 'system-status-icon' });
+
+    this._button= new St.Button({
+          child: btnIcon,
+          reactive: true,
+          can_focus: true,
+          track_hover: true,
+          style_class: 'system-menu-action fav-delete-btn',
+    });
+
+    this._statusBin = new St.Bin({ x_align: St.Align.END, });
+    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    this._statusBin.child= this._button;
+
+    /** signal 'delete-fav' is emmited when the delete button is clicked */
+    this._idc1= this._button.connect('clicked', () => {
+      this.emit('delete-fav', this._servName);
+    })
+  }
+
+  /**
+   * destructor
+   */
+  destroy(){
+    this._button.disconnect(this._idc1);
+
+    super.destroy();
+  }
+
+  get key(){
+    return this._servName;
+  }
+
+  get infos(){
+    return this._infos;
+  }
+
+  set infos(infos){
+    this._infos= infos;
+    this.tLabel.text= this._servName+" - "+this._infos;
+  }
+}
+
+
+/** Regisering this item as a GObject in order
+ *  to use signals via the 'emit' method
+ */
+let FavoriteStacker = GObject.registerClass(
+{
+  Signals: {
+    'server-fav-connect': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
+/**
+ * Class that implements the part of the gui menu
+ * where the faved servers are displyed
+ */
+class FavoriteStacker extends GObject.Object{
+  /**
+   * 
+   * @param {object} submenu the parent submenu
+   * @param {string} favPath the path of the file that contains faved server JSON format
+   */
+  _init(submenu, favPath){
+    super._init();
+
+    this._parentMenu= submenu;
+
+    this._startPos= this._parentMenu.menu._getMenuItems().length;
+
+    this.FAV_SIGS= [];
+
+    this._currentServInfo= {server: "", city: "", country: ""};
+
+    let label= new St.Label({text: "----- Favorites -----",});
+    let hbox= new St.BoxLayout();
+    let item= new PopupMenu.PopupBaseMenuItem({reactive: false});
+    hbox.add(label);
+    item.actor.add(hbox, { expand: true, x_fill: false});
+
+    this._parentMenu.menu.addMenuItem(item);
+
+    /** button to add current server as favourite */
+    let btnLabel= new St.Label({text: "Add current as favorite",});
+
+    this._button= new St.Button({
+                      child: btnLabel,
+                      reactive: true,
+                      can_focus: true,
+                      track_hover: true,
+                      style_class: 'system-menu-action add-fav-button',
+    });
+    this._button.set_toggle_mode(true);
+    /** hidden by default */
+    this._button.hide();
+
+    let btnItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
+    btnItem.actor.add(this._button, { expand: true, x_fill: false});
+
+    this._parentMenu.menu.addMenuItem(btnItem);
+
+    /** loading from disk and handling the favs */
+    this._favHandler= new FavHandler(favPath);
+    this._favHandler.load();
+
+    /** fill menu with existing favs */
+    this._generateItemList();
+
+    /** when 'add favourite' button is clicked,
+     * add the server (with its infos) as a fav
+     */
+    this._idc1= this._button.connect('clicked', () => {
+      let serv= this._currentServInfo;
+      if(serv && serv.server){
+        if(!this._favHandler.isFaved(serv.server)){
+          this._favHandler.add(serv.server, serv.city, serv.country);
+          this._favHandler.save();
+          this._addFavItem(serv.server, serv.city+", "+serv.country);
+
+          /** only to update the display state of the button
+           *  (if the current serv is added, it should diseappear)*/
+          this.currentServer= serv;
+        }
+        else{
+          let r= this._parentMenu.menu._getMenuItems().find((item)=>{
+            if(item instanceof FavedServerItem){
+              return (item instanceof FavedServerItem) &&
+                      item.key===serv.server;
+            }
+          });
+
+          if(r){
+            r.infos= "????, ????";
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Called on destruction
+   * 
+   * cleans signals
+   */
+  _onDestroy(){
+    for(var i= 0; i<this.FAV_SIGS.length; ++i){
+      let t= this.FAV_SIGS[i];
+
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1]);
+      }
+    }
+
+    if(this._idc1){
+      this._button.disconnect(this._idc1);
+      this._idc1= 0;
+    }
+
+    super.destroy();
+  }
+
+  /**
+   * Private method that adds all loaded & stored faved servers as gui items
+   */
+  _generateItemList(){
+    if(this._favHandler){
+      for(var t=this._favHandler.first(); t!==undefined; t=this._favHandler.next()){
+        this._addFavItem(t[0], t[1]);
+      }
+    }
+  }
+
+  /** 
+   * Private method that adds a faved server as a gui item
+   * 
+   * @param {string} serv the server name
+   * @param {string} info the server infos
+  */
+  _addFavItem(serv, info){
+    let favItem= new FavedServerItem(serv, info);
+
+    this._parentMenu.menu.addMenuItem(favItem);
+
+    /** whenever a fav server's menu item is clicked,
+     * the signal 'server-fav-connect' is emitted
+     */
+    this.FAV_SIGS.push([favItem, favItem.connect('activate', () => {
+      this.emit('server-fav-connect', favItem.key);
+    })]);
+
+    /** whenever a fav server's menu item's delete button is clicked,
+     * it is removed from the fav data handler (changes written on disk)
+     * the menu item is removed and its signal disconnected
+     */
+    this.FAV_SIGS.push([favItem, favItem.connect('delete-fav', (item, servName) => {
+      this._favHandler.remove(servName);
+      this._favHandler.save();
+
+      var i= -1;
+      do{
+        i= this.FAV_SIGS.findIndex((e) => {
+          return e[0]==item;
+        });
+        if(i>=0){
+          let elmt= this.FAV_SIGS[i];
+          if(elmt && elmt[0] && elmt[1]){
+            elmt[0].disconnect(elmt[1]);
+          }
+          this.FAV_SIGS[i]= undefined;
+          this.FAV_SIGS= this.FAV_SIGS.slice(0,i).concat(
+                          (this.FAV_SIGS.length>(i+1))?
+                            this.FAV_SIGS.slice((i+1))
+                            : []
+          );
+        }
+      }
+      while(i>=0);
+      
+      item.destroy();
+
+      /** only to update the display state of the button
+       *  (if the current serv was fav, and has been delete, it should reappear)*/
+      this.currentServer= this._currentServInfo;
+    })]);
+  }
+
+  /**
+   * accessor (write) to change the current server.
+   * if this server is already faved, we hide the 'add as favourite' button
+   * that becomes, de facto, redundant
+   * 
+   * @param {object} serverInfo object that contains a 'server' field, for the server name
+   *    (and a 'infos' field)
+   */
+  set currentServer(serverInfo){
+    if(this._favHandler.isFaved(serverInfo.server) || !this._currentServInfo){
+      this._button.hide();
+    }
+    else{
+      this._button.show();
+    }
+    this._currentServInfo= serverInfo;
+  }
+
+  get currentServer(){
+    return this._currentServInfo;
+  }
+}
+);
+
+/**
  * Class that implements the submenu from which the user can type in directly
  *  a server name
  */
@@ -293,30 +743,30 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         let hbox= new St.BoxLayout();
 
         this.servEntry = new St.Entry({
-        style_class: 'search-entry',
-        can_focus: true,
-        hint_text: _('Enter server name'),
-        track_hover: true,}
+          style_class: 'search-entry',
+          can_focus: true,
+          hint_text: _('Enter server name'),
+          track_hover: true,}
         );
 
         this.SIGS_ID= [];
         this.SIGS_ID[0]= this.servEntry.get_clutter_text().connect( 'activate',
-        this._newServerEntry.bind(this)
+          this._newServerEntry.bind(this)
         );
 
         this.SIGS_ID[1]= this.servEntry.get_clutter_text().connect( 'text-changed',
         () => {
             if(this._err){
-            this.servEntry.style_class='nvpn-serv-entry';
-            this._err= false;
+              this.servEntry.style_class='nvpn-serv-entry';
+              this._err= false;
             }
         }
         );
         this.SIGS_ID[2]= this.menu.connect('open-state-changed',
         () => {
             if(this._err){
-            this.servEntry.style_class='nvpn-serv-entry';
-            this._err= false;
+              this.servEntry.style_class='nvpn-serv-entry';
+              this._err= false;
             }
         }
         );
@@ -324,13 +774,24 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         hbox.add_child(this.servEntry);
 
         let item= new PopupMenu.PopupBaseMenuItem({
-        reactive: false
+          reactive: false
         });
 
         item.actor.add(hbox, { expand: true, x_fill: false});
         this.menu.addMenuItem(item);
 
         this.servEntry.width= 150;
+
+
+        let separator= new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(separator);
+
+        this.fav= new FavoriteStacker(this, ".config/nordvpn/nordvpn_connect/fav.json");
+        this.SIGS_ID[3]= this.fav.connect('server-fav-connect', (item, servName)=>{
+          this.emit('server-fav-connect', servName);
+        });
+
+        //this.fav.currentServer= "oui";
     }
   
   /** Destructor
@@ -340,17 +801,21 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[0]);
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[1]);
     this.menu.disconnect(this.SIGS_ID[2]);
+    this.fav.disconnect(this.SIGS_ID[3]);
 
     super.destroy();
   }
 
   /** Method to call to fill the content of the server text entry */
-  setSeverEntryText(txt){
+  setSeverEntryText(serverName, city=undefined, country=undefined){
     /** checks the format before filling the entry */
     let rgx= /^([a-z]{2}(\-[a-z]*)?[0-9]+)(\.nordvpn\.com)?$/g;
-    let arr= rgx.exec(txt);
+    let arr= rgx.exec(serverName);
     if((arr!==null) && (arr[1]!==undefined)){
       this.servEntry.set_text(arr[1]);
+
+      //this.fav.currentServer= arr[1];
+      this.fav.currentServer= {server: arr[1], city: (city?city:""), country: (country?country:"")};
     }
   }
 
@@ -372,7 +837,7 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     if(serv){
         /** callback (if function set) */
         if(this.newServer_cb){
-        this.newServer_cb(this.servEntry.text);
+          this.newServer_cb(this.servEntry.text);
         }
 
         /** menu closes */
@@ -456,6 +921,8 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
    */
     destroy(){
         this._switch.actor.disconnect(this._c_id);
+
+        super.destroy();
     }
 
     /** Method that that 'toggles' or 'switch' the current state of the item
@@ -628,6 +1095,359 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     }
 }
 
+
+/** Class that implements a DNS text entry line as a submenu item */
+class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
+  /** Constructor
+   *  @method
+   *  @param {string} text - the displayed name of the item
+   */
+  constructor(text){
+    super();
+
+    this.actor.reactive= false;
+
+    this.label = new St.Label({ text: text, });
+    this.actor.label_actor= this.label;
+    this.actor.add_child(this.label);
+
+    /** this attribute allows to save the previous entered text,
+     *  so that, if the user types something indalid, the text can
+     *  immediately be reverted. This allows to mainain a constant
+     *  valid entry */
+    this._oldText="..."
+    this._validated= false;
+    this._auto= false;
+
+    this.entry= new St.Entry({
+      can_focus: true,
+      text: this._oldText,
+      track_hover: true,
+    });
+    this._statusBin = new St.Bin({x_fill: true, x_align: St.Align.END });
+    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    this._statusBin.child= this.entry;
+
+    /** When ever the user enter's new text… */
+    this._idc1= this.entry.get_clutter_text().connect('text-changed', (txt) =>
+      {
+        /** the current text is processed and enforce valid format */
+        let r= this._processText(txt.text);
+
+        /** if it's valid, this new text is the new displayed entry*/
+        if(r){
+          this.entry.set_text(r);
+          this._oldText= r;
+        }
+        /** if invalid, the entry text reverts to previous state */
+        else{
+          this.entry.set_text(this._oldText);
+        }
+        
+        /** if the 'new text change', was done by human intervention,
+         *  then if text doesn't matche an entire DNS adress,
+         *  make necessar display adjustments*/
+        if(!this._auto){
+          this.entry.style_class= (this.DNSTextCheck(this.entry.get_text()))?
+                                    ''
+                                  : 'dns-entry-error';
+        }
+        this._auto= false;
+
+        /** newly entered text means no validation has been made on it */
+        this._validated= false;
+      }
+    );
+
+    /** When enter is pressed withing the entry line input… */
+    this._idc2= this.entry.get_clutter_text().connect('activate', () =>
+      {
+        /** the current entry text is checked */
+        let txt= this.entry.get_text();
+        let check= this.DNSTextCheck(txt);
+
+        /** if the text matchtes an entire valid dns adress format,
+         *  visual adjustments are made */
+        this.entry.style_class= (check)? 'dns-entry-validated' : 'dns-entry-error';
+
+        /** and if so, approriate signal is emitted, and
+         *  entry is marked as validated */
+        this._validated= check;
+        if(check){
+          this.emit('validated-dns-text', txt)
+        }
+        /** otherwise, the entry is cleared of any inputed text*/
+        else{
+          this._clearText();
+        }
+      }
+    );
+
+    /** When text is deleted… */
+    this._idc3= this.entry.get_clutter_text().connect('delete-text', () => 
+      {
+        /** if this text has previously been validated,
+         *  the entry inputed text is cleared*/
+        if(this._validated){
+          this._clearText();
+        }
+      }
+    );
+  }
+
+  /** Destructor
+   *  @method
+   */
+  destroy(){
+    if(this._idc1)
+      this.entry.get_clutter_text().disconnect(this._idc1);
+    if(this._idc2)
+      this.entry.get_clutter_text().disconnect(this._idc2);
+    if(this._idc3)
+      this.entry.get_clutter_text().disconnect(this._idc3);
+
+    super.destroy();
+  }
+
+  /** Method that determines if given text match DNS adress format
+   *  @method
+   * 
+   *  DNS adress format:
+   *    'N1.N2.N3.N4'
+   *  where Nk is an interger within the [0,255] range
+   * 
+   *  @param {string} txt - the text to match
+   *  @return {boolean} wheter or not the text matches DNS adress format
+   */
+  DNSTextCheck(txt){
+    return (
+      ((/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/)
+        .exec(this.entry.get_text())
+      ) !== null
+    );
+  }
+
+  /** Private method process a given partial DNS address to enforce formating
+   *  @method
+   *  @param {string} newText - the text to process
+   *  @return {string} - the reformated (if needed) text if given text was valid,
+   *                    an empty string if invalid (not matching parial DNS address format)
+   */
+  _processText(newText){
+    if(newText===this._oldText) return newText;
+
+    let r= (/^([0-9]{1,3})?\.([0-9]{1,3})?\.([0-9]{1,3})?\.([0-9]{1,3})?/g)
+              .exec(newText);
+    
+
+    /** if not match or not all field were either matched correctly or 
+     *  empty, returns the old state*/
+    if(r===null || r.length<5) return this._oldText;
+
+    /** reformat text by ensuring all numbers are within
+     *  the [0,255] range
+     */
+    let txt= "";
+    for(var i= 1; i<5; ++i){
+      if(r[i]){
+        let t= parseInt(r[i]);
+        txt+= (t<0)? "0" : (t>255)? "255" : t.toString();
+      }
+
+      if(i<4) txt+= '.';
+    }
+
+    return txt;
+  }
+
+  /** Private method that clears all the inputed text within the entry.
+   *  @method
+   * 
+   *  emits the 'dns-text-cleared' signal
+   */
+  _clearText(){
+    /** default text is '...', _oldText is also reset*/
+    this._oldText= "...";
+    this.entry.set_text("...");
+
+    /** mark as unvalidated with  no decoration */
+    this._validated= false;
+    this.entry.style_class= '';
+
+
+    this.emit('dns-text-cleared');
+  }
+
+  /** Method to programatically change the content of the dns entry
+   *  text.
+   *  @method
+   *  @param {string} txt - the new text to put into the entry
+   */
+  setTxt(txt){
+    /** mark has not entered manually */
+    this._auto= true;
+    if(txt){
+      this.entry.set_text(txt);
+      /** a valid entered text via this method is marked as validated */
+      this._validated= true;
+    }
+    else{
+      this.entry.set_text('...');
+    }
+  }
+};
+
+/** Regisering this item as a GObject in order
+ *  to use signals via the 'emit' method
+ */
+let OptionsSubDNSItemContainer = GObject.registerClass(
+{
+  Signals: {
+    'new-DNS-config': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
+/** Class that implements the container of the several (3) DNS entires needed */
+class OptionsSubDNSItemContainer extends GObject.Object{
+  /** Constructor
+   *  @method
+   *  @param {string} name - the genric name of the items
+   *  @param {object} optionSubMenu - the submenu in which to add the dns entries
+   *  @param {integer} num - default value: 3 ; the number of entries to create*/
+  _init(name, optionSubMenu, num= 3){
+    super._init();
+    this.menu= optionSubMenu;
+
+    this._entries= [];
+    this._DNSAdresses= [];
+    this._entry_SIGS= [];
+
+    /** Anonymous funciton to add entry items to the menu and connect signals */
+    let dnsItemAdd= (num, it=-1) => {
+      let r= new OptionsSubDNSItem(name + " " +num);
+      this.menu.addMenuItem(r);
+
+      this._entries.push(r);
+
+      /** Whenever a new valid DNS entry is entered or cleared,
+       *  the new dns config must be generated and emitted (_newDNSCofig())*/
+      this._entry_SIGS.push([r, r.connect('validated-dns-text', (item, dnsTxt) => {
+        this._DNSAdresses[num+it]= dnsTxt;
+
+        this._newDNSConfig();
+      })]);
+
+      this._entry_SIGS.push([r, r.connect('dns-text-cleared', () => {
+        delete this._DNSAdresses[num+it];
+
+        this._newDNSConfig();
+      })]);
+
+      return r;
+    }
+
+    for(var i=1; i<=num; ++i){
+      dnsItemAdd(i);
+    }
+  }
+
+  /** Destructor
+   *  @method
+   */
+  _onDestroy(){
+    for(var i= 0; i<this._entry_SIGS.length; ++i){
+      let t= this._entry_SIGS[i];
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1])
+      }
+    }
+    for(var i=0; i<this._entries.length; ++i){
+      let t= this._entries[i];
+      if(t){
+        t.destroy();
+      }
+    }
+
+    super.destroy();
+  }
+
+  /** Private method that generated and emit the current
+   *  DNS confiruration
+   */
+  _newDNSConfig(){
+    let txt= "";
+
+    for(var i= 0; i<this._DNSAdresses.length; ++i){
+      let t= this._DNSAdresses[i];
+      if(t){
+        txt+= t + " ";
+      }
+    }
+
+    txt= (txt.split(/\w+/).length>1)? txt : 'disabled';
+
+    this.emit('new-DNS-config', txt);
+  }
+
+
+  /** Generic method to change dns configuration
+   *  @method
+   *  @param {string} v - the value of the dns configuration
+   *  
+   * A DNS configuration is a string object containing 1 to 3 DNS
+   * address correctli formated, sperated by a space character
+   */
+  /**TODO
+   * WARNING!!
+   * v.replace(/(\r\n|\n|\r)/gm, ""); crashes when whitelist exists
+   */
+  setValue(v){
+    let _v= v.replace(/(\r\n|\n|\r)/gm, "");
+    /** if value is 'disabled', means that there is not dns set,
+     *  all entries texts are disarded
+     */
+    if(_v==='disabled'){
+      for(var i= 0; i<this._entries.length; ++i){
+        let item= this._entries[i];
+        if(item){
+          item.setTxt('');
+        }
+      }
+    }
+    /** otherwise… */
+    else{
+      /** dns address are isolated*/
+      let values= _v.split(/,\s*/);
+      let l= values.length;
+
+      /** each of them fills an entry */
+      for(var i= 0; i<l; ++i){
+        let t= values[i];
+        if(t){
+          let item= this._entries[i];
+          if(item){
+            item.setTxt(t);
+          }
+        }
+      }
+
+      /** and the remaining entries texts (if existing) are discarded */
+      let L= this._entries.length;
+      if(l<L){
+        for(var i= 0; i<(L-l); ++i){
+          let item= this._entries[l+i];
+          if(item){
+            item.setTxt('');
+          }
+        }
+      }
+    }
+  }
+}
+);
+
 /** Class that implements  the submenu where appears the toggle for the
  *  different options offered by the CLI tool.
  */
@@ -658,6 +1478,11 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     */
     this['cybersec']= addSwitchItem("CyberSec", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('cybersec',state.toString());
+
+      let dns= this['dns'];
+      if(dns && state){
+        dns.setValue('disabled');
+      }
     });
     this['killswitch']= addSwitchItem("Kill Switch", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('killswitch',state.toString());
@@ -685,6 +1510,43 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
                     )]
                   );
     this['protocol']= item;
+  
+    /** speartor in the submenu */
+    let separator= new PopupMenu.PopupSeparatorMenuItem();
+    this.menu.addMenuItem(separator);
+
+    /** Adding the 3 DNS entries */
+    let dns= new OptionsSubDNSItemContainer("DNS", this.menu);
+    /** What to do when a new (and valid) DNS configuration has been entered */
+    this._toggSigs.push([dns, dns.connect( 'new-DNS-config', (obj, txt)=>
+                    {
+                      if(this._optCh_cb) this._optCh_cb('dns', txt);
+
+                      /** Enabling DNS, disables the CyberSec option
+                       * (has specified by the CLI app itself)*/
+                      let cs= this['cybersec'];
+                      if(txt!=="disabled" && cs){
+                        cs.setValue(false);
+                      }
+                    }
+                  )]
+                );
+    this['dns']= dns;
+
+
+    /** Adding a text message that warns about the DNS-CyberSec
+     *  exclusions */
+    let txtItem=  new PopupMenu.PopupBaseMenuItem({reactive: false,});
+    
+    this._panel_hbox= new St.BoxLayout();
+    let label1= new St.Label({style_class:'dns-cybersec-warning',});
+    label1.text= "Note: Setting DNS disables CyberSec and vice versa.";
+    label1.get_clutter_text().set_line_wrap(true);
+
+    this._panel_hbox.add_child(label1);
+    txtItem.actor.add_child(this._panel_hbox);
+
+    this.menu.addMenuItem(txtItem);
   }
 
   /** Destructor
@@ -701,6 +1563,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['autoconnect'].destroy();
     this['notify'].destroy();
     this['protocol'].destroy();
+    this['dns'].destroy();
   }
 
   /** Method that allows to specified a given function as a given callback when
@@ -730,8 +1593,15 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
 }
 
 
-
+/** class that implements a inforative message as a gui
+ * menu item
+ */
 class MessageItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * constructor
+   * 
+   * @param {string} txt message to display
+   */
   constructor(txt){
     super("");
 
