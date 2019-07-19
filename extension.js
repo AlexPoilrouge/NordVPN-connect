@@ -29,7 +29,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.0.1";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.2";
 
 /**
  * Calls for a given shell command in a synchronous way
@@ -247,7 +247,7 @@ class Core_CMDs{
     this.server_disconnect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-disconnect")))?
                           txt : "nordvpn d";
     this.daemon_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-daemon-online-check")))?
-                          txt : "echo \";`systemctl --user is-active nordvpnud`;`systemctl is-active nordvpnsd`;systemctl is-active nordvpnd\" | grep -Po \"(^;active;active;)|(;inactive;active$)\"";
+                          txt : "echo \";`systemctl --user is-active nordvpnud`;`systemctl is-active nordvpnsd`;`systemctl is-active nordvpnd`\" | grep -Po \";active$\"";
     this.vpn_online_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-vpn-online-check")))?
                           txt : "ifconfig -a | grep tun0";
     this.option_set= (txt=Unescape.convert(SETTINGS.get_string("cmd-option-set")))?
@@ -470,7 +470,7 @@ class NVPNMenu extends PanelMenu.Button{
         /** only usefull if menu is opening */
         if(this.menu.isOpen){
           this._update_displayed_server_infos(true);
-          if((!this.nvpn_monitor) && this.currentStatus<NVPNMenu.STATUS.CONNECTED){
+          if(/*(!this.nvpn_monitor) &&*/ this.currentStatus<NVPNMenu.STATUS.CONNECTED){
             this._update_status_and_ui();
           }
         }
@@ -1432,7 +1432,6 @@ class NVPNMenu extends PanelMenu.Button{
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
 
     if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.serverName){
-      log("nordvpn attempt at reconnect @"+this.server_info.serverName);
       this._nordvpn_ch_connect(this.server_info.serverName);
     }
   }

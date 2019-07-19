@@ -40,7 +40,7 @@
             <default>"nordvpn d"</default>
         </key>
         <key type="s" name="cmd-daemon-online-check">
-            <default>"echo \";`systemctl --user is-active nordvpnud`;`systemctl is-active nordvpnsd`;systemctl is-active nordvpnd\" | grep -Po \"(^;active;active;)|(;inactive;active$)\""</default>
+            <default>"systemctl is-active nordvpnd | grep -Eo '^active$'"</default>
         </key>
         <key type="s" name="cmd-vpn-online-check">
             <default>"ifconfig -a | grep tun0"</default>

@@ -74,15 +74,13 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
-Once the 'nordvpn' CLI tool is installed (assuming here, version `3.0.0`), check the packaged daemon's status:
+Once the 'nordvpn' CLI tool is installed (assuming here, version `3.2`), check the packaged daemon's status:
 
-    systemctl status nordvpnsd.service
-    systemctl --user status nordvpnud.service
+    systemctl status nordvpnd.service
     
 If the daemon isn't up and running, fix that:
 
-    systemctl enable --now nordvpnsd.service
-    systemctl --user enable --now nordvpnud.service
+    systemctl enable --now nordvpnd.service
     
 Now, set up your logins to the NordVPN service:
 
