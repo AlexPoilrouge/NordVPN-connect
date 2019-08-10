@@ -14,6 +14,22 @@ const GLib = imports.gi.GLib;
 const ByteArray = imports.byteArray;
 
 
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+const PersistentData = Me.imports.persistentData;
+
+const Convenience = Me.imports.convenience;
+
+
+
+/** Object that will be the access holder to this extension's gSettings */
+var SETTINGS;
+
+function init(){
+  /** Iniating the gSettings access */
+  SETTINGS = Convenience.getSettings();
+}
 
 /**
  * Class that implements the generic class for 'invisible' submenus.
@@ -286,170 +302,89 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
     }
 }
 
-/**
- * Class that implements a data manager for handling
- * favourite servers.
- * Stores, adds, removes and writes & reads favs on disk
- */
-class FavHandler{
-  /**
-   * Constructor
-   * 
-   * @param {string} path the path of the json file that stores the faved servers
-   */
-  constructor(path){
-    this._path= path;
 
-    this._dataObj= null;
+let StackerBase = GObject.registerClass(
+  {
+  },
+class StackerBase extends GObject.Object{
+  _init(title, submenu, startPos= undefined){
+    super._init();
+    
+    this._parentMenu= submenu;
 
-    this._iterator= 0;
-  }
+    this.ITEM_SIGS= [];
 
-  /**
-   * Is the handler ready to be used
-   * (favs data correctly loaded)
-   * 
-   * @returns {boolean} ready or not
-   */
-  isReady(){
-    return (this._dataObj!==null) && (this._dataObj!==undefined);
-  }
+    var b= Boolean(startPos);
+    this._startPos= (b)? startPos
+                      : this._parentMenu.menu._getMenuItems().length;
 
-  /**https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/GLib.html#expand
-   * https://rockon999.pages.gitlab.gnome.org/gjs-guide/tutorials/gjs-basic-file-operations.html#getting-a-gio-file-instance
-   */
-  /**
-   * Method that loads the faved servers from the json fav file
-   */
-  load(){
-    let file= Gio.file_new_for_path(this._path);
+    let label= new St.Label({text: "----- "+title+" -----",});
+    let hbox= new St.BoxLayout();
+    this._startItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
+    hbox.add(label);
+    this._startItem.actor.add(hbox, { expand: true, x_fill: false});
 
-    /** checks if containing directory exists, if not, creates it */
-    if(!file.get_parent().query_exists(null)){
-      file.get_parent().make_directory_with_parents(null);
+    if(b){
+      this._parentMenu.menu.addMenuItem(this._startItem);
+    }
+    else{
+      this._parentMenu.menu.addMenuItem(this._startItem, startPos);
     }
 
-    /** checks if fav json file exists, if not, creates it */
-    if(!file.query_exists(null)){
-      file.create(Gio.FileCreateFlags.NONE, null);
+    this.ITEM_SIGS.push([this._startItem, this._startItem.connect('destroy', () => {
+      --this._sl;
+
+      if(this._sl>0){
+        this._startItem= this._parentMenu.menu._getMenuItems()[this._startPos+1];
+      }
+      else{
+        this._startItem= null;
+      }
+    })]);
+
+    this._sl= 1;
+  }
+
+  _onDestroy(){
+    for(var i= 0; i<this.ITEM_SIGS.length; ++i){
+      let t= this.ITEM_SIGS[i];
+
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1]);
+      }
     }
 
-    /** loads file content */
-    let [res, cont]= file.load_contents(null);
+    super.destroy();
+  }
 
-    /** if success parses the JSON data into an Object */
-    if(res){
-      let json= (Object.entries(cont).length === 0)?
-                  {}
-                : JSON.parse(ByteArray.toString(cont));
-      if(json){
-        this._dataObj= json;
+  _computeStartPos(){
+    if(Boolean(this._startItem)){
+      var tmp= this._parentMenu.menu._getMenuItems().indexOf(this._startItem);
+      if(tmp>=0){
+        this._startPos= tmp;
       }
     }
   }
 
-  /**
-   * Method that saves the current state of the favs data
-   * on disk, into JSON form
-   */
-  save(){
-    var dataStream= "{}";
-    if(this._dataObj){
-      dataStream= JSON.stringify(this._dataObj, null, '\t');
-    }
+  get actualizedStartPos(){
+    this._computeStartPos();
+    return this._startPos;
+  }
 
-    if(GLib.file_test(this._path, GLib.FileTest.EXISTS)){
-      GLib.file_set_contents(this._path, dataStream);
+  addNonDynamicFrontItem(item){
+    if(Boolean(item)){
+      this._parentMenu.menu.addMenuItem(item, this._startPos+this._sl);
+
+      ++this._sl;
+
+      this.ITEM_SIGS.push([item, item.connect('destroy', () => {
+        --this._sl;
+      })]);
     }
   }
 
-  /**
-   * Adds a new server to the favs
-   * 
-   * @param {string} server the server name 
-   * @param {string} country the country of the server
-   * @param {string} city the city of the server
-   */
-  add(server, country, city){
-    if(this._dataObj){
-      this._dataObj[server]= country+", "+city;
-    }
-  }
-
-  /**
-   * Removes a server from the favs
-   * 
-   * @param {string} server the name of the faved server to remove 
-   */
-  remove(server){
-    if(this._dataObj){
-      delete this._dataObj[server];
-    }
-  }
-
-  /**
-   * Checks if a servers is already faved
-   * 
-   * @param {string} server name of the tested server
-   * 
-   * @returns {boolean} whether of not the server is already faved 
-   */
-  isFaved(server){
-    return ((this._dataObj) && (this._dataObj[server]!==undefined));
-  }
-
-  /**
-   * How many faved servers?
-   * 
-   * @returns {integer} the number of currently faved servers
-   */
-  getNumber(){
-    return (this._dataObj)? Object.keys(this._dataObj).length : 0;
-  }
-
-  /**
-   * Method for iterating purpous.
-   * 
-   * Gets the first iteration within the fav list
-   * (the internalt iterator is pointing at the begining)
-   * 
-   * @returns {object} a couple [k, i] with k the server name, and i its info
-   *    returns undefined if nothing / empty
-   */
-  first(){
-    if(!this._dataObj) return undefined;
-
-    this._iterator= 0;
-    if(this.getNumber()>0){
-      let k= Object.keys(this._dataObj)[0];
-      return [k,this._dataObj[k]];
-    }
-    else{
-      return undefined;
-    }
-  }
-
-  /**
-   * Method for itterating purpous
-   * 
-   * Advance to the next iteration within the fav list
-   * (the internal iterator is incremented)
-   * 
-   * @returns {object} a couple [k, i] with k the server name, and i its info
-   *    return undefined if nothing (i.e. the previous iteration was the last one)
-   */
-  next(){
-    if(!this._dataObj) return undefined;
-
-    if(this.getNumber()>(++this._iterator)){
-      let k= Object.keys(this._dataObj)[this._iterator];
-      return [k,this._dataObj[k]];
-    }
-    else{
-      return undefined;
-    }
-  }
-};
+  get acutalizedDynamicItemStartPos(){ return (this.actualizedStartPos+this._sl)}
+});
 
 /**
  * Class that implements faved server as a GUI menu item
@@ -530,33 +465,25 @@ let FavoriteStacker = GObject.registerClass(
  * Class that implements the part of the gui menu
  * where the faved servers are displyed
  */
-class FavoriteStacker extends GObject.Object{
+class FavoriteStacker extends StackerBase{
   /**
    * 
    * @param {object} submenu the parent submenu
-   * @param {string} favPath the path of the file that contains faved server JSON format
+   * @param {string} persistentDataHandler the object that implement the handling of
+   *                                  persitent data.
+   * 
+   * Note that the data within persistentDataHandler should be loaded prior to this
+   * object creation
    */
-  _init(submenu, favPath){
-    super._init();
-
-    this._parentMenu= submenu;
-
-    this._startPos= this._parentMenu.menu._getMenuItems().length;
+  _init(submenu, persistentDataHandler){
+    super._init("Favorite servers",submenu);
 
     this.FAV_SIGS= [];
 
     this._currentServInfo= {server: "", city: "", country: ""};
 
-    let label= new St.Label({text: "----- Favorites -----",});
-    let hbox= new St.BoxLayout();
-    let item= new PopupMenu.PopupBaseMenuItem({reactive: false});
-    hbox.add(label);
-    item.actor.add(hbox, { expand: true, x_fill: false});
-
-    this._parentMenu.menu.addMenuItem(item);
-
     /** button to add current server as favourite */
-    let btnLabel= new St.Label({text: "Add current as favorite",});
+    let btnLabel= new St.Label({text: "Fav' current server",});
 
     this._button= new St.Button({
                       child: btnLabel,
@@ -572,14 +499,15 @@ class FavoriteStacker extends GObject.Object{
     let btnItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
     btnItem.actor.add(this._button, { expand: true, x_fill: false});
 
-    this._parentMenu.menu.addMenuItem(btnItem);
+    this.addNonDynamicFrontItem(btnItem);
 
     /** loading from disk and handling the favs */
-    this._favHandler= new FavHandler(favPath);
-    this._favHandler.load();
+    this._favHandler= new PersistentData.FavHandler(persistentDataHandler);
+    //this._favHandler.load();
 
     /** fill menu with existing favs */
     this._generateItemList();
+
 
     /** when 'add favourite' button is clicked,
      * add the server (with its infos) as a fav
@@ -631,7 +559,16 @@ class FavoriteStacker extends GObject.Object{
       this._idc1= 0;
     }
 
-    super.destroy();
+    super._onDestroy();
+  }
+
+  _computeStartPos(){
+    if(Boolean(this._startItem)){
+      var tmp= this._parentMenu.menu._getMenuItems().indexOf(this._startItem);
+      if(tmp>=0){
+        this._startPos= tmp;
+      }
+    }
   }
 
   /**
@@ -654,7 +591,8 @@ class FavoriteStacker extends GObject.Object{
   _addFavItem(serv, info){
     let favItem= new FavedServerItem(serv, info);
 
-    this._parentMenu.menu.addMenuItem(favItem);
+    var disp= this.acutalizedDynamicItemStartPos;
+    this._parentMenu.menu.addMenuItem(favItem, disp);
 
     /** whenever a fav server's menu item is clicked,
      * the signal 'server-fav-connect' is emitted
@@ -694,7 +632,7 @@ class FavoriteStacker extends GObject.Object{
       item.destroy();
 
       /** only to update the display state of the button
-       *  (if the current serv was fav, and has been delete, it should reappear)*/
+       *  (if the current serv was fav, and has been delstyle_classete, it should reappear)*/
       this.currentServer= this._currentServInfo;
     })]);
   }
@@ -719,6 +657,217 @@ class FavoriteStacker extends GObject.Object{
 
   get currentServer(){
     return this._currentServInfo;
+  }
+}
+);
+
+
+class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
+  constructor(location, isPin){
+    super({style_class: 'recent-location'});
+    this.tLabel= new St.Label({
+      style_class: 'recent-location-label' +((isPin)?' pinned':''),
+      text: location.replace(/_/gi,' ')
+    });
+    this.actor.add(this.tLabel, {expand: true, x_fill: false});
+
+    this._location= location;
+    this._pin= isPin;
+    
+    let btnIcon = new St.Icon({ icon_name: (isPin)?'zoom-out-symbolic':'view-pin-symbolic',
+                               style_class: 'system-status-icon' });
+
+    this._button= new St.Button({
+          child: btnIcon,
+          reactive: true,
+          can_focus: true,
+          track_hover: true,
+          style_class: 'system-menu-action pin-btn',
+    });
+
+    this._statusBin = new St.Bin({ x_align: St.Align.MIDDLE, });
+    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.MIDDLE });
+    this._statusBin.child= this._button;
+
+    /** signal 'delete-fav' is emmited when the delete button is clicked */
+    this._idc1= this._button.connect('clicked', () => {
+      this.emit(((isPin)?'unpin':'pin'), location);
+    })
+  }
+
+  get isPin(){ return this._pin;}
+  get location(){ return this._location;}
+}
+
+let RecentLocationStacker = GObject.registerClass(
+{
+  Signals: {
+    'location-connect': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
+class RecentLocationStacker extends StackerBase{
+  _init(submenu, persistentDataHandler, capacity=3){
+    super._init("Recent Connections", submenu);
+
+    this._capacity= capacity;
+
+    this.RLOC_SIGS= [];
+
+    this._length= 0;
+
+    this._rlocHandler= new PersistentData.RecentLocationHandler(persistentDataHandler, this._capacity);
+
+    this._generateItemList();
+
+    log("nordvpn rls?");
+  }
+
+  /**
+   * Called on destruction
+   * 
+   * cleans signals
+   */
+  _onDestroy(){
+    for(var i= 0; i<this.RLOC_SIGS.length; ++i){
+      let t= this.RLOC_SIGS[i];
+
+      if(t && t[0] && t[1]){
+        t[0].disconnect(t[1]);
+      }
+    }
+
+    super._onDestroy();
+  }
+
+  _generateItemList(){
+    log("nordvpn pppp?");
+    if(this._rlocHandler){
+      var i= 0;
+      for(var t= this._rlocHandler.first(); t!==undefined; t= this._rlocHandler.next()){
+        log("nordvpn addRLocItem "+t[0]+", "+t[1]);
+        this._addRLocItem(t[0], i, t[1]);
+        ++i;
+      }
+    }
+    log("nordvpn ooo?");
+  }
+
+  __deleteInnerItem(item){
+    log("nordvpn dInnerItem("+(Boolean(item)?"item["+item.location+"]":"null/undefined]"));
+    item.destroy();
+    --this._length;
+  }
+
+  _deleteItem(location){
+    let p_items= this._parentMenu.menu._getMenuItems();
+
+    var disp= this.acutalizedDynamicItemStartPos;
+    for(var i= disp; i<p_items.length; ++i){
+      var i_item= p_items[i];
+      if( Boolean(i_item) && (i_item instanceof RecentLocationItem)
+          && i_item.location===location){
+        this.__deleteInnerItem(i_item);
+      }
+    }
+  }
+
+  __addInnerItem(item, i=undefined){
+    var disp= this.acutalizedDynamicItemStartPos;
+
+    var pos= (i===undefined || i<0)?this._length:i;
+
+    this._parentMenu.menu.addMenuItem(item, disp+pos);
+    ++this._length;
+  }
+
+  _addRLocItem(location, pos= 0, isPin= false){
+    log("nordvpn iiii?");
+    let rlocItem= new RecentLocationItem(location, isPin);
+
+    var disp= this.acutalizedDynamicItemStartPos;
+    log("nordvpn addMenuItem( item["+location+"], "+pos+disp+"]");
+    //this._parentMenu.menu.addMenuItem(rlocItem, pos+this._startPos+1);
+    this.__addInnerItem(rlocItem, pos)
+
+    this.RLOC_SIGS.push([rlocItem, rlocItem.connect('activate',() => {
+      this.emit('location-connect', location);
+    })]);
+
+    if(isPin){
+      this.RLOC_SIGS.push([rlocItem, rlocItem.connect('unpin', (item, loc) =>{
+        var b= this._rlocHandler.unpin(loc);
+        this._rlocHandler.save();
+
+        this.__deleteInnerItem(item);
+        if(b) this.addRecentLocation(loc, false);
+      })])
+    }
+    else{
+      this.RLOC_SIGS.push([rlocItem, rlocItem.connect('pin', (item, loc) =>{
+        this._rlocHandler.pin(loc);
+        this._rlocHandler.save();
+
+        log("nordvpn pining item["+loc+"]")
+        //this.__deleteInnerItem(item);
+        this.addRecentLocation(loc, true);
+      })])
+    }
+  }
+
+  addRecentLocation(location, pin= false){
+    var b_wasPinned= this._rlocHandler.isPinned(location);
+    if(pin){
+      this._deleteItem(location);
+      this._rlocHandler.pin(location);
+    }
+    else{
+      var rmvLoc= this._rlocHandler.add(location);
+      if(Boolean(rmvLoc)){
+        log("nordvpn arl("+location+") requires deleting item["+rmvLoc+"]");
+        this._deleteItem(rmvLoc);
+      }
+    }
+
+    this._rlocHandler.save();
+
+    var i=0;
+    for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
+      if(t[0]===location){
+        if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
+          log("nordvpn arli("+location+','+i+','+pin+')');
+          this._addRLocItem(location, i, pin);
+        }
+
+        break;
+      }
+
+      ++i;
+    }
+  }
+
+  setCapacity(c){
+    var oldCap= this._capacity;
+    if(c>0 && c!==oldCap){
+      this._rlocHandler.capacity= c;
+      this._capacity= c;
+
+      this._rlocHandler.save();
+
+      var diff= c-oldCap;
+
+      if(diff<0 && this._length>c){
+        let children= this._parentMenu.menu._getMenuItems();
+
+        var p= this._startPos + 1 + this._length + diff;
+        
+        for(var i=0; i<(-diff); ++i){
+          this.__deleteInnerItem(children[p]);
+        }
+      }
+    }
   }
 }
 );
@@ -786,12 +935,26 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         let separator= new PopupMenu.PopupSeparatorMenuItem();
         this.menu.addMenuItem(separator);
 
-        this.fav= new FavoriteStacker(this, ".config/nordvpn/nordvpn_connect/fav.json");
-        this.SIGS_ID[3]= this.fav.connect('server-fav-connect', (item, servName)=>{
-          this.emit('server-fav-connect', servName);
+        //peparing the handling of persistent data (favs, recents loc …)
+        this.persistentDataHandler= new PersistentData.PersistentDataHandler(
+          ".config/nordvpn/nordvpn_connect/fav.json"
+        );
+        this.persistentDataHandler.load();
+
+
+        var rlocCapactiy= SETTINGS.get_int('recent-capacity');        
+        this.recent= new RecentLocationStacker(this, this.persistentDataHandler, rlocCapactiy);
+        this.SIGS_ID[3]= this.recent.connect('location-connect', (item, location)=>{
+          this.emit('location-connect', location);
+        });
+        this._sett_sig1= SETTINGS.connect('changed::recent-capacity', () => {
+          this.recent.setCapacity(SETTINGS.get_int('recent-capacity'));
         });
 
-        //this.fav.currentServer= "oui";
+        this.fav= new FavoriteStacker(this, this.persistentDataHandler);
+        this.SIGS_ID[4]= this.fav.connect('server-fav-connect', (item, servName)=>{
+          this.emit('server-fav-connect', servName);
+        });
     }
   
   /** Destructor
@@ -802,6 +965,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[1]);
     this.menu.disconnect(this.SIGS_ID[2]);
     this.fav.disconnect(this.SIGS_ID[3]);
+
+    SETTINGS.disconnect(this._sett_sig1);
 
     super.destroy();
   }
@@ -879,6 +1044,12 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
   */
   isEntryEmpty(){
     return this.servEntry.text.length===0;
+  }
+
+  notifyRecentConnection(location){
+    if(this.recent){
+      this.recent.addRecentLocation(location);
+    }
   }
 }
 

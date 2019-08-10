@@ -64,5 +64,11 @@
             <summary>If true, reconnects every time settings are changed within the extension</summary>
             <description>Reconnect when settings change?</description>
         </key>
+        <key type="i" name="recent-capacity">
+            <range min="1" max="50"/>
+            <default>4</default>
+            <summary>Set how many items to store within the 'recent connection' menu</summary>
+            <description>How many items in the 'recent connections' menu</description>
+        </key>
     </schema>
 </schemalist>

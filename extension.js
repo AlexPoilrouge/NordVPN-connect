@@ -624,6 +624,8 @@ class NVPNMenu extends PanelMenu.Button{
      *  a call to the '_serv_fav_cliked()' method
      */
     this._id_sm_1= this._submenuServer.connect('server-fav-connect', this._serv_fav_cliked.bind(this));
+
+    this._id_sm_2= this._submenuServer.connect('location-connect', this._serv_fav_cliked.bind(this));
     
 
 
@@ -736,6 +738,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     this._submenuServer.disconnect(this._id_sm_1);
     this._id_sm_1= 0;
+
+    this._submenuServer.disconnect(this._id_sm_2);
+    this._id_sm_2= 0;
 
     for(var i= 0; i<this.SETT_SIGS.length; ++i){
       if(this.SETT_SIGS[i])
@@ -1057,6 +1062,8 @@ class NVPNMenu extends PanelMenu.Button{
         /** asynchronous connection call */
         let t= this._cmd.exec_async('server_place_connect', {'target': placeName});
 
+        this._recent_connection(placeName);
+
         if(t!==undefined && t!==null) this._waiting_state();
       }
 
@@ -1071,6 +1078,8 @@ class NVPNMenu extends PanelMenu.Button{
       /** (if no live monitoring) synchronous connection call (freezes the ui in the
        *  meantime) */
       this._cmd.exec_sync('server_place_connect', {'target': placeName});
+
+      this._recent_connection(placeName);
     }
   }
 
@@ -1490,6 +1499,12 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  _recent_connection(location){
+    if(location){
+      this._submenuServer.notifyRecentConnection(location);
+    }
+  }
+
 
 });
 
@@ -1511,6 +1526,8 @@ let _indicator;
 function enable() {
   /** Iniating the gSettings access */
   SETTINGS = Convenience.getSettings();
+
+  SubMenus.init();
   
   /** creating main object and attaching it to the top pannel */
   _indicator= new NVPNMenu;
