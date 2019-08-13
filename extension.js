@@ -29,7 +29,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.2";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.3";
 
 /**
  * Calls for a given shell command in a synchronous way
@@ -118,9 +118,10 @@ class ServerInfos{
     this._country= undefined;
     this._city= undefined;
     this._ip= [undefined, undefined, undefined, undefined];
-    this._protocol= false;
+    this._protocol= false; //false=UDP, true= TCP
     this._transfer= {recv: {data: 0, unit: 'B'}, sent: {data: 0, unit: 'B'}};
     this._uptime= "unknown";
+    this._technology= false; //false=OpenVPN, true=NordLynx
   }
 
 
@@ -132,6 +133,8 @@ class ServerInfos{
   get ip(){return this._ip;}
 
   isUDP(){return !(this._protocol);}
+
+  isOpenVPN(){return (!this._technology);}
 
   get transferData(){return this._transfer;}
   get uptimeInfoString(){return this._uptime;}
@@ -193,6 +196,9 @@ class ServerInfos{
         }
         else if( (r=/^.*[Uu]ptime:\s*(.*)$/.exec(line)) && r.length>1 ){
           this._uptime= r[1];
+        }
+        else if( (r=/^.*[Tt]echnology:\s*(.*)$/.exec(line)) && r.length>1 ){
+          this._technology= ( r[1] && r[1]==='NordLynx' );
         }
     });
   }
@@ -447,6 +453,9 @@ class NVPNMenu extends PanelMenu.Button{
      *  to reconnect to the location designated by this string after disconnecting*/
     this._auto_connect_to= "";
 
+    //unused
+    this._transition_time_out= 0;
+
     /** this private member is the horyzontal layout box contaning the server indicator
      * in the panel area*/
     this._panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
@@ -519,8 +528,10 @@ class NVPNMenu extends PanelMenu.Button{
 
     this._location_label= new St.Label({style_class: 'label-server-info', text: '*,*', x_align: St.Align.END});
     vbox3.add_child(this._location_label);
-    this._ip_label= new St.Label({style_class: 'label-server-info', text: "Shown IP: .... []", x_align: St.Align.END});
+    this._ip_label= new St.Label({style_class: 'label-server-info', text: "Shown IP: ....", x_align: St.Align.END});
     vbox3.add_child(this._ip_label);
+    this._tech_label= new St.Label({style_class: 'label-server-info', text: "Technology: ....", x_align: St.Align.END});
+    vbox3.add_child(this._tech_label);
     this._transfer_label= new St.Label({style_class: 'label-server-info', text: "↑ - ; ↓ - ", x_align: St.Align.END});
     vbox3.add_child(this._transfer_label);
     this._uptime_label= new St.Label({style_class: 'label-server-info', text: "uptime: ", x_align: St.Align.END});
@@ -1008,7 +1019,10 @@ class NVPNMenu extends PanelMenu.Button{
     }
 
     this._location_label.text= '* '+this.server_info.city+' ,'+this.server_info.country+' *';
-    this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.')+" ["+(this.server_info.isUDP()?"udp":"tcp")+"]";
+    this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.');
+    this._tech_label.text= "Technology: "+ ((this.server_info.isOpenVPN())?
+                                              ("OpenVPN / " + (this.server_info.isUDP()?"udp":"tcp"))
+                                            : "NordLynx")
     this._transfer_label.text= "↑ "+this.server_info.transferData.sent.data+" "+this.server_info.transferData.sent.unit+
                                 " ; ↓ "+this.server_info.transferData.recv.data+" "+this.server_info.transferData.recv.unit;
     this._uptime_label.text= "uptime: "+this.server_info.uptimeInfoString;
@@ -1025,6 +1039,9 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _waiting_state(){
+      this.currentStatus= NVPNMenu.STATUS.TRANSITION;
+      this._transition_time_out= 0;
+
       /** menu won't open on click */
       this.setSensitive(false);
       /** menu is closed (if opened) */
@@ -1157,6 +1174,9 @@ class NVPNMenu extends PanelMenu.Button{
 
       break;
     case NVPNMenu.STATUS.TRANSITION:
+      this._cmd.exec_async( 'server_disconnect' );
+
+      this._update_status_and_ui();
 
       break;
     /** allows to connect when status is 'disconnected' */
@@ -1326,6 +1346,8 @@ class NVPNMenu extends PanelMenu.Button{
       break;
     /** when the status is 'in transition', checks if this is still the case */
     case NVPNMenu.STATUS.TRANSITION:
+      this._transition_time_out+= this._refresh_delay;
+
       change= (!(this._is_in_transition()) /*&& this._auto_connect_to.length===0*/);
 
       /** if, while in transition, a change is detected, and if the attribute
@@ -1337,6 +1359,9 @@ class NVPNMenu extends PanelMenu.Button{
         /** if there is a reconnection, then we're still in transition.
          *  No change is status and visual feedback necessary */
         change= false;
+      }
+      else if(this._transition_time_out>10){
+        //this.setSensitive(true);
       }
 
       break;
@@ -1431,8 +1456,8 @@ class NVPNMenu extends PanelMenu.Button{
   option_changed(option, txt){
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
 
-    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.serverName){
-      this._nordvpn_ch_connect(this.server_info.serverName);
+    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.city){
+      this._nordvpn_ch_connect(this.server_info.city);
     }
   }
 
@@ -1455,6 +1480,12 @@ class NVPNMenu extends PanelMenu.Button{
 
         params[k]= v;
       }
+
+      /** in nordvpn 3.3 'technology' isn't present is the 'nordvpn settings' list,
+       * however, we know it is set to 'NordLynx', if 'protocol' is absent from the list;
+       * 'OpenVPN' if present…
+       */
+      params['technology']= (Boolean(params['protocol']))?'OpenVPN':'NordLynx'
 
     /** updating the options submenu given the configuration that
      *  has just been generated
