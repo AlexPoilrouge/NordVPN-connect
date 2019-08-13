@@ -1658,9 +1658,6 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['killswitch']= addSwitchItem("Kill Switch", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('killswitch',state.toString());
     });
-    this['obfuscate']= addSwitchItem("Obfuscate", (obj,state) => {
-      if(this._optCh_cb) this._optCh_cb('obfuscate',state.toString());
-    });
     this['autoconnect']= addSwitchItem("Auto-connect", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('autoconnect',state.toString());
     });
@@ -1668,19 +1665,46 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
       if(this._optCh_cb) this._optCh_cb('notify',state.toString());
     });
 
+
+    /** Adding a value switch item that allows to knowingly swich between
+     *  the 'OpenVPN' and 'NordLynx' technologies for corresponding option
+     */
+    let itemTech= new OptionsSubMenuSwitcherButtonItem("Technology", ["OpenVPN","NordLynx"]);
+    this.menu.addMenuItem(itemTech);
+
+    this._toggSigs.push([itemTech, itemTech.connect('toggled-option', (obj, txt)=>
+                      {
+                        if(this._optCh_cb) this._optCh_cb('technology',txt);
+
+                        /** make appropriate changes to submenu
+                         *  according to value of 'technlogy' */ 
+                        this._notifyTechChanged();
+                      }
+                    )]
+                  );
+    this['technology']= itemTech;
+
+
+    this['obfuscate']= addSwitchItem("Obfuscate", (obj,state) => {
+      if(this._optCh_cb) this._optCh_cb('obfuscate',state.toString());
+    });
+
+
     /** Adding a value switch item that allows to knowingly swich between
      *  the 'udp' and 'tcp' protocols for corresponding option
      */
-    let item= new OptionsSubMenuSwitcherButtonItem("Protocol", ["udp","tcp"]);
-    this.menu.addMenuItem(item);
+    let itemProto= new OptionsSubMenuSwitcherButtonItem("Protocol", ["udp","tcp"]);
+    this.menu.addMenuItem(itemProto);
 
-    this._toggSigs.push([item, item.connect('toggled-option', (obj, txt)=>
+    this._toggSigs.push([itemProto, itemProto.connect('toggled-option', (obj, txt)=>
                       {
                         if(this._optCh_cb) this._optCh_cb('protocol',txt);
                       }
                     )]
                   );
-    this['protocol']= item;
+    this['protocol']= itemProto;
+
+
   
     /** speartor in the submenu */
     let separator= new PopupMenu.PopupSeparatorMenuItem();
@@ -1734,6 +1758,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['autoconnect'].destroy();
     this['notify'].destroy();
     this['protocol'].destroy();
+    this['technology'].destroy();
     this['dns'].destroy();
   }
 
@@ -1760,7 +1785,24 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
         this[option].setValue(params[option]);
       }
     }
+
+    this._notifyTechChanged();
   }
+
+  /** Private method
+   *  Makes the changes to menu according to value of the 'technology' field
+   */
+  _notifyTechChanged(){
+    if(Boolean(this['technology']) && this['technology'].currentOption()==="NordLynx"){
+      this['protocol'].actor.hide();
+      this['obfuscate'].actor.hide();
+    }
+    else{
+      this['protocol'].actor.show();
+      this['obfuscate'].actor.show();
+    }
+  }
+
 }
 
 
