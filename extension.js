@@ -1456,8 +1456,16 @@ class NVPNMenu extends PanelMenu.Button{
   option_changed(option, txt){
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
 
-    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected() && this.server_info.city){
-      this._nordvpn_ch_connect(this.server_info.city);
+    if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected()){
+      if(this.server_info.city && option!=="notify"){
+        this._nordvpn_ch_connect(this.server_info.city);
+      }
+    }
+    /** ensure the options are displayed correctly (according to the CLI tool)
+     * by forcing the display to match the actual state (of the CLI tool)
+     * (only necessary when 'reconnect' option isn't on, since the menu closes otherwise)*/
+    else{
+      this.updateOptionsMenu();
     }
   }
 
