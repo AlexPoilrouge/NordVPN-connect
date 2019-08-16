@@ -1840,7 +1840,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['notify'].destroy();
     this['protocol'].destroy();
     this['technology'].destroy();
-    this['dns'].destroy();
+    this['dns']._onDestroy();
   }
 
   /** Method that allows to specified a given function as a given callback when
