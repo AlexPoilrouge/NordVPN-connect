@@ -304,9 +304,27 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
 
 
 let StackerBase = GObject.registerClass(
-  {
-  },
+{
+},
+/**
+ * Base class to implement 'stackers'.
+ * 
+ * Used to keep coherent a set of static items, followed
+ * by some dynamic items.
+ * To use inside a submenu.
+ * 
+ * To use as a class parent.
+ */
 class StackerBase extends GObject.Object{
+  /**
+   * Initialization method
+   * 
+   * @param {string} title the title of the stacker; will be
+   *              displayed as a static label 
+   * @param {PopupMenu.PopupSubMenuMenuItem} submenu the parent submenu
+   * @param {integer} startPos positive integer that indicates the position
+   *                    within the submenu where to insert the stacker
+   */
   _init(title, submenu, startPos= undefined){
     super._init();
     
@@ -345,6 +363,9 @@ class StackerBase extends GObject.Object{
     this._sl= 1;
   }
 
+  /**
+   * Called on destruction
+   */
   _onDestroy(){
     for(var i= 0; i<this.ITEM_SIGS.length; ++i){
       let t= this.ITEM_SIGS[i];
@@ -357,6 +378,10 @@ class StackerBase extends GObject.Object{
     super.destroy();
   }
 
+  /**
+   * Private method that recomputes the index of the first item of the stacker
+   *  relatively to the parent submenu
+   */
   _computeStartPos(){
     if(Boolean(this._startItem)){
       var tmp= this._parentMenu.menu._getMenuItems().indexOf(this._startItem);
@@ -366,11 +391,20 @@ class StackerBase extends GObject.Object{
     }
   }
 
+  /** 
+   * Getter property to access the current (after acutalization) index of the stacker
+   *  within th eparent submenu
+   */
   get actualizedStartPos(){
     this._computeStartPos();
     return this._startPos;
   }
 
+  /**
+   * Add a static item to the stacker
+   * 
+   * @param {PopupSubMenuItem} item an item to add as the static part of the stacker
+   */
   addNonDynamicFrontItem(item){
     if(Boolean(item)){
       this._parentMenu.menu.addMenuItem(item, this._startPos+this._sl);
@@ -383,6 +417,11 @@ class StackerBase extends GObject.Object{
     }
   }
 
+
+  /** 
+   * Getter property to access the current (after acutalization) index of the first
+   *  dynamic item within the stacker
+   */
   get acutalizedDynamicItemStartPos(){ return (this.actualizedStartPos+this._sl)}
 });
 
@@ -463,7 +502,7 @@ let FavoriteStacker = GObject.registerClass(
 },
 /**
  * Class that implements the part of the gui menu
- * where the faved servers are displyed
+ * where the faved servers are displayed
  */
 class FavoriteStacker extends StackerBase{
   /**
@@ -562,15 +601,6 @@ class FavoriteStacker extends StackerBase{
     super._onDestroy();
   }
 
-  _computeStartPos(){
-    if(Boolean(this._startItem)){
-      var tmp= this._parentMenu.menu._getMenuItems().indexOf(this._startItem);
-      if(tmp>=0){
-        this._startPos= tmp;
-      }
-    }
-  }
-
   /**
    * Private method that adds all loaded & stored faved servers as gui items
    */
@@ -661,8 +691,16 @@ class FavoriteStacker extends StackerBase{
 }
 );
 
-
+/**
+ * Class that implements a recent location as a GUI menu item
+ */
 class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
+  /**
+   * Constructor
+   * 
+   * @param {string} location the location 
+   * @param {boolean} isPin whether or not the location is 'pinned' 
+   */
   constructor(location, isPin){
     super({style_class: 'recent-location'});
     this.tLabel= new St.Label({
@@ -689,7 +727,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
     this.actor.add(this._statusBin, { expand: true, x_align: St.Align.MIDDLE });
     this._statusBin.child= this._button;
 
-    /** signal 'delete-fav' is emmited when the delete button is clicked */
+    /** signal 'unpin'/'pin' is emmited when the pin button is clicked */
     this._idc1= this._button.connect('clicked', () => {
       this.emit(((isPin)?'unpin':'pin'), location);
     })
@@ -708,7 +746,19 @@ let RecentLocationStacker = GObject.registerClass(
     }
   }
 },
+/**
+ * Class that implements the part of the gui menu
+ * where the faved servers are displayed
+ */
 class RecentLocationStacker extends StackerBase{
+  /**
+   * 
+   * @param {PopupMenu.PopupSubMenuMenuItem} submenu the parent submenu
+   * @param {PersistentDataHandler} persistentDataHandler the instance of the
+   *       persistentdatahandler that handles the data storage 
+   * @param {integer} capacity positive integer that represents how many locations
+   *        can be stacked
+   */
   _init(submenu, persistentDataHandler, capacity=3){
     super._init("Recent Connections", submenu);
 
@@ -721,8 +771,6 @@ class RecentLocationStacker extends StackerBase{
     this._rlocHandler= new PersistentData.RecentLocationHandler(persistentDataHandler, this._capacity);
 
     this._generateItemList();
-
-    log("nordvpn rls?");
   }
 
   /**
@@ -742,25 +790,35 @@ class RecentLocationStacker extends StackerBase{
     super._onDestroy();
   }
 
+  /**
+   * Private method to fillthe stacked according to the current state of the stored
+   *  locations data.
+   */
   _generateItemList(){
-    log("nordvpn pppp?");
     if(this._rlocHandler){
       var i= 0;
       for(var t= this._rlocHandler.first(); t!==undefined; t= this._rlocHandler.next()){
-        log("nordvpn addRLocItem "+t[0]+", "+t[1]);
         this._addRLocItem(t[0], i, t[1]);
         ++i;
       }
     }
-    log("nordvpn ooo?");
   }
 
+  /**
+   * Private method that deletes an item from the stacker
+   * 
+   * @param {PopupMenu.PopupSubMenuMenuItem} item 
+   */
   __deleteInnerItem(item){
-    log("nordvpn dInnerItem("+(Boolean(item)?"item["+item.location+"]":"null/undefined]"));
     item.destroy();
     --this._length;
   }
 
+  /**
+   * Private method that deletes a given location from the stacker
+   * 
+   * @param {string} location the location 
+   */
   _deleteItem(location){
     let p_items= this._parentMenu.menu._getMenuItems();
 
@@ -774,6 +832,14 @@ class RecentLocationStacker extends StackerBase{
     }
   }
 
+  /**
+   * Private method that adds a dynamic item to the submenu.
+   * 
+   * @param {PopupMenu.PopupSubMenuMenuItem} item the item to add
+   * @param {integer} i the position (relatively to the other dynamic item)
+   *          where to add this item. If not specified (of undefined) the item
+   *          is added as last. 
+   */
   __addInnerItem(item, i=undefined){
     var disp= this.acutalizedDynamicItemStartPos;
 
@@ -783,13 +849,17 @@ class RecentLocationStacker extends StackerBase{
     ++this._length;
   }
 
+  /**
+   * Private method to add a location ('pinned' or not) within the stack.
+   * 
+   * @param {string} location the location
+   * @param {integer} pos the position (relatively to other locations/dynamic items)
+   * @param {boolean} isPin is the location pinned ?
+   */
   _addRLocItem(location, pos= 0, isPin= false){
-    log("nordvpn iiii?");
     let rlocItem= new RecentLocationItem(location, isPin);
 
     var disp= this.acutalizedDynamicItemStartPos;
-    log("nordvpn addMenuItem( item["+location+"], "+pos+disp+"]");
-    //this._parentMenu.menu.addMenuItem(rlocItem, pos+this._startPos+1);
     this.__addInnerItem(rlocItem, pos)
 
     this.RLOC_SIGS.push([rlocItem, rlocItem.connect('activate',() => {
@@ -810,13 +880,17 @@ class RecentLocationStacker extends StackerBase{
         this._rlocHandler.pin(loc);
         this._rlocHandler.save();
 
-        log("nordvpn pining item["+loc+"]")
-        //this.__deleteInnerItem(item);
         this.addRecentLocation(loc, true);
       })])
     }
   }
 
+  /**
+   * Adds a location to the stacker
+   * 
+   * @param {string} location the location name 
+   * @param {boolean} pin is the location pinned ?
+   */
   addRecentLocation(location, pin= false){
     var b_wasPinned= this._rlocHandler.isPinned(location);
     if(pin){
@@ -826,7 +900,6 @@ class RecentLocationStacker extends StackerBase{
     else{
       var rmvLoc= this._rlocHandler.add(location);
       if(Boolean(rmvLoc)){
-        log("nordvpn arl("+location+") requires deleting item["+rmvLoc+"]");
         this._deleteItem(rmvLoc);
       }
     }
@@ -837,7 +910,6 @@ class RecentLocationStacker extends StackerBase{
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
       if(t[0]===location){
         if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
-          log("nordvpn arli("+location+','+i+','+pin+')');
           this._addRLocItem(location, i, pin);
         }
 
@@ -848,6 +920,15 @@ class RecentLocationStacker extends StackerBase{
     }
   }
 
+  /**
+   * Changer the capacity of the stacker, i.e.: how many location can be
+   *  stacked simultaneously
+   * 
+   * @param {integer} c a >0 number that represents the capacity 
+   * 
+   * Note: if the the call to this method reduces the capacity, it will delete
+   *  locations (including 'pinned' ones), starting from the bottom.
+   */
   setCapacity(c){
     var oldCap= this._capacity;
     if(c>0 && c!==oldCap){
@@ -874,7 +955,7 @@ class RecentLocationStacker extends StackerBase{
 
 /**
  * Class that implements the submenu from which the user can type in directly
- *  a server name
+ *  a server name, fav servers, a see / pin recent connections
  */
 class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     /**
@@ -1385,7 +1466,7 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
    * 
    *  DNS adress format:
    *    'N1.N2.N3.N4'
-   *  where Nk is an interger within the [0,255] range
+   *  where Nk is an integer within the [0,255] range
    * 
    *  @param {string} txt - the text to match
    *  @return {boolean} wheter or not the text matches DNS adress format
