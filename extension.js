@@ -31,6 +31,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 const NORDVPN_TOOL_EXPECTED_VERSION= "3.3";
 
+
 /**
  * Calls for a given shell command in a synchronous way
  * @function
@@ -471,7 +472,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.label_nvpn.visible= (!SETTINGS.get_boolean('compact-icon'));
     });
     this._panel_hbox.add(this.label_nvpn, {y_fill: false, y_align: St.Align.MIDDLE});
-    this.actor.add_child(this._panel_hbox);
+    this.add_child(this._panel_hbox);
 
     /** saving this idea for later disconnection of the signal during object's destruction */
     this._id_c_click1= this.connect('button-press-event',
@@ -603,6 +604,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** when an item of this submenu (i.e. a place name) is selected,
      *  the '_place_menu_new_selection()' method will be called (no argument). */
+    log("nordvpn yeah? "+ this._submenuPlaces + "_-_-_-_-_" + this._submenuPlaces.select_callback);
+    log("nordvpn huh? "+ this._submenuPlaces.add_place);
+    log("nordvpn cheh? "+ this._submenuPlaces.unselect_current);
     this._submenuPlaces.select_callback(this._place_menu_new_selection.bind(this));
 
     /** call to private method that fill the 'country submenu' with all the required country name */

@@ -37,10 +37,12 @@ function init(){
  * The menu are meant to be unseeable (no title or space), and only become
  * visible when their content unfolds.
  * Meant to be a generic class to extend from.
- */
+ */ 
+var HiddenSubMenuMenuItemBase = GObject.registerClass(
 class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
-    constructor(){
-      super("",false);
+    //constructor(){
+    _init(){
+      super._init("",false);
       /** no title… */
       this.actor.remove_child(this.label);
       this.actor.remove_child(this._triangleBin);
@@ -51,15 +53,17 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
     /** Destructor
      *  @method
      */
-    destroy(){
+    _onDestroy(){
+    //destroy(){
         super.destroy();
     }
-  };
+  });
 
 
   /**
    * Class that implements an item to be inserted int the 'PlaceMenu' menu.
    */
+  var PlaceItem = GObject.registerClass(
   class PlaceItem extends PopupMenu.PopupBaseMenuItem{
     /** Enumerator for the possible type of item insertable in this 'PlaceMenu':
      *  Either a 'country', a 'city' or a 'group'
@@ -78,8 +82,9 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
     /**
      * Constructor, also initializes the UI for the item
      */
-    constructor(str_Place, type=PlaceItem.TYPE.COUNTRY){
-      super ();
+    _init(str_Place, type=PlaceItem.TYPE.COUNTRY){
+    //constructor(str_Place, type=PlaceItem.TYPE.COUNTRY){
+      super._init();
   
       /** the actual place name stored by this item
        *    i.e.: the actual string to be used when calling the 'connect' command of the CLI Tool 
@@ -124,44 +129,49 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
     get PlaceName(){
       return this.placeName;
     }
-  };
+  });
   
 
 /**
  * Class that implements the submenu use to pick a server by clicking
  * on a country name
  */
+var PlacesMenu = GObject.registerClass(
 class PlacesMenu extends HiddenSubMenuMenuItemBase{
-    /**
-     * Initiate the attributes needed to maintain this menu
-     * @method
-     */
-    constructor(){
-      super();
-  
-      /** this attribute will be use to store the 'callback' function
-       *  that will be called whenever an item (i.e. country) of this submenu
-       *  is selected */
-      this.select_cb= null;
-      /** attribute used to point on the item that is currently 'selected' */
-      this.cur_selected=null;
-  
-      /** this attribute is a list that will be used to store the 'ids' generated
-       *  when a signal connection is made with an item (in private method 'add_place()')
-       *  so that these ids may be reused later to handle all the signal disonnections for
-       *  all the items during this menu's destruction */
-      this._ids_c_items= [];
-  
-      let separator= new PopupMenu.PopupSeparatorMenuItem();
-      this.menu.addMenuItem(separator);
-    }
+  /**
+   * Initiate the attributes needed to maintain this menu
+   * @method
+   */
+  //constructor(){
+  _init(){
+    super._init();
+
+    log("nordvpn ftbs!!!!");
+
+    /** this attribute will be use to store the 'callback' function
+     *  that will be called whenever an item (i.e. country) of this submenu
+     *  is selected */
+    this.select_cb= null;
+    /** attribute used to point on the item that is currently 'selected' */
+    this.cur_selected=null;
+
+    /** this attribute is a list that will be used to store the 'ids' generated
+     *  when a signal connection is made with an item (in private method 'add_place()')
+     *  so that these ids may be reused later to handle all the signal disonnections for
+     *  all the items during this menu's destruction */
+    this._ids_c_items= [];
+
+    let separator= new PopupMenu.PopupSeparatorMenuItem();
+    this.menu.addMenuItem(separator);
+  }
   
     /**
      * Destructor. Makes sure to disconnect all the signal connection made
      * for all the added items
      * @method
      */
-    destroy(){
+    _onDestroy(){
+    //destroy(){
       let children= this.menu._getMenuItems();
       let diff= 0;
       for(let i=0; i<this.menu.length; ++i){
@@ -204,7 +214,7 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
      *   during the callbakc, the parameter passed to func will be the clicked item text
      *   (i.e. country name) passed as a string
      */
-    select_callback(func=null){
+    select_callback(func= null){
       this.select_cb= func;
     }
 
@@ -300,7 +310,7 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
         }
       }
     }
-}
+});
 
 
 let StackerBase = GObject.registerClass(
@@ -428,6 +438,15 @@ class StackerBase extends GObject.Object{
 /**
  * Class that implements faved server as a GUI menu item
  */
+let FavedServerItem = GObject.registerClass(
+  {
+    Signals: {
+      'delete-fav': {
+        flags: GObject.SignalFlags.RUN_FIRST,
+        param_types: [ GObject.TYPE_STRING ]
+      }
+    }
+  },
 class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
   /**
    * Constructor
@@ -435,8 +454,9 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
    * @param {string} servName the faved server name
    * @param {string} infos infos about server
    */
-  constructor(servName, infos){
-    super({style_class: 'server-fav',});
+  //constructor(servName, infos){
+  _init(servName, infos){
+    super._init({style_class: 'server-fav',});
     this.tLabel= new St.Label({text: servName+" - "+infos.slice(0,13)+((infos.length>13)?'…':'')});
     this.actor.add(this.tLabel, {expand: true, x_fill: false});
 
@@ -467,10 +487,11 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
   /**
    * destructor
    */
-  destroy(){
+  //destroy(){
+  _onDestroy(){
     this._button.disconnect(this._idc1);
 
-    super.destroy();
+    super._onDestroy();
   }
 
   get key(){
@@ -485,7 +506,7 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
     this._infos= infos;
     this.tLabel.text= this._servName+" - "+this._infos;
   }
-}
+});
 
 
 /** Regisering this item as a GObject in order
@@ -694,6 +715,19 @@ class FavoriteStacker extends StackerBase{
 /**
  * Class that implements a recent location as a GUI menu item
  */
+var RecentLocationItem = GObject.registerClass(
+  {
+    Signals: {
+      'pin': {
+        flags: GObject.SignalFlags.RUN_FIRST,
+        param_types: [ GObject.TYPE_STRING ]
+      },
+      'unpin': {
+        flags: GObject.SignalFlags.RUN_FIRST,
+        param_types: [ GObject.TYPE_STRING ]
+      }
+    }
+  },
 class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
   /**
    * Constructor
@@ -701,8 +735,9 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
    * @param {string} location the location 
    * @param {boolean} isPin whether or not the location is 'pinned' 
    */
-  constructor(location, isPin){
-    super({style_class: 'recent-location'});
+  //constructor(location, isPin){
+  _init(location, isPin){
+    super._init({style_class: 'recent-location'});
     this.tLabel= new St.Label({
       style_class: 'recent-location-label' +((isPin)?' pinned':''),
       text: location.replace(/_/gi,' ')
@@ -735,7 +770,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
 
   get isPin(){ return this._pin;}
   get location(){ return this._location;}
-}
+});
 
 let RecentLocationStacker = GObject.registerClass(
 {
@@ -957,13 +992,28 @@ class RecentLocationStacker extends StackerBase{
  * Class that implements the submenu from which the user can type in directly
  *  a server name, fav servers, a see / pin recent connections
  */
+
+var ServerSubMenu = GObject.registerClass(
+{
+  Signals: {
+    'server-fav-connect': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    },
+    'location-connect': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
 class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     /**
      * Initiate the attributes needed to maintain this menu
      * @method
      */
-    constructor(){
-        super();
+    //constructor(){
+    _init(){
+        super._init();
 
         /** field to know if there's currently en entry error
          *  (i.e.: not fitting the expected format)
@@ -1041,7 +1091,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
   /** Destructor
    *    @method
    */
-  destroy(){
+  //destroy(){
+  _onDestroy(){
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[0]);
     this.servEntry.get_clutter_text().disconnect(this.SIGS_ID[1]);
     this.menu.disconnect(this.SIGS_ID[2]);
@@ -1049,7 +1100,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
 
     SETTINGS.disconnect(this._sett_sig1);
 
-    super.destroy();
+    //super.destroy();
+    super._onDestroy();
   }
 
   /** Method to call to fill the content of the server text entry */
@@ -1132,7 +1184,7 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
       this.recent.addRecentLocation(location);
     }
   }
-}
+});
 
 /** Class that implements the 'switch' ui component that allows to alternate
  *  between true/false (on/off, enabled/disabled) options
@@ -1140,41 +1192,52 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
  *      closes the parent menu when toggled, which is an undesired behavior
  *  here )
  */
+var OptionsSubMenuSwitchItem = GObject.registerClass(
+{
+  Signals: {
+    'toggled': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_BOOLEAN ]
+    }
+  }
+},
 class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
     /** Intiates the item
      *  @method
      *  @param {string} text - the (displayed) name of the item
      */
-    constructor(text){
-        super();
+    //constructor(text){
+    _init(text){
+        super._init();
 
-        this.actor.reactive= false;
+        this/*.actor*/.reactive= false;
 
         this.label = new St.Label({ text: text, });
-        this.actor.label_actor= this.label;
-        this.actor.add_child(this.label);
-        this.actor.accessible_role = Atk.Role.CHECK_MENU_ITEM;
+        this/*.actor*/.label_actor= this.label;
+        this/*.actor*/.add_child(this.label);
+        this/*.actor*/.accessible_role = Atk.Role.CHECK_MENU_ITEM;
 
         this._switch= new PopupMenu.Switch(true);
-        this._switch.actor.reactive= true;
-        this._switch.actor.can_focus= true;
-        this._switch.actor.active= true;
+        this._switch/*.actor*/.reactive= true;
+        this._switch/*.actor*/.can_focus= true;
+        this._switch/*.actor*/.active= true;
 
         this._statusBin = new St.Bin({ x_align: St.Align.END });
         this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
-        this._statusBin.child= this._switch.actor;
+        this._statusBin.child= this._switch/*.actor*/;
 
-        this._c_id= this._switch.actor.connect('button-press-event', this.toggle.bind(this));
+        this._c_id= this._switch/*.actor*/.connect('button-press-event', this.toggle.bind(this));
     }
 
   
   /** Destructor
    *    @method
    */
-    destroy(){
+    //destroy(){
+    _onDestroy(){
         this._switch.actor.disconnect(this._c_id);
 
-        super.destroy();
+        super._onDestroy();
     }
 
     /** Method that that 'toggles' or 'switch' the current state of the item
@@ -1210,7 +1273,7 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
     setValue(v){
         this.setToggleState(v);
     }
-}
+});
 
 /** Class that implements the 'switch button' ui component that allows to alternate
  *  between predefined states successively
@@ -1218,14 +1281,25 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
  *      required to display exclusive settings but that are not corresponding
  *  to the true/false idiom )
  */
+
+var OptionsSubMenuSwitcherButtonItem = GObject.registerClass(
+{
+  Signals: {
+    'toggled-option': {
+      flags: GObject.SignalFlags.RUN_FIRST,
+      param_types: [ GObject.TYPE_STRING ]
+    }
+  }
+},
 class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     /** Initates the item
      *  @method
      *  @param {string} text  - the (displayed) name of the item
      *  @param {Array} options  - the array containing all the possible values for this item
     */
-    constructor(text, options){
-        super();
+    _init(text, options){
+    //constructor(text, options){
+        super._init();
 
         let label= new St.Label({ text: text });
         this.actor.label_actor= label;
@@ -1256,7 +1330,8 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     /** Destructor
      *  @method
      */
-    destroy(){
+    //destroy(){
+    _onDestroy(){
         this._button.disconnect(this._idC);
 
         super.destroy();
@@ -1345,17 +1420,32 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     setValue(v){
         this.setToOption(v);
     }
-}
+});
 
 
 /** Class that implements a DNS text entry line as a submenu item */
+
+var OptionsSubDNSItem = GObject.registerClass(
+  {
+    Signals: {
+      'validated-dns-text': {
+        flags: GObject.SignalFlags.RUN_FIRST,
+        param_types: [ GObject.TYPE_STRING ]
+      },
+      'dns-text-cleared': {
+        flags: GObject.SignalFlags.RUN_FIRST,
+        param_types: [ GObject.TYPE_STRING ]
+      }
+    }
+  },
 class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
   /** Constructor
    *  @method
    *  @param {string} text - the displayed name of the item
    */
-  constructor(text){
-    super();
+  _init(text){
+  //constructor(text){
+    super._init();
 
     this.actor.reactive= false;
 
@@ -1450,7 +1540,8 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
   /** Destructor
    *  @method
    */
-  destroy(){
+  //destroy(){
+  _onDestroy(){
     if(this._idc1)
       this.entry.get_clutter_text().disconnect(this._idc1);
     if(this._idc2)
@@ -1458,7 +1549,7 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
     if(this._idc3)
       this.entry.get_clutter_text().disconnect(this._idc3);
 
-    super.destroy();
+    super._onDestroy();
   }
 
   /** Method that determines if given text match DNS adress format
@@ -1547,7 +1638,7 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
       this.entry.set_text('...');
     }
   }
-};
+});
 
 /** Regisering this item as a GObject in order
  *  to use signals via the 'emit' method
@@ -1703,12 +1794,15 @@ class OptionsSubDNSItemContainer extends GObject.Object{
 /** Class that implements  the submenu where appears the toggle for the
  *  different options offered by the CLI tool.
  */
+
+let OptionsSubMenu = GObject.registerClass(
 class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
   /** Constructor
    *  @method
    */
-  constructor(){
-    super();
+  _init(){
+  //constructor(){
+    super._init();
 
     this._toggSigs=[];
 
@@ -1828,7 +1922,8 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
   /** Destructor
    *  @method
    */
-  destroy(){
+  //destroy(){
+  _onDestroy(){
     for(var i=0; i<this._toggSigs.length; ++i){
       var t= this._toggSigs[i];
       t[0].disconnect(t[1]);
@@ -1841,6 +1936,8 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     this['protocol'].destroy();
     this['technology'].destroy();
     this['dns']._onDestroy();
+
+    this._onDestroy();
   }
 
   /** Method that allows to specified a given function as a given callback when
@@ -1884,20 +1981,22 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     }
   }
 
-}
+});
 
 
 /** class that implements a inforative message as a gui
  * menu item
  */
+let MessageItem = GObject.registerClass(
 class MessageItem extends PopupMenu.PopupBaseMenuItem{
   /**
    * constructor
    * 
    * @param {string} txt message to display
    */
-  constructor(txt){
-    super("");
+  _init(txt){
+  //constructor(txt){
+    super._init();
 
     this.actor.reactive= false;
 
@@ -1923,14 +2022,15 @@ class MessageItem extends PopupMenu.PopupBaseMenuItem{
   /** Destructor
    *  @method
    */
-  destroy(){
+  //destroy(){
+  _onDestroy(){
     this.disconnect(this._idc);
 
-    super.destroy();
+    super._onDestroy();
   }
 
   hide(){
-    this.actor.hide();
+    super.hide();
   }
 
   show(){
@@ -1940,11 +2040,12 @@ class MessageItem extends PopupMenu.PopupBaseMenuItem{
   setText(txt){
     this.label1.text= txt;
   }
-}
+});
 
 /** Class that implements the menu item that shows a message when
  *  expected given version doesn't match actual given version
  */
+let VersionChecker = GObject.registerClass(
 class VersionChecker extends MessageItem{
   /** Enumerator for the possible result of versions comparison
    *  @readonly
@@ -1963,8 +2064,9 @@ class VersionChecker extends MessageItem{
    *  @param {string} expectedVer - the expected version (format X.X.…)
    *  @param {string} actualVer - the actual version (format X.X.…)
    */
-  constructor(expectedVer, actualVer){
-    super(""); 
+  _init(expectedVer, actualVer){
+  //constructor(expectedVer, actualVer){
+    super._init(""); 
 
     this._expectedVersion= expectedVer;
     this._actualVersion= actualVer;
@@ -2015,8 +2117,9 @@ class VersionChecker extends MessageItem{
   /** Destructor
    *  @method
    */
-  destroy(){
-    super.destroy();
+  //destroy(){
+  _onDestroy(){
+    super._onDestroy();
   }
 
   /** Private methods that compute the comparison between expected and actual
@@ -2091,4 +2194,4 @@ class VersionChecker extends MessageItem{
     return this._res;
   }
 
-}
+});
