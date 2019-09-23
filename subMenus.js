@@ -136,8 +136,8 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
  * Class that implements the submenu use to pick a server by clicking
  * on a country name
  */
-var PlacesMenu = GObject.registerClass(
-class PlacesMenu extends HiddenSubMenuMenuItemBase{
+var LocationsMenu = GObject.registerClass(
+class LocationsMenu extends HiddenSubMenuMenuItemBase{
   /**
    * Initiate the attributes needed to maintain this menu
    * @method
@@ -145,8 +145,6 @@ class PlacesMenu extends HiddenSubMenuMenuItemBase{
   //constructor(){
   _init(){
     super._init();
-
-    log("nordvpn ftbs!!!!");
 
     /** this attribute will be use to store the 'callback' function
      *  that will be called whenever an item (i.e. country) of this submenu

@@ -598,15 +598,12 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** this private member is the implementation of the submenu that allows to select
      *  a nordvpn server by clicking on the country */
-    this._submenuPlaces= new SubMenus.PlacesMenu();
+    this._submenuPlaces= new SubMenus.LocationsMenu();
     
     this.menu.addMenuItem(this._submenuPlaces);
 
     /** when an item of this submenu (i.e. a place name) is selected,
      *  the '_place_menu_new_selection()' method will be called (no argument). */
-    log("nordvpn yeah? "+ this._submenuPlaces + "_-_-_-_-_" + this._submenuPlaces.select_callback);
-    log("nordvpn huh? "+ this._submenuPlaces.add_place);
-    log("nordvpn cheh? "+ this._submenuPlaces.unselect_current);
     this._submenuPlaces.select_callback(this._place_menu_new_selection.bind(this));
 
     /** call to private method that fill the 'country submenu' with all the required country name */
@@ -1252,7 +1249,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** foreach element in this list, it is added as an item to the submenu */
     country_list.forEach(function(elmt){
-      /** using the 'PlacesMenu' object's method 'addPlace' to add this country name to
+      /** using the 'LocationsMenu' object's method 'addPlace' to add this country name to
        *  this submenu */
       tsm.add_place(elmt);
     });
