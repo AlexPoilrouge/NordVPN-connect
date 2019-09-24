@@ -55,7 +55,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
      */
     _onDestroy(){
     //destroy(){
-        super.destroy();
+        super._onDestroy();
     }
   });
 
@@ -182,7 +182,7 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
         }
       }
   
-      super.destroy();
+      super._onDestroy();
     }
   
     /**
@@ -383,7 +383,7 @@ class StackerBase extends GObject.Object{
       }
     }
 
-    super.destroy();
+    super._onDestroy();
   }
 
   /**
@@ -1332,7 +1332,7 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
     _onDestroy(){
         this._button.disconnect(this._idC);
 
-        super.destroy();
+        super._onDestroy();
     }
 
     /** Private method that switch the current value of item to the following one
@@ -1711,7 +1711,7 @@ class OptionsSubDNSItemContainer extends GObject.Object{
       }
     }
 
-    super.destroy();
+    super._onDestroy();
   }
 
   /** Private method that generated and emit the current

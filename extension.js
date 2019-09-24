@@ -98,7 +98,7 @@ const Group_List=[
   "Dedicated_IP",
   "P2P",
   "Double_VPN",
-  "Onion_Over_VPN",
+  //"Onion_Over_VPN", //this group seems to have disappeared from the CLI tool
 ];
 
 /**

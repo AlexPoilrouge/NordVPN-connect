@@ -74,7 +74,7 @@ If you're on a debian based distribution, checkout this page: https://nordvpn.co
 If you're on an archlinux based distribution, this tool *might* be available in
 the AUR: https://aur.archlinux.org/packages/nordvpn-bin/
 
-Once the 'nordvpn' CLI tool is installed (assuming here, version `3.2`), check the packaged daemon's status:
+Once the 'nordvpn' CLI tool is installed (assuming here, version `3.3`), check the packaged daemon's status:
 
     systemctl status nordvpnd.service
     
@@ -93,9 +93,11 @@ Now you should be able to use this extension.
 
 This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.30.2*' and the *'nordvpn' CLI tool version 2.1.0-5*, for all commits before (and including) commit `a0c1b1034e0a8518796e5490a4a8746fa20da506` (revert to this commit if encountering compatibility issues).
 
-This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for commits before (and including) commit *cf7538c5bfe7a09547c2d5e87bfd1952538a2581*.
+This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the *'nordvpn' CLI tool version 2.2.0-2*, for commits before (and including) commit `cf7538c5bfe7a09547c2d5e87bfd1952538a2581`.
 
-This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for later commits.
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for commits before (and including) commit `099034f172582f5077ec1018f38aaa3ef908586c`.
+
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.34.0' and the *'nordvpn' CLI tool version 3.0.0-4*, for later commits.
 
 
 ###### Install
@@ -117,6 +119,8 @@ From the start, a command line install should look like this:
 
 `gnome-shell-extension-tool -e NordVPN_Connect@poilrouge.fr`
 
+`gnome-shell -r`
+
 
 ## Misc.
 
@@ -124,7 +128,7 @@ From the start, a command line install should look like this:
 
 Since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, an *“ Extension Settings ”* page has been added.
 
-Like all other Gnome-shell extension (that provides shuch 'settings' page), there are several ways of accessing it:
+Like all other Gnome-shell extensions (that provide such 'settings' page), there are several ways of accessing it:
 
 1. Install and use the *“ gnome-tweaks ”* tool. Then go to the `Extensions` tab. From there you should be able to access to extensions settings page, if there are any provided with corresponding extension.
 2. Go to the *“ GNOME Extensions ”* website, and visit the [*“ Installed Extensions ”* section](https://extensions.gnome.org/local/). From there you should be able to manage your installed extensions, provided your web browser had the *“ GNOME Shell Integration ”* plugin installed and enabled.
@@ -139,10 +143,9 @@ Like all other Gnome-shell extension (that provides shuch 'settings' page), ther
 
 ***The extension says « daemon disabled/missing », what gives?***
 
-  Installing the 'nordvpn' CLI tool isn't enough. The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
+  Installing the 'nordvpn' CLI tool isn't enough (assuming version `3.3`). The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
   
-    systemd enable --now nordvpnsd.service
-    systemd --user enable --now nordvpnud.service
+    systemd enable --now nordvpnd.service
 
 ***The extension says « tool not logged in », what's up?***
 
@@ -156,9 +159,6 @@ and enter your NordVPN logins.
 
   This extension is supposed to react to the current state of the NordVPN server connection given by the 'nordvpn' CLI tool and the 'nordvpnd' systemd daemon. Therefore, you might need to use those tool to fix the issue.
 
-
-***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
-
 ***I have a custom installation of 'nordvpn' CLI tool / I don't use 'systemd' / whatever … Am I doomed?***
 
   Pretty much. Howerver, since commit `aabdf8d307c1ecebf38c097b9e34987862ae859b`, a *“ Settings ”* page has been added to the extensions. I contains a tab that allows you to change the core shell commands that allows to monitor and connect with the *nordvpn* CLI tool. But you're on your own from there, sorry.
@@ -166,6 +166,9 @@ and enter your NordVPN logins.
 ***Yo, the extension say's there's a pickle with my 'shell' or something… Da fox?***
 
   This extension, by default, uses `bash` to run its core commands. The default path it uses is `/bin/bash`. However, if that doesn't fit with your install, you can try changing the default shell within the "*Advanced*" tab, located in the extensions '*[settings](#extension-settings-page)*' page (only possible since commit `28bbe2bb0178c8e6325683585b5268fa454798a0`, i.e. version 7 of the extension).
+
+
+***-> Once you made the appropriate change, either reload the extension, or reload gnome shell by using `Alt+F2` and entering `r`***
 
 
 
