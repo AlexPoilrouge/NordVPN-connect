@@ -1499,15 +1499,9 @@ class NVPNMenu extends PanelMenu.Button{
         params[k]= v;
       }
 
-      /** in nordvpn 3.3 'technology' isn't present is the 'nordvpn settings' list,
-       * however, we know it is set to 'NordLynx', if 'protocol' is absent from the list;
-       * 'OpenVPN' if present…
+      /** updating the options submenu given the configuration that
+       *  has just been generated
        */
-      params['technology']= (Boolean(params['protocol']))?'OpenVPN':'NordLynx'
-
-    /** updating the options submenu given the configuration that
-     *  has just been generated
-     */
       this._submenuOptions.updateFromOpt(params);
     }
   }

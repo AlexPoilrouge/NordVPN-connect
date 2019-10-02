@@ -1383,17 +1383,20 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
      *                      option not provided by this item)
     */
     setToOption(txt){
-        let i= this._options.indexOf(txt);
+//      let i= this._options.indexOf(txt);
+      let i= this._options.findIndex( (opt) => {return (opt.toLowerCase()===txt.toLowerCase());} );
 
-        if(i>=0 && i<this._options.length){
+      log("nordvpn "+this.actor.label_actor.text+" setToOption("+txt+") _"+i+"_");
+
+      if(i>=0 && i<this._options.length){
         this._iterator= i;
 
-        this._btnLabel.set_text(txt);
+        this._btnLabel.set_text(this._options[i]);
 
         return true;
-        }
-        
-        return false;
+      }
+      
+      return false;
     }
 
     /** Method that changes the value of the item to the one specified with signal emission
