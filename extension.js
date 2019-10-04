@@ -263,6 +263,8 @@ class Core_CMDs{
                           txt : "nordvpn settings | sed -e :a -e N -e '$!ba' -e 's/\\n/;/g' | sed -e 's/: /:/g' | sed -e 's/ //g' | sed -e 's/-//g' | tr '[:upper:]' '[:lower:]'";
     this.get_version= (txt=Unescape.convert(SETTINGS.get_string("cmd-get-version")))?
                           txt : "nordvpn --version | grep -Po \"([0-9]\\.?)+[0-9]\"";
+    this.get_groups_countries= (txt=Unescape.convert(SETTINGS.get_string("cmd-get-groups-countries")))?
+                          txt : "echo `nordvpn groups | sed -e :a -e N -e '$!ba' -e 's/\\n/;/g'`; echo `nordvpn countries | sed -e :a -e N -e '$!ba' -e 's/\\n/;/g'`";
 
 
     this.SETT_SIGS.push(SETTINGS.connect('changed::cmd-shell', () => {

@@ -52,6 +52,7 @@ class NVPN_Settings{
             NVPN_Sett_Entry_Option_Set: null,
             NVPN_Sett_Entry_Get_Options: null,
             NVPN_Sett_Entry_Get_Version: null,
+            NVPN_Sett_Entry_Get_Groups_Countries: null,
             NVPN_Sett_Button_Default: null,
             NVPN_Sett_Button_Reset: null,
             NVPN_Sett_Button_Apply: null,
@@ -264,6 +265,7 @@ class NVPN_Settings{
         fillEntries(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         fillEntries(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
         fillEntries(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
+        fillEntries(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
 
         let s= this._objects.NVPN_Sett_Switch_Cmd_Change.get_state();
         this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(s);
@@ -322,6 +324,7 @@ class NVPN_Settings{
         chToDef(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         chToDef(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
         chToDef(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
+        chToDef(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }
@@ -347,6 +350,7 @@ class NVPN_Settings{
         chToRst(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         chToRst(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
         chToRst(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
+        chToRst(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
     }
 
     _sig_Cmd_change_apply(){
@@ -368,6 +372,7 @@ class NVPN_Settings{
         applyCh(this._objects.NVPN_Sett_Entry_Option_Set, 'cmd-option-set');
         applyCh(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
         applyCh(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
+        applyCh(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
     }

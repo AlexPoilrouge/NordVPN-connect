@@ -770,6 +770,40 @@ X.X.X…</property>
                         <property name="top_attach">0</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="width_request">200</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
+All items are separated with a whitespace.</property>
+                        <property name="halign">start</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="label" translatable="yes">Get nordvpn current version:</property>
+                        <property name="use_markup">True</property>
+                        <property name="wrap">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">14</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="NVPN_Sett_Entry_Get_Groups_Countries">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
+All items are separated with a whitespace.</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="hexpand">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">14</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>

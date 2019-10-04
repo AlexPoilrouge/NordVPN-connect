@@ -54,6 +54,9 @@
         <key type="s" name="cmd-get-version">
             <default>"nordvpn --version | grep -Eo '([0-9]\\.?)+[0-9]'"</default>
         </key>
+        <key type="s" name="cmd-get-groups-countries">
+            <default>"echo `nordvpn groups | sed -e :a -e N -e '$!ba' -e 's/\\\\n/;/g'`; echo `nordvpn countries | sed -e :a -e N -e '$!ba' -e 's/\\\\n/;/g'`"</default>
+        </key>
         <key type="b" name="version-check">
             <default>true</default>
             <summary>If true check installed Nordvpn CLI tools version against expect version</summary>
