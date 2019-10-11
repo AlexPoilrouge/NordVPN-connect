@@ -442,6 +442,9 @@ class NVPNMenu extends PanelMenu.Button{
     this.SETT_SIGS= [];
 
 
+    this.targets= {'groups': [],'countries':[]};
+
+
     this.server_info= new ServerInfos();
 
     /** @member {boolean} nvpn_monitor
@@ -782,6 +785,28 @@ class NVPNMenu extends PanelMenu.Button{
     let txt= (t!==undefined && t!==null && this._is_NVPN_found)? t
               :"0.0";
     return txt;
+  }
+
+  _getGroupsAndCountries(){
+    let t= this._cmd.exec_sync('get_groups_countries');
+    let r= (t===undefined || t===null || t==='')? null : {'groups':null,'countries':null};
+    var tmp= [];
+    if(r){
+      tmp= t.split('\n');
+      r.groups= tmp[0].split(' ');
+      if(tmp.length>1){
+        r.countries= tmp[1].split(' ');
+      }
+    }
+
+    return r;
+  }
+
+  _updateGroupsAndCountries(){
+    let gac= this._getGroupsAndCountries();
+    
+    this.targets.groups= ( gac && gac.groups )? gac.groups : [];
+    this.targets.groups= ( gac && gac.countries )? gac.countries : [];
   }
 
   /** Private method used to hide or show the submenus and the associated buttons
@@ -1255,6 +1280,86 @@ class NVPNMenu extends PanelMenu.Button{
        *  this submenu */
       tsm.add_place(elmt);
     });
+  }
+
+  _fill_country_submenu_b(){
+    var tmp= this.targets.countries;
+    let c_list= (tmp)? tmp : [];
+    tmp= this.targets.groups;
+    let g_list= (tmp)? tmp : [];
+
+    let tsm= this._submenuPlaces;
+
+    if(/*dynamic_list_only*/true){
+      var b_noDynItem= false;
+      if(b_noDynItem=(c_list.length===0 && g_list.length===0)){
+        c_list= this._get_countries_list();
+        g_list= Group_List;
+      }
+
+      if(b_noDynItem){
+        g_list.forEach(function(grp) {
+          //add crossed
+          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP, SubMenus.PlaceItem.STATE.FORCED);
+        });
+        c_list.forEach(function(cntry) {
+          //add crossed
+          tsm.add_place(cntry, SubMenus.PlaceItem.TYPE.COUNTRY, SubMenus.PlaceItem.STATE.FORCED);
+        });
+      }
+      else{
+        g_list.forEach(function(grp) {
+          //add normal
+          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP);
+        });
+        c_list.forEach(function(cntry) {
+          //add normal
+          tsm.add_place(cntry);
+        });
+      }
+
+    }
+    else if(/*distinctive_list*/true){
+      let cl= this._get_countries_list();
+      let gl= Group_List;
+
+      gl.forEach(function(grp) {
+        if(g_list.includes(grp)){
+          //add normal
+          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP);
+        }
+        else{
+          //add crossed
+          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.UNAVAILABLE);
+        }
+      })
+
+      cl.forEach(function(cntry) {
+        if(c_list.includes(cntry)){
+          //add normal
+          tsm.add_place(cntry);
+        }
+        else{
+          //add crossed
+          tsm.add_place(cntry, SubMenus.PlaceItem.TYPE.COUNTRY, SubMenus.PlaceItem.STATE.UNAVAILABLE);
+        }
+      })
+    }
+    else{ //default_static_list_only
+      c_list= this._get_countries_list();
+      g_list= Group_List;
+
+      Group_List.forEach(function(elmt){
+        tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
+      });
+  
+      /** foreach element in this list, it is added as an item to the submenu */
+      country_list.forEach(function(elmt){
+        /** using the 'LocationsMenu' object's method 'addPlace' to add this country name to
+         *  this submenu */
+        tsm.add_place(elmt);
+      });
+    }
   }
 
   /**

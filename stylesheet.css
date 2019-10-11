@@ -39,6 +39,14 @@
   font-style: italic;
 }
 
+.submenu-label-state-unavailable{
+    text-decoration: line-through;
+}
+
+.submenu-label-state-forced{
+    color: rgba(133, 66, 8, 0.7);
+}
+
 .sub-menu-btn{
   margin-left:10px;
   margin-right: 10px;

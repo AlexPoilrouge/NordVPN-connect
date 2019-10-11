@@ -78,11 +78,19 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
         GROUP: 2,
       };
     }
+
+    static get STATE(){
+      return {
+        DEFAULT: 0,
+        UNAVAILABLE: 1,
+        FORCED: 2,
+      }
+    }
   
     /**
      * Constructor, also initializes the UI for the item
      */
-    _init(str_Place, type=PlaceItem.TYPE.COUNTRY){
+    _init(str_Place, type=PlaceItem.TYPE.COUNTRY, state=PlaceItem.STATE.DEFAULT){
     //constructor(str_Place, type=PlaceItem.TYPE.COUNTRY){
       super._init();
   
@@ -92,15 +100,22 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
       this.placeName= str_Place;
       /** type of item */
       this.type= type;
+
+      this.state= state;
   
       this.checkIcon = new St.Icon({  icon_name: 'network-vpn-symbolic',
                                   style_class: 'countries_submenu_label_item_selected_icon' });
       this.actor.add(this.checkIcon);
   
       let label_item= new St.Label({
-        style_class: (this.type===PlaceItem.TYPE.GROUP)?
+        style_class: ((this.type===PlaceItem.TYPE.GROUP)?
                         'groups-submenu-label-item'
-                        :'countries_submenu_label_item',
+                        :'countries-submenu-label-item')
+                    + (this.state===PlaceItem.STATE.UNAVAILABLE)?
+                        ' submenu-label-state-unavailable'
+                        : (this.state===PlaceItem.STATE.FORCED)?
+                        ' submenu-label-state-forced'
+                        :'',
         text: this.placeName.replace(/_/gi,' ')}
       );
       this.actor.add(label_item);
@@ -186,13 +201,15 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
     }
   
     /**
-     * Method to add a new country as an item to this menu
+     * Method to add a new location as an item to this menu
      * @method
      * @param {string} str_Place - the displayed name of the item (i.e. the country's name)
+     * @param {enum} type - type of location. Can be a PlaceItem.TYPE.COUNTRY or a 
+     *                      PlaceItem.TYPE.COUNTRY.GROUP
      */
-    add_place(str_Place, type=PlaceItem.TYPE.COUNTRY){
+    add_place(str_Place, type=PlaceItem.TYPE.COUNTRY, state=PlaceItem.STATE.DEFAULT){
       /** creating the new item as an instance of 'PlaceItem' class */
-      let item= new PlaceItem(str_Place, type);
+      let item= new PlaceItem(str_Place, type, state);
       /** adding this item to the menu */
       this.menu.addMenuItem(item,
                 (type===PlaceItem.TYPE.GROUP)?0:undefined

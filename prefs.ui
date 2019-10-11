@@ -194,6 +194,37 @@ You can't try increasing it, for performance issue? But you probably shouldn't c
             <property name="top_attach">4</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkComboBoxText" id="NVPN_Sett_TxtCombo_Target_Mode">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the 'available' targets given dynamically by the CLI, or the 'deault' static targets hard coded that may not be available at the time)</property>
+            <property name="valign">center</property>
+            <property name="active">0</property>
+            <items>
+              <item id="0" translatable="yes">Available targets only</item>
+              <item id="1" translatable="yes">Discriminate availables</item>
+              <item id="2" translatable="yes">Show all (default) targets</item>
+            </items>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="NVPN_Sett_Label_Target_Mode">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the 'available' targets given dynamically by the CLI, or the 'deault' static targets hard coded that may not be available at the time)</property>
+            <property name="label" translatable="yes">Target (locations) display mode:</property>
+            <property name="xalign">0.30000001192092896</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child type="tab">

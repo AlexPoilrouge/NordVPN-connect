@@ -73,5 +73,11 @@
             <summary>Set how many items to store within the 'recent connection' menu</summary>
             <description>How many items in the 'recent connections' menu</description>
         </key>
+        <key type="i" name="target-display-mode">
+            <range min="0" max="2"/>
+            <default>0</default>
+            <summary>How to display the connection targets (countries, groups…)</summary>
+            <description>0: only available targets (display default if none available); 1: all but discriminates by display; 2: default</description>
+        </key>
     </schema>
 </schemalist>
