@@ -612,7 +612,9 @@ class NVPNMenu extends PanelMenu.Button{
     this._submenuPlaces.select_callback(this._place_menu_new_selection.bind(this));
 
     /** call to private method that fill the 'country submenu' with all the required country name */
-    this._fill_country_submenu();
+    //this._fill_country_submenu();
+    this._updateGroupsAndCountries();
+    this._fill_country_submenu_b();
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -624,6 +626,8 @@ class NVPNMenu extends PanelMenu.Button{
     this._submenuServer.newServerEntry_callback(this.server_entry.bind(this));
 
     this.menu.addMenuItem(this._submenuServer);
+
+    this._update_recent_location_submenu();
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -692,6 +696,10 @@ class NVPNMenu extends PanelMenu.Button{
       else{
         this._versionChecker.actor.hide();
       }
+    });
+
+    this.SETT_SIGS[2]= SETTINGS.connect('changed::target-display-mode', () =>{
+      this._udpate_location_submenu();
     });
 
 
@@ -788,14 +796,27 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _getGroupsAndCountries(){
+    let _clearEmpty= (t) => {
+      var i=0;
+      while(i<t.length){
+        if(t[i]) ++i;
+        else t.splice(i,1);
+      }
+    }
+    
     let t= this._cmd.exec_sync('get_groups_countries');
+    log("nordvpn t: "+t);
     let r= (t===undefined || t===null || t==='')? null : {'groups':null,'countries':null};
     var tmp= [];
     if(r){
       tmp= t.split('\n');
-      r.groups= tmp[0].split(' ');
+      r.groups= tmp[0].split(',');
+      _clearEmpty(r.groups);
+      log("nordvpn t -> groups: -"+r.groups+"- l: "+r.groups.length);
       if(tmp.length>1){
-        r.countries= tmp[1].split(' ');
+        r.countries= tmp[1].split(',');
+        _clearEmpty(r.countries);
+        log("nordvpn t -> countries: -"+r.countries+"- l: "+r.countries.length);
       }
     }
 
@@ -806,7 +827,7 @@ class NVPNMenu extends PanelMenu.Button{
     let gac= this._getGroupsAndCountries();
     
     this.targets.groups= ( gac && gac.groups )? gac.groups : [];
-    this.targets.groups= ( gac && gac.countries )? gac.countries : [];
+    this.targets.countries= ( gac && gac.countries )? gac.countries : [];
   }
 
   /** Private method used to hide or show the submenus and the associated buttons
@@ -1282,7 +1303,7 @@ class NVPNMenu extends PanelMenu.Button{
     });
   }
 
-  _fill_country_submenu_b(){
+  _fill_country_submenu_b(){    
     var tmp= this.targets.countries;
     let c_list= (tmp)? tmp : [];
     tmp= this.targets.groups;
@@ -1290,14 +1311,20 @@ class NVPNMenu extends PanelMenu.Button{
 
     let tsm= this._submenuPlaces;
 
-    if(/*dynamic_list_only*/true){
+    let displayMode= SETTINGS.get_int('target-display-mode');
+    
+    log("nordvpn so i am here: "+ displayMode);
+
+    if(displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.AVAILABLE_ONLY){
+      log("nordvpn test1");
       var b_noDynItem= false;
-      if(b_noDynItem=(c_list.length===0 && g_list.length===0)){
+      if( (b_noDynItem=(c_list.length===0 && g_list.length===0)) ){
         c_list= this._get_countries_list();
         g_list= Group_List;
       }
 
       if(b_noDynItem){
+        log("nordvpn test2");
         g_list.forEach(function(grp) {
           //add crossed
           tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP, SubMenus.PlaceItem.STATE.FORCED);
@@ -1308,9 +1335,11 @@ class NVPNMenu extends PanelMenu.Button{
         });
       }
       else{
+        log("nordvpn test3");
         g_list.forEach(function(grp) {
           //add normal
           tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP);
+          log("nordvpn test 3.1: add_place("+grp+", GROUP)");
         });
         c_list.forEach(function(cntry) {
           //add normal
@@ -1319,7 +1348,7 @@ class NVPNMenu extends PanelMenu.Button{
       }
 
     }
-    else if(/*distinctive_list*/true){
+    else if(displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.DISCRIMINATE_DISPLAY){
       let cl= this._get_countries_list();
       let gl= Group_List;
 
@@ -1345,7 +1374,7 @@ class NVPNMenu extends PanelMenu.Button{
         }
       })
     }
-    else{ //default_static_list_only
+    else{ //displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.SHOW_ALL
       c_list= this._get_countries_list();
       g_list= Group_List;
 
@@ -1360,6 +1389,29 @@ class NVPNMenu extends PanelMenu.Button{
         tsm.add_place(elmt);
       });
     }
+  }
+
+  _udpate_location_submenu(){
+    let tsm= this._submenuPlaces;
+
+    tsm.clearAllLocations();
+    this._updateGroupsAndCountries();
+    this._fill_country_submenu_b();
+
+    this._update_recent_location_submenu();
+  }
+
+  _update_recent_location_submenu(){
+    let ssm= this._submenuServer;
+
+    let displayMode= SETTINGS.get_int('target-display-mode');
+  
+    var tmp= this.targets.countries;
+    let c_list= (tmp)? tmp : [];
+    tmp= this.targets.groups;
+    let g_list= (tmp)? tmp : [];
+
+    ssm.updateRecentLocationDisplay(displayMode, c_list, g_list);
   }
 
   /**
@@ -1572,6 +1624,13 @@ class NVPNMenu extends PanelMenu.Button{
   */
   option_changed(option, txt){
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
+
+
+    if( (option==="protocol" || option==="obfuscate" || option==="cybersec" || option==="technology") )
+    {
+      this._udpate_location_submenu();
+      this._update_recent_location_submenu();
+    }
 
     if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected()){
       if(this.server_info.city && option!=="notify"){

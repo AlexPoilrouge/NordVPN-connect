@@ -807,11 +807,11 @@ X.X.X…</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
-All items are separated with a whitespace.</property>
+All items are separated with a coma.</property>
                         <property name="halign">start</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="label" translatable="yes">Get nordvpn current version:</property>
+                        <property name="label" translatable="yes">Get groups and countries</property>
                         <property name="use_markup">True</property>
                         <property name="wrap">True</property>
                       </object>
@@ -825,7 +825,7 @@ All items are separated with a whitespace.</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
-All items are separated with a whitespace.</property>
+All items are separated with a coma.</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
                         <property name="hexpand">True</property>

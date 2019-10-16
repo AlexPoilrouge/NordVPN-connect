@@ -109,15 +109,16 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
   
       let label_item= new St.Label({
         style_class: ((this.type===PlaceItem.TYPE.GROUP)?
-                        'groups-submenu-label-item'
-                        :'countries-submenu-label-item')
-                    + (this.state===PlaceItem.STATE.UNAVAILABLE)?
-                        ' submenu-label-state-unavailable'
+                      'groups-submenu-label-item'
+                      :'countries-submenu-label-item')
+                      + ((this.state===PlaceItem.STATE.UNAVAILABLE)?
+                        'submenu-label-state-unavailable'
                         : (this.state===PlaceItem.STATE.FORCED)?
                         ' submenu-label-state-forced'
-                        :'',
+                        : ''),
         text: this.placeName.replace(/_/gi,' ')}
       );
+
       this.actor.add(label_item);
       this.checkIcon.hide();
     }
@@ -153,6 +154,14 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
  */
 var LocationsMenu = GObject.registerClass(
 class LocationsMenu extends HiddenSubMenuMenuItemBase{
+  static get DISPLAY_MODE(){
+    return {
+      AVAILABLE_ONLY: 0,
+      DISCRIMINATE_DISPLAY: 1,
+      SHOW_ALL: 2,
+    }
+  }
+
   /**
    * Initiate the attributes needed to maintain this menu
    * @method
@@ -322,6 +331,30 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
         }
         else if (item===undefined) {
           log("[nvpn] Error: got item (n=" + i.toString() + ") undefined looking for \"" + placeName + "\"...");
+        }
+      }
+    }
+
+    clearAllLocations(){
+      let children= this.menu._getMenuItems();
+      /*var i=0;
+      while(i<this.menu.length){
+        let item= children[i];
+        if( (item!==undefined) && (item instanceof PlaceItem) ){
+          //item.destroy();
+          log("nordvpn ooo")
+        }
+        else{
+          log("nordvpn iiiii")
+          ++i;
+        }
+      }*/
+      for(var i=0; i<children.length; ++i){
+        //item.destroy();
+        let item= children[i];
+        if( (item!==undefined) && (item instanceof PlaceItem) ){
+          log("nordvpn ch["+i+"].destroy() --- "+item.PlaceName)
+          item.destroy();
         }
       }
     }
@@ -785,6 +818,19 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
 
   get isPin(){ return this._pin;}
   get location(){ return this._location;}
+
+  updateStyle(state){
+    this.tLabel.style_class=
+    'recent-location-label' +
+    ((this.isPin)?' pinned':'')  +
+    ((state===PlaceItem.STATE.FORCED)?
+      ' submenu-label-state-forced' :
+      ''  )                 +
+    ((state===PlaceItem.STATE.UNAVAILABLE)?
+      ' submenu-label-state-unavailable':
+      ''  )
+    ;
+  }
 });
 
 let RecentLocationStacker = GObject.registerClass(
@@ -1000,6 +1046,63 @@ class RecentLocationStacker extends StackerBase{
       }
     }
   }
+
+  /** TODO!!!
+   * 1) Factorize
+   * 2) Change scope of DISPLAY_MODE & STATE enums
+  */
+  updateLocationsDisplay(displayMode, countries, groups){
+    let p_items= this._parentMenu.menu._getMenuItems();
+    if(displayMode===LocationsMenu.DISPLAY_MODE.AVAILABLE_ONLY){
+      let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) && (!(countries.length>0 || groups.length>0));
+      var i= this.acutalizedDynamicItemStartPos;
+      while(i<p_items.length){
+        let item= p_items[i];
+
+        if(Boolean(item) && (item instanceof RecentLocationItem)){
+          let state=
+            (b_noDynamic)?
+              PlaceItem.STATE.FORCED  :
+              (countries.includes(item.location) || groups.includes(item.location))?
+                PlaceItem.STATE.DEFAULT :
+                PlaceItem.STATE.UNAVAILABLE;
+          
+          item.updateStyle(state);
+        }
+
+        ++i;
+      }
+    }
+    else if( displayMode===LocationsMenu.DISPLAY_MODE.DISCRIMINATE_DISPLAY ){
+      var i= this.acutalizedDynamicItemStartPos;
+      while(i<p_items.length){
+        let item= p_items[i];
+
+        if(Boolean(item) && (item instanceof RecentLocationItem)){
+          let state=
+            (countries.includes(item.location) || groups.includes(item.location))?
+              PlaceItem.STATE.DEFAULT :
+              PlaceItem.STATE.UNAVAILABLE;
+
+            item.updateStyle(state);
+        }
+
+        ++i;
+      }
+    }
+    else{
+      var i= this.acutalizedDynamicItemStartPos;
+      while(i<p_items.length){
+        let item= p_items[i];
+
+        if(Boolean(item) && (item instanceof RecentLocationItem)){
+          item.updateStyle(PlaceItem.STATE.DEFAULT);
+        }
+
+        ++i;
+      }
+    }
+  }
 }
 );
 
@@ -1197,6 +1300,12 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
   notifyRecentConnection(location){
     if(this.recent){
       this.recent.addRecentLocation(location);
+    }
+  }
+
+  updateRecentLocationDisplay(displayMode, countries, groups){
+    if(Boolean(this.recent)){
+      this.recent.updateLocationsDisplay(displayMode, countries, groups)
     }
   }
 });
