@@ -117,7 +117,7 @@ From the start, a command line install should look like this:
 
 ( May not be necessary ):
 
-`gnome-shell-extension-tool -e NordVPN_Connect@poilrouge.fr`
+`gnome-shell enable NordVPN_Connect@poilrouge.fr`
 
 `gnome-shell -r`
 
