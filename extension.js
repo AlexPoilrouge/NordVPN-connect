@@ -441,7 +441,8 @@ class NVPNMenu extends PanelMenu.Button{
     /** storing signal connectio ids for later discards */
     this.SETT_SIGS= [];
 
-
+    
+    /** 'groups' and 'countries' dynamic storages */
     this.targets= {'groups': [],'countries':[]};
 
 
@@ -613,8 +614,11 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** call to private method that fill the 'country submenu' with all the required country name */
     //this._fill_country_submenu();
+    /** fetchs the current value of 'displayMode' option */
+    let displayMode= SETTINGS.get_int('target-display-mode');
+    /** calls for refreshing and updating the locations display dynamically (according to CLI) */
     this._updateGroupsAndCountries();
-    this._fill_country_submenu_b();
+    this._fill_country_submenu_b(displayMode);
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -627,7 +631,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.menu.addMenuItem(this._submenuServer);
 
-    this._update_recent_location_submenu();
+    /** also have to update the display of the 'recent locations' menu,
+     *  since the display of the items vary according to the 'display mode' option */
+    this._update_recent_location_submenu(displayMode);
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -698,7 +704,9 @@ class NVPNMenu extends PanelMenu.Button{
       }
     });
 
-    this.SETT_SIGS[2]= SETTINGS.connect('changed::target-display-mode', () =>{
+    /** update the 'locations menu' and 'recent locations' display in case the option
+     *  value changes*/
+    this.SETT_SIGS[3]= SETTINGS.connect('changed::target-display-mode', () =>{
       this._udpate_location_submenu();
     });
 
@@ -795,7 +803,13 @@ class NVPNMenu extends PanelMenu.Button{
     return txt;
   }
 
+  /** Private method that fetchs the 'groups' and 'country' lists given by the CLI
+   * @method
+   * @returns {object} a couple that contains the 2 lists as fields 'groups' and 'countries',
+   *          object can be null (if call failed), or fields can be null (if results unreadable) 
+   */
   _getGroupsAndCountries(){
+    /** anonymous function to suppress empty entries or invalid of lsit */
     let _clearEmpty= (t) => {
       var i=0;
       while(i<t.length){
@@ -804,10 +818,12 @@ class NVPNMenu extends PanelMenu.Button{
       }
     }
     
+    /** calling command, initiating objects… */
     let t= this._cmd.exec_sync('get_groups_countries');
     log("nordvpn t: "+t);
     let r= (t===undefined || t===null || t==='')? null : {'groups':null,'countries':null};
     var tmp= [];
+    /** processing the command results and storing result */
     if(r){
       tmp= t.split('\n');
       r.groups= tmp[0].split(',');
@@ -823,9 +839,15 @@ class NVPNMenu extends PanelMenu.Button{
     return r;
   }
 
+  /** Private commands that updates dynamically local attribute object that stores the 'countries'
+   *  and 'groups' list given by the CLI
+   *  @method
+  */
   _updateGroupsAndCountries(){
+    /** dynamically fetchs the lists */
     let gac= this._getGroupsAndCountries();
     
+    /** update local attribute */
     this.targets.groups= ( gac && gac.groups )? gac.groups : [];
     this.targets.countries= ( gac && gac.countries )? gac.countries : [];
   }
@@ -1292,7 +1314,7 @@ class NVPNMenu extends PanelMenu.Button{
     let tsm= this._submenuPlaces;
 
     Group_List.forEach(function(elmt){
-      tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
+      tsm.add_place(elmt,SubMenus.LOCATION_TYPE.GROUP)
     });
 
     /** foreach element in this list, it is added as an item to the submenu */
@@ -1303,7 +1325,14 @@ class NVPNMenu extends PanelMenu.Button{
     });
   }
 
-  _fill_country_submenu_b(){    
+  /**
+   *  Private method that fills the country connection submenu with all the
+   *  required country and groups, according to data stored with the local
+   *  'targets' attributes object, and the 'displayMode' option value
+   *  @method
+   *  @param {integer} displayMode the value corresponding to the wanted displayMode option
+   */
+  _fill_country_submenu_b(displayMode){    
     var tmp= this.targets.countries;
     let c_list= (tmp)? tmp : [];
     tmp= this.targets.groups;
@@ -1311,11 +1340,12 @@ class NVPNMenu extends PanelMenu.Button{
 
     let tsm= this._submenuPlaces;
 
-    let displayMode= SETTINGS.get_int('target-display-mode');
     
     log("nordvpn so i am here: "+ displayMode);
 
-    if(displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.AVAILABLE_ONLY){
+    /** the 'displayMode' value will affect the "style" in which the items are
+     *  displayed, along with their nature (groups or countries) */
+    if(displayMode===SubMenus.LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY){
       log("nordvpn test1");
       var b_noDynItem= false;
       if( (b_noDynItem=(c_list.length===0 && g_list.length===0)) ){
@@ -1327,18 +1357,18 @@ class NVPNMenu extends PanelMenu.Button{
         log("nordvpn test2");
         g_list.forEach(function(grp) {
           //add crossed
-          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP, SubMenus.PlaceItem.STATE.FORCED);
+          tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP, SubMenus.LOCATION_ITEM_STATE.FORCED);
         });
         c_list.forEach(function(cntry) {
           //add crossed
-          tsm.add_place(cntry, SubMenus.PlaceItem.TYPE.COUNTRY, SubMenus.PlaceItem.STATE.FORCED);
+          tsm.add_place(cntry, SubMenus.LOCATION_TYPE.COUNTRY, SubMenus.LOCATION_ITEM_STATE.FORCED);
         });
       }
       else{
         log("nordvpn test3");
         g_list.forEach(function(grp) {
           //add normal
-          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP);
+          tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP);
           log("nordvpn test 3.1: add_place("+grp+", GROUP)");
         });
         c_list.forEach(function(cntry) {
@@ -1348,18 +1378,18 @@ class NVPNMenu extends PanelMenu.Button{
       }
 
     }
-    else if(displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.DISCRIMINATE_DISPLAY){
+    else if(displayMode===SubMenus.LOCATIONS_DISPLAY_MODE.DISCRIMINATE_DISPLAY){
       let cl= this._get_countries_list();
       let gl= Group_List;
 
       gl.forEach(function(grp) {
         if(g_list.includes(grp)){
           //add normal
-          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP);
+          tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP);
         }
         else{
           //add crossed
-          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP, SubMenus.PlaceItem.STATE.UNAVAILABLE);
+          tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP, SubMenus.LOCATION_ITEM_STATE.UNAVAILABLE);
         }
       })
 
@@ -1370,16 +1400,16 @@ class NVPNMenu extends PanelMenu.Button{
         }
         else{
           //add crossed
-          tsm.add_place(cntry, SubMenus.PlaceItem.TYPE.COUNTRY, SubMenus.PlaceItem.STATE.UNAVAILABLE);
+          tsm.add_place(cntry, SubMenus.LOCATION_TYPE.COUNTRY, SubMenus.LOCATION_ITEM_STATE.UNAVAILABLE);
         }
       })
     }
-    else{ //displayMode===SubMenus.LocationsMenu.DISPLAY_MODE.SHOW_ALL
+    else{ //displayMode===SubMenus.LOCATIONS_DISPLAY_MODE.SHOW_ALL
       c_list= this._get_countries_list();
       g_list= Group_List;
 
       g_list.forEach(function(elmt){
-        tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
+        tsm.add_place(elmt,SubMenus.LOCATION_TYPE.GROUP)
       });
   
       /** foreach element in this list, it is added as an item to the submenu */
@@ -1391,21 +1421,33 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  /** Private method that dynamically (according to CLI) update the display of the
+   *  location items, in function of the current displayMode option value
+   */
   _udpate_location_submenu(){
     let tsm= this._submenuPlaces;
 
+    /** fetchs the current value of 'displayMode' option */
+    let displayMode= SETTINGS.get_int('target-display-mode');
+
+    /** clear the location list, dynamically fetches the value, and fills
+     *  back the menu*/
     tsm.clearAllLocations();
     this._updateGroupsAndCountries();
-    this._fill_country_submenu_b();
+    this._fill_country_submenu_b(displayMode);
     tsm.select_from_name(tsm.LastSelectedPlaceName);
 
-    this._update_recent_location_submenu();
+    /** update the styles of the 'recentLocations' menu's items */
+    this._update_recent_location_submenu(displayMode);
   }
 
-  _update_recent_location_submenu(){
+  /** Private method that updates the style in which the items of 'recentLocations' menu
+   *  are displayed according to the 'displayMode' option value
+   * 
+   *  @param {integer} displayMode the value corresponding to the wanted displayMode option
+   */
+  _update_recent_location_submenu(displayMode){
     let ssm= this._submenuServer;
-
-    let displayMode= SETTINGS.get_int('target-display-mode');
   
     var tmp= this.targets.countries;
     let c_list= (tmp)? tmp : [];
@@ -1628,6 +1670,8 @@ class NVPNMenu extends PanelMenu.Button{
     let t= this._cmd.exec_sync('option_set', {'option': option, 'value': txt});
 
 
+    /** these nvpn settings might affect the available locations lists.
+     *  therefore they must be updated when these option values change.*/
     if( (option==="protocol" || option==="obfuscate" || option==="cybersec" || option==="technology") )
     {
       this._udpate_location_submenu();

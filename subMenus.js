@@ -31,6 +31,42 @@ function init(){
   SETTINGS = Convenience.getSettings();
 }
 
+/** Enumerator for instructions on how locations item should be displayed in a menu:
+ *  Either a 'AVAILABLE_ONLY', a 'DISCRIMINATE_DISPLAY' or a 'SHOW_ALL'
+ *  (according to value of the 'displayMenu' option)
+ *  @readonly
+ *  @enum {number}
+ */
+const LOCATIONS_DISPLAY_MODE={
+  AVAILABLE_ONLY: 0,
+  DISCRIMINATE_DISPLAY: 1,
+  SHOW_ALL: 2,
+};
+
+/** Enumerator for the possible states of item inserted in a potentioal menu:
+ *  Either a 'DEFAULT', a 'UNAVAILABLE' or a 'FORCED'
+ *  (according to their availability in the CLI (or not= default))
+ *  @readonly
+ *  @enum {number}
+ */
+const LOCATION_ITEM_STATE= {
+  DEFAULT: 0,
+  UNAVAILABLE: 1,
+  FORCED: 2,
+};
+
+/** Enumerator for the possible type of item insertable in menus
+ *  Either a 'country', a 'city' or a 'group'
+ *  (according to the possibilities offered by the NordVPN CLI Tool)
+ *  @readonly
+ *  @enum {number}
+ */
+const LOCATION_TYPE= {
+  COUNTRY: 0,
+  CITY: 1,
+  GROUP: 2,
+};
+
 /**
  * Class that implements the generic class for 'invisible' submenus.
  * 
@@ -64,34 +100,16 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
    * Class that implements an item to be inserted int the 'PlaceMenu' menu.
    */
   var PlaceItem = GObject.registerClass(
-  class PlaceItem extends PopupMenu.PopupBaseMenuItem{
-    /** Enumerator for the possible type of item insertable in this 'PlaceMenu':
-     *  Either a 'country', a 'city' or a 'group'
-     *  (according to the possibilities offered by the NordVPN CLI Tool)
-     *  @readonly
-     *  @enum {number}
-     */
-    static get TYPE() {
-      return {
-        COUNTRY: 0,
-        CITY: 1,
-        GROUP: 2,
-      };
-    }
-
-    static get STATE(){
-      return {
-        DEFAULT: 0,
-        UNAVAILABLE: 1,
-        FORCED: 2,
-      }
-    }
-  
+    class PlaceItem extends PopupMenu.PopupBaseMenuItem{  
     /**
      * Constructor, also initializes the UI for the item
+     * 
+     * @param {string} str_Place name of location
+     * @param {enum} type the type of location (city, country, group)
+     * @param {enum} state current state of location (unavailable, force, default)
      */
-    _init(str_Place, type=PlaceItem.TYPE.COUNTRY, state=PlaceItem.STATE.DEFAULT){
-    //constructor(str_Place, type=PlaceItem.TYPE.COUNTRY){
+    _init(str_Place, type=LOCATION_TYPE.COUNTRY, state=LOCATION_ITEM_STATE.DEFAULT){
+    //constructor(str_Place, type=LOCATION_TYPE.COUNTRY){
       super._init();
   
       /** the actual place name stored by this item
@@ -108,12 +126,12 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
       this.actor.add(this.checkIcon);
   
       let label_item= new St.Label({
-        style_class: ((this.type===PlaceItem.TYPE.GROUP)?
+        style_class: ((this.type===LOCATION_TYPE.GROUP)?
                       'groups-submenu-label-item'
                       :'countries-submenu-label-item')
-                      + ((this.state===PlaceItem.STATE.UNAVAILABLE)?
+                      + ((this.state===LOCATION_ITEM_STATE.UNAVAILABLE)?
                         ' submenu-label-state-unavailable'
-                        : (this.state===PlaceItem.STATE.FORCED)?
+                        : (this.state===LOCATION_ITEM_STATE.FORCED)?
                         ' submenu-label-state-forced'
                         : ''),
         text: this.placeName.replace(/_/gi,' ')}
@@ -154,14 +172,6 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
  */
 var LocationsMenu = GObject.registerClass(
 class LocationsMenu extends HiddenSubMenuMenuItemBase{
-  static get DISPLAY_MODE(){
-    return {
-      AVAILABLE_ONLY: 0,
-      DISCRIMINATE_DISPLAY: 1,
-      SHOW_ALL: 2,
-    }
-  }
-
   /**
    * Initiate the attributes needed to maintain this menu
    * @method
@@ -213,15 +223,16 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
      * Method to add a new location as an item to this menu
      * @method
      * @param {string} str_Place - the displayed name of the item (i.e. the country's name)
-     * @param {enum} type - type of location. Can be a PlaceItem.TYPE.COUNTRY or a 
-     *                      PlaceItem.TYPE.COUNTRY.GROUP
+     * @param {enum} type - type of location. Can be a LOCATION_TYPE.COUNTRY or a 
+     *                      LOCATION_TYPE.COUNTRY.GROUP
+     * @param {enum} state - state of location. Unavailabe, force, or default
      */
-    add_place(str_Place, type=PlaceItem.TYPE.COUNTRY, state=PlaceItem.STATE.DEFAULT){
+    add_place(str_Place, type=LOCATION_TYPE.COUNTRY, state=LOCATION_ITEM_STATE.DEFAULT){
       /** creating the new item as an instance of 'PlaceItem' class */
       let item= new PlaceItem(str_Place, type, state);
       /** adding this item to the menu */
       this.menu.addMenuItem(item,
-                (type===PlaceItem.TYPE.GROUP)?0:undefined
+                (type===LOCATION_TYPE.GROUP)?0:undefined
         );
   
       /** setting the callback for when our item is click by the user, while not forgetting
@@ -269,7 +280,7 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
        *  make it the currently selected item (data) and select it (ui) */
       else{
         this.cur_selected= item;
-        item.select(item.type!==PlaceItem.TYPE.GROUP);
+        item.select(item.type!==LOCATION_TYPE.GROUP);
       }
   
       /** make the requested call back (function pointed by attribute 'select_db'),
@@ -335,22 +346,13 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       }
     }
 
+    /** Method to empty LocationMenu of all location items
+     * @method
+     */
     clearAllLocations(){
       let children= this.menu._getMenuItems();
-      /*var i=0;
-      while(i<this.menu.length){
-        let item= children[i];
-        if( (item!==undefined) && (item instanceof PlaceItem) ){
-          //item.destroy();
-          log("nordvpn ooo")
-        }
-        else{
-          log("nordvpn iiiii")
-          ++i;
-        }
-      }*/
+    
       for(var i=0; i<children.length; ++i){
-        //item.destroy();
         let item= children[i];
         if( (item!==undefined) && (item instanceof PlaceItem) ){
           log("nordvpn ch["+i+"].destroy() --- "+item.PlaceName)
@@ -819,14 +821,18 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
   get isPin(){ return this._pin;}
   get location(){ return this._location;}
 
+  /** Method to update style of displayed item according to a given state
+   * 
+   * @param {enum} state - style from state to apply to item - forced, unavailable or default
+   */
   updateStyle(state){
     this.tLabel.style_class=
     'recent-location-label' +
     ((this.isPin)?' pinned':'')  +
-    ((state===PlaceItem.STATE.FORCED)?
+    ((state===LOCATION_ITEM_STATE.FORCED)?
       ' submenu-label-state-forced' :
       ''  )                 +
-    ((state===PlaceItem.STATE.UNAVAILABLE)?
+    ((state===LOCATION_ITEM_STATE.UNAVAILABLE)?
       ' submenu-label-state-unavailable':
       ''  )
     ;
@@ -1049,63 +1055,58 @@ class RecentLocationStacker extends StackerBase{
     }
   }
 
-  /** TODO!!!
-   * 1) Factorize
-   * 2) Change scope of DISPLAY_MODE & STATE enums
-  */
+  /** Method to update the style of all displayed items in menu
+   * according to a given display mode and the list of countries
+   * and groups dynamically available
+   * 
+   * @method
+   * @param {enum} displayMode - displayMode for this menu
+   * @param {list} countries - list of dynamically available countries
+   * @param {list} groups - list of dynamically available groups
+   */
   updateLocationsDisplay(displayMode, countries, groups){
-    let p_items= this._parentMenu.menu._getMenuItems();
-    if(displayMode===LocationsMenu.DISPLAY_MODE.AVAILABLE_ONLY){
-      let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) || (!(countries.length>0 || groups.length>0));
-      var i= this.acutalizedDynamicItemStartPos;
-      while(i<p_items.length){
-        let item= p_items[i];
+    let styleUpdateFn= (mode, mapFn) =>{
+      let p_items= this._parentMenu.menu._getMenuItems();
+      if(displayMode===mode){
+        var i= this.acutalizedDynamicItemStartPos;
+        while(i<p_items.length){
+          let item= p_items[i];
 
-        if(Boolean(item) && (item instanceof RecentLocationItem)){
-          let state=
-            (b_noDynamic)?
-              PlaceItem.STATE.FORCED  :
-              (countries.includes(item.location) || groups.includes(item.location))?
-                PlaceItem.STATE.DEFAULT :
-                PlaceItem.STATE.UNAVAILABLE;
-          
-          item.updateStyle(state);
-          log("nordvpn [rls] '"+item.location+"'.updateStyle("+state+")");
+          if(Boolean(item) && (item instanceof RecentLocationItem)){
+            item.updateStyle( mapFn(item) );
+          }
+
+          ++i;
         }
-
-        ++i;
       }
-    }
-    else if( displayMode===LocationsMenu.DISPLAY_MODE.DISCRIMINATE_DISPLAY ){
-      var i= this.acutalizedDynamicItemStartPos;
-      while(i<p_items.length){
-        let item= p_items[i];
+    };
 
-        if(Boolean(item) && (item instanceof RecentLocationItem)){
-          let state=
-            (countries.includes(item.location) || groups.includes(item.location))?
-              PlaceItem.STATE.DEFAULT :
-              PlaceItem.STATE.UNAVAILABLE;
+    let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) || (!(countries.length>0 || groups.length>0));
+    styleUpdateFn(LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY, (item)=>{
 
-            item.updateStyle(state);
-            log("nordvpn [rls] '"+item.location+"'.updateStyle("+state+")");
-        }
+      let state=
+        (b_noDynamic)?
+        LOCATION_ITEM_STATE.FORCED  :
+          (countries.includes(item.location) || groups.includes(item.location))?
+            LOCATION_ITEM_STATE.DEFAULT :
+            LOCATION_ITEM_STATE.UNAVAILABLE;
+      
+      return state;
+    });
 
-        ++i;
-      }
-    }
-    else{
-      var i= this.acutalizedDynamicItemStartPos;
-      while(i<p_items.length){
-        let item= p_items[i];
+    styleUpdateFn(LOCATIONS_DISPLAY_MODE.DISCRIMINATE_DISPLAY, (item)=>{
 
-        if(Boolean(item) && (item instanceof RecentLocationItem)){
-          item.updateStyle(PlaceItem.STATE.DEFAULT);
-        }
+      let state=
+        (countries.includes(item.location) || groups.includes(item.location))?
+          LOCATION_ITEM_STATE.DEFAULT :
+          LOCATION_ITEM_STATE.UNAVAILABLE;
 
-        ++i;
-      }
-    }
+      return state;
+    });
+    
+    styleUpdateFn(LOCATIONS_DISPLAY_MODE.SHOW_ALL, (item)=>{
+        return LOCATION_ITEM_STATE.DEFAULT;
+    });
   }
 }
 );
@@ -1301,12 +1302,23 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     return this.servEntry.text.length===0;
   }
 
+  /** Method to "inform" this object that a recent connection has been made to a given location
+   * @method
+   * @param {string} location - name of location
+   */
   notifyRecentConnection(location){
     if(this.recent){
       this.recent.addRecentLocation(location);
     }
   }
 
+  /** Method to update the display of item of the recentLocationMenu given
+   *  a display mode, and the lit of availble groups and countries
+   * 
+   * @param {enum} displayMode the display mode for this menu 
+   * @param {list} countries list of dynamically available countries 
+   * @param {list} groups list of dynamically available groups
+   */
   updateRecentLocationDisplay(displayMode, countries, groups){
     if(Boolean(this.recent)){
       this.recent.updateLocationsDisplay(displayMode, countries, groups)
