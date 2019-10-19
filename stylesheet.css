@@ -41,6 +41,7 @@
 
 .submenu-label-state-unavailable{
     text-decoration: line-through;
+    color: rgba(255, 255, 255, 0.42);
 }
 
 .submenu-label-state-forced{

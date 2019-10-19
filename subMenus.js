@@ -112,7 +112,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
                       'groups-submenu-label-item'
                       :'countries-submenu-label-item')
                       + ((this.state===PlaceItem.STATE.UNAVAILABLE)?
-                        'submenu-label-state-unavailable'
+                        ' submenu-label-state-unavailable'
                         : (this.state===PlaceItem.STATE.FORCED)?
                         ' submenu-label-state-forced'
                         : ''),
@@ -830,6 +830,8 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
       ' submenu-label-state-unavailable':
       ''  )
     ;
+
+    log("nordvpn upStyle: "+this.tLabel.style_class);
   }
 });
 
@@ -1054,7 +1056,7 @@ class RecentLocationStacker extends StackerBase{
   updateLocationsDisplay(displayMode, countries, groups){
     let p_items= this._parentMenu.menu._getMenuItems();
     if(displayMode===LocationsMenu.DISPLAY_MODE.AVAILABLE_ONLY){
-      let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) && (!(countries.length>0 || groups.length>0));
+      let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) || (!(countries.length>0 || groups.length>0));
       var i= this.acutalizedDynamicItemStartPos;
       while(i<p_items.length){
         let item= p_items[i];
@@ -1068,6 +1070,7 @@ class RecentLocationStacker extends StackerBase{
                 PlaceItem.STATE.UNAVAILABLE;
           
           item.updateStyle(state);
+          log("nordvpn [rls] '"+item.location+"'.updateStyle("+state+")");
         }
 
         ++i;
@@ -1085,6 +1088,7 @@ class RecentLocationStacker extends StackerBase{
               PlaceItem.STATE.UNAVAILABLE;
 
             item.updateStyle(state);
+            log("nordvpn [rls] '"+item.location+"'.updateStyle("+state+")");
         }
 
         ++i;

@@ -228,7 +228,7 @@ class NVPN_Settings{
                 "changed",
                 Lang.bind(this, this._sig_target_mode_changed)
             );
-        this.SETT_SIGS[5]. SETTINGS.connect('changed::target-display-mode', () => {
+        this.SETT_SIGS[5]= SETTINGS.connect('changed::target-display-mode', () => {
             this._objects.NVPN_Sett_TxtCombo_Target_Mode.set_active(SETTINGS.get_int('target-display-mode'));
         });
 

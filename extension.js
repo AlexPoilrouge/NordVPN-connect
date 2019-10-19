@@ -1359,7 +1359,7 @@ class NVPNMenu extends PanelMenu.Button{
         }
         else{
           //add crossed
-          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.UNAVAILABLE);
+          tsm.add_place(grp, SubMenus.PlaceItem.TYPE.GROUP, SubMenus.PlaceItem.STATE.UNAVAILABLE);
         }
       })
 
@@ -1378,12 +1378,12 @@ class NVPNMenu extends PanelMenu.Button{
       c_list= this._get_countries_list();
       g_list= Group_List;
 
-      Group_List.forEach(function(elmt){
+      g_list.forEach(function(elmt){
         tsm.add_place(elmt,SubMenus.PlaceItem.TYPE.GROUP)
       });
   
       /** foreach element in this list, it is added as an item to the submenu */
-      country_list.forEach(function(elmt){
+      c_list.forEach(function(elmt){
         /** using the 'LocationsMenu' object's method 'addPlace' to add this country name to
          *  this submenu */
         tsm.add_place(elmt);
@@ -1397,6 +1397,7 @@ class NVPNMenu extends PanelMenu.Button{
     tsm.clearAllLocations();
     this._updateGroupsAndCountries();
     this._fill_country_submenu_b();
+    tsm.select_from_name(tsm.LastSelectedPlaceName);
 
     this._update_recent_location_submenu();
   }
@@ -1570,6 +1571,7 @@ class NVPNMenu extends PanelMenu.Button{
     /** if a change has been detected, a ui update is needed */
     if (change){
       this._update_status_and_ui();
+      this._udpate_location_submenu();
     }
   }
 
