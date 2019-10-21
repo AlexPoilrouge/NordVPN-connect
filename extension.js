@@ -489,6 +489,20 @@ class NVPNMenu extends PanelMenu.Button{
           if(/*(!this.nvpn_monitor) &&*/ this.currentStatus<NVPNMenu.STATUS.CONNECTED){
             this._update_status_and_ui();
           }
+          /** if the locations menu update is still pending
+           *  i.e.: the locations menus haven't been updated yet
+           *  i.e.: these menu are filled only on first click*/
+          if(this._location_update_pending){
+            /** fetchs the current value of 'displayMode' option */
+            let displayMode= SETTINGS.get_int('target-display-mode');
+            /** calls for refreshing and updating the locations display
+             *  dynamically (according to CLI) */
+            this._updateGroupsAndCountries();
+            this._fill_country_submenu_b(displayMode);
+            this._update_recent_location_submenu(displayMode);
+            /** flag that means that the udpate is still pending, is discarded */
+            this._location_update_pending= false;
+          }
         }
       }.bind(this)
     );
@@ -612,13 +626,9 @@ class NVPNMenu extends PanelMenu.Button{
      *  the '_place_menu_new_selection()' method will be called (no argument). */
     this._submenuPlaces.select_callback(this._place_menu_new_selection.bind(this));
 
-    /** call to private method that fill the 'country submenu' with all the required country name */
-    //this._fill_country_submenu();
-    /** fetchs the current value of 'displayMode' option */
-    let displayMode= SETTINGS.get_int('target-display-mode');
-    /** calls for refreshing and updating the locations display dynamically (according to CLI) */
-    this._updateGroupsAndCountries();
-    this._fill_country_submenu_b(displayMode);
+    /** the locations menu is pending
+     *  will be only filled on first click/opening*/
+    this._location_update_pending= true;
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -633,7 +643,7 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** also have to update the display of the 'recent locations' menu,
      *  since the display of the items vary according to the 'display mode' option */
-    this._update_recent_location_submenu(displayMode);
+    //this._update_recent_location_submenu(displayMode);
 
 
     /** this private member is the implementation of the submenu that allows to select
@@ -747,6 +757,7 @@ class NVPNMenu extends PanelMenu.Button{
     this.menu.actor.width= hbox3.get_preferred_width(-1)[1]+
                             this._submenuServer.menu.actor.get_preferred_width(-1)[1];
 
+    this._unregister_next_connexion= false;
   }
 
   /**
@@ -1680,6 +1691,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected()){
       if(this.server_info.city && option!=="notify"){
+        /** use this flag to 'inform' that the location in this case should not
+         *  be registered (by the recentLocations menu), since it's an automatic connexion*/
+        this._unregister_next_connexion= true;
         this._nordvpn_ch_connect(this.server_info.city);
       }
     }
@@ -1746,8 +1760,9 @@ class NVPNMenu extends PanelMenu.Button{
   }
 
   _recent_connection(location){
-    if(location){
+    if(location && !this._unregister_next_connexion){
       this._submenuServer.notifyRecentConnection(location);
+      this._unregister_next_connexion= false;
     }
   }
 
