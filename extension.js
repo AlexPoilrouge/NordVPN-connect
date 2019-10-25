@@ -29,7 +29,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.3";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.4";
 
 
 /**
@@ -458,7 +458,7 @@ class NVPNMenu extends PanelMenu.Button{
      * i.e.: when user wants to switch server locations
      * if this string is not empty during deconnection, the code will try
      *  to reconnect to the location designated by this string after disconnecting*/
-    this._auto_connect_to= "";
+    //this._auto_connect_to= "";
 
     //unused
     this._transition_time_out= 0;
@@ -502,6 +502,11 @@ class NVPNMenu extends PanelMenu.Button{
             this._update_recent_location_submenu(displayMode);
             /** flag that means that the udpate is still pending, is discarded */
             this._location_update_pending= false;
+
+            let country= this._getCountyFromServerName(this.server_info.serverName);
+            if(country && this._submenuPlaces){
+              this._submenuPlaces.select_from_name(country);
+            }
           }
         }
       }.bind(this)
@@ -968,6 +973,24 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  _getCountyFromServerName(server){
+    var tsm= this._submenuPlaces;
+    if((server) && (tsm)){
+      let rgx= /([a-z]*)[0-9]*.*$/g;
+      //let arr= rgx.exec(this.server_name);
+      let arr= rgx.exec(server);
+      if((arr!==null) && (arr[1]!==undefined)){
+        /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
+          * the country name from the found country code */
+        let country= Country_Dict[arr[1]];
+
+        return (country)?country:"";
+      }
+    }
+
+    return "";
+  }
+
   /**
    * Private method that update this extension's current status, according to the 'nordvpn' command line tool's
    * state, and update the UI accordingly
@@ -1034,24 +1057,11 @@ class NVPNMenu extends PanelMenu.Button{
 
       /** enbales the submenus to show*/
       this._submenusVisible(true);
-      /** e.g. if the country server connection menu has no country currently selected */
-      // if(this._submenu.LastSelectedPlaceName.length ===0){
-        /** extracting the country code (i.e.: fr, us, uk, etc.) from the server name
-         *  with a regex */
-        let rgx= /([a-z]*)[0-9]*.*$/g;
-        //let arr= rgx.exec(this.server_name);
-        let arr= rgx.exec(this.server_info.serverName);
-        if((arr!==null) && (arr[1]!==undefined)){
-          /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
-            * the country name from the found country code */
-          let country= Country_Dict[arr[1]];
-          if (country!==undefined){
-            /** we use the country menu object's method 'select_from_name' to update its ui
-             *  so that the found country name is marked as selected */
-            this._submenuPlaces.select_from_name(country);
-          }
-        }
-      // }
+      
+      let country= this._getCountyFromServerName(this.server_info.serverName);
+      if(country){
+        this._submenuPlaces.select_from_name(country);
+      }
 
       break;
     case NVPNMenu.STATUS.DISCONNECTED:
@@ -1168,7 +1178,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       /** if there is a reconnection, it is done with the connection step, or there is none to begin
           with. Either way we deativate it by emptying the private attribute '_auto_connect_to' */
-      this._auto_connect_to="";
+      //this._auto_connect_to="";
 
       /** unlocking ui updates */
       this._vpn_lock= false;
@@ -1200,7 +1210,7 @@ class NVPNMenu extends PanelMenu.Button{
        *  the process must be aborted and updating accordingly the ui */
       if (this._get_current_status() < NVPNMenu.STATUS.TRANSITION){
         this._update_status_and_ui();
-        this._auto_connect_to="";
+        //this._auto_connect_to="";
       }
       else{
       /** asynchronous disconnection call */
@@ -1234,15 +1244,18 @@ class NVPNMenu extends PanelMenu.Button{
        *  private method); when the vpn disconnection is set, and if '_auto_connect_to', at that
        *  time, isn't empty, a reconnection to the place designated by this attribute should be
        *  handled */
-      this._auto_connect_to= placeName;
+      /*this._auto_connect_to= placeName;
       this._nordvpn_disconnect();
-      this.currentStatus= NVPNMenu.STATUS.TRANSITION;
+      this.currentStatus= NVPNMenu.STATUS.TRANSITION;*/
+      this._waiting_state();
+      this._nordvpn_quickconnect(placeName);
+
     }
     /** if no live monitoring, the synchronous (re)connection must be called once the disconnection
      *  has been made */
-    if(!this.nvpn_monitor){
+    /*if(!this.nvpn_monitor){
       this._nordvpn_quickconnect(placeName);
-    }
+    }*/
 
   }
 
@@ -1541,11 +1554,11 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** local reconnection function for factoring purposes */
     let _this= this;
-    let _reconnection= function(){
+    /*let _reconnection= function(){
       if(_this._auto_connect_to.length!==0){
           _this._nordvpn_quickconnect(_this._auto_connect_to);
         }
-    };
+    };*/
 
     let t= undefined;
 
@@ -1576,16 +1589,16 @@ class NVPNMenu extends PanelMenu.Button{
       /** if, while in transition, a change is detected, and if the attribute
        *  _auto_connect_to is set, then it means that a reconnection to the
        *  place designated by this attribute is pending. */
-      if(change && this._auto_connect_to.length!==0){
-        _reconnection();
+      /*if(change && this._auto_connect_to.length!==0){
+        _reconnection();*/
 
         /** if there is a reconnection, then we're still in transition.
          *  No change is status and visual feedback necessary */
-        change= false;
+        /*change= false;
       }
       else if(this._transition_time_out>10){
         //this.setSensitive(true);
-      }
+      }*/
 
       break;
     /** when the status is 'disconnected', check if there's a connection to a vpn */
@@ -1609,13 +1622,13 @@ class NVPNMenu extends PanelMenu.Button{
       if(change){
         this._submenuPlaces.unselect_no_cb();
 
-        if(this._auto_connect_to.length!==0){
-           _reconnection();
+        /*if(this._auto_connect_to.length!==0){
+           _reconnection();*/
 
           /** if there is a reconnection, then we're still in transition.
            *  No change is status and visual feedback necessary */
-          change= false;
-        }
+          /*change= false;
+        }*/
       }
 
       break;
