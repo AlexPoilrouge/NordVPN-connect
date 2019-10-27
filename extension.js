@@ -381,6 +381,7 @@ class Core_CMDs{
       command= command.replace("_%"+k+"%_", params[k]);
     }
     COMMAND_LINE_ASYNC(command, this.command_shell);
+    log("nordvpn exec_async -> cmd='"+command+"'");
 
     return true;
   }
@@ -1153,6 +1154,14 @@ class NVPNMenu extends PanelMenu.Button{
    * @param {string} placeName - optional, the place name (i.e. country, server, ...) to connect to
    */
   _nordvpn_quickconnect(placeName=""){
+    log("nordvpn qc("+placeName+')');
+    var loc= placeName;
+    let rgx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
+    let arr= rgx.exec(placeName);
+    if(Boolean(arr) && arr.length>2 && Boolean(arr[1]) && Boolean(arr[2])){
+      loc= "-group "+arr[1]+' '+arr[2];
+    }
+
     /** if the live monitoring of the vpn connection state in on (through the boolean
      *  attribute 'nvpn_monitor') */
     if(this.nvpn_monitor){
@@ -1169,7 +1178,7 @@ class NVPNMenu extends PanelMenu.Button{
       }
       else{
         /** asynchronous connection call */
-        let t= this._cmd.exec_async('server_place_connect', {'target': placeName});
+        let t= this._cmd.exec_async('server_place_connect', {'target': loc});
 
         this._recent_connection(placeName);
 
@@ -1186,9 +1195,13 @@ class NVPNMenu extends PanelMenu.Button{
     else{
       /** (if no live monitoring) synchronous connection call (freezes the ui in the
        *  meantime) */
-      this._cmd.exec_sync('server_place_connect', {'target': placeName});
+      this._cmd.exec_sync('server_place_connect', {'target': loc});
 
       this._recent_connection(placeName);
+    }
+
+    if(Boolean(this._submenuPlaces)){
+      this._submenuPlaces.unselectGroup();
     }
   }
 
@@ -1488,9 +1501,15 @@ class NVPNMenu extends PanelMenu.Button{
    *  @param {string} placeName - the callback is supposed to give the name of the selected place as argument
    */
   _place_menu_new_selection(placeName){
+    var loc=placeName
+    let s_grp= (Boolean(this._submenuPlaces))?this._submenuPlaces.SelectedGroupName:null;
+    if(s_grp){
+      loc= '['+s_grp+"] "+placeName;
+    }
+
     /** Connection to this placeName if the current status is 'Disconnected' */
     if(this.currentStatus===NVPNMenu.STATUS.DISCONNECTED){
-      this._nordvpn_quickconnect(placeName);
+      this._nordvpn_quickconnect(loc);
     }
     else{
       if(this._submenuPlaces){
@@ -1501,8 +1520,8 @@ class NVPNMenu extends PanelMenu.Button{
       if((this.currentStatus===NVPNMenu.STATUS.CONNECTED)){
         /** and, if the placeName is not empty, a 'reconnection' has to be made, using the
          *  '_nordvpn_ch_connect' private method */
-        if(placeName.length!==0){
-          this._nordvpn_ch_connect(placeName);
+        if(loc.length!==0){
+          this._nordvpn_ch_connect(loc);
         }
         /** if placeName not empty, a reconnection cannot be made, so only a disconnection is made */
         else{

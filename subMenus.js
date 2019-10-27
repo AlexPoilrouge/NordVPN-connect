@@ -100,6 +100,14 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
    * Class that implements an item to be inserted int the 'PlaceMenu' menu.
    */
   var PlaceItem = GObject.registerClass(
+    {
+      Signals: {
+        'group-select-toggled': {
+          flags: GObject.SignalFlags.RUN_FIRST,
+          param_types: [ GObject.TYPE_STRING, GObject.TYPE_BOOLEAN]
+        }
+      }
+    },
     class PlaceItem extends PopupMenu.PopupBaseMenuItem{  
     /**
      * Constructor, also initializes the UI for the item
@@ -139,6 +147,51 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
 
       this.actor.add(label_item);
       this.checkIcon.hide();
+
+      this._groupSelect=false;
+
+      this._idc1= null;
+      this._button= null;
+      if(type===LOCATION_TYPE.GROUP){
+    
+        let btnIcon = new St.Icon({ icon_name: 'emoji-flags-symbolic',
+                                   style_class: 'system-status-icon' });
+    
+        this._button= new St.Button({
+              child: btnIcon,
+              reactive: true,
+              can_focus: true,
+              track_hover: true,
+              style_class: 'system-menu-action fav-delete-btn',
+        });
+    
+        this._statusBin = new St.Bin({ x_align: St.Align.END, });
+        this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+        this._statusBin.child= this._button;
+
+        this._idc1= this._button.connect('clicked', () => {
+          this._groupSelect= (type===LOCATION_TYPE.GROUP)  && (!this._groupSelect);
+          if(this._groupSelect){
+            this.style_class= this.style_class + ' group-selected'
+          }
+          else{
+            this.style_class= this.style_class.replace(/ group-selected/g,'');
+          }
+          this.emit('group-select-toggled', this.placeName, this._groupSelect);
+        })
+
+      }
+    }
+
+    /**
+     * destructor
+     */
+    _onDestroy(){
+      if(Boolean(this._button) && Boolean(this._idc1)){
+        this._button.disconnect(this._idc1);
+      }
+  
+      super._onDestroy();
     }
   
     /**
@@ -162,6 +215,15 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
      */
     get PlaceName(){
       return this.placeName;
+    }
+
+    get isGroupSelected(){
+      return (this.type===LOCATION_TYPE.GROUP) && this._groupSelect;
+    }
+
+    unselectGroup(){
+      this._groupSelect= false;
+      this.style_class= this.style_class.replace(/ group-selected/g,'');
     }
   });
   
@@ -195,6 +257,8 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
 
     let separator= new PopupMenu.PopupSeparatorMenuItem();
     this.menu.addMenuItem(separator);
+
+    this._groupSelected= null;
   }
   
     /**
@@ -240,6 +304,10 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       let t= this;
       this._ids_c_items.push(
         item.connect('activate', this._item_select.bind(this,item))
+      );
+
+      this._ids_c_items.push(
+        item.connect('group-select-toggled', this._group_select_toggle.bind(this))
       );
     }
   
@@ -287,6 +355,26 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
        *  with the currently selected item as string argument (empty string if nothing
        *  currently selected */
       this.select_cb(this.LastSelectedPlaceName);
+    }
+
+    _group_select_toggle(item, placeName, toggle){
+      log("nordvpn _group_select_toggle"+[placeName, toggle]);
+      if(Boolean(this._groupSelected) && 
+          !(toggle && item===this._groupSelected))
+      {
+        this._groupSelected.unselectGroup();
+      }
+      this._groupSelected= toggle?item:null;
+    }
+
+    unselectGroup(){
+      if(Boolean(this._groupSelected)){
+        this._groupSelected.unselectGroup();
+      }
+    }
+
+    get SelectedGroupName(){
+      return Boolean(this._groupSelected)?this._groupSelected.PlaceName:"";
     }
 
     /**
@@ -350,6 +438,8 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
      * @method
      */
     clearAllLocations(){
+      this.unselectGroup();
+
       let children= this.menu._getMenuItems();
     
       for(var i=0; i<children.length; ++i){

@@ -53,6 +53,10 @@
   margin-right: 10px;
 }
 
+.group-selected{
+  background-color: rgb(0, 127, 255);
+}
+
 
 .nvpn-action-button{
   color: rgba(255,255,255,1.0);
