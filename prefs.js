@@ -35,6 +35,7 @@ class NVPN_Settings{
             NVPN_Sett_Toggle_Option_Reconnect: null,
             NVPN_Sett_Spin_Recent_Cap: null,
             NVPN_Sett_TxtCombo_Target_Mode: null,
+            NVPN_Sett_Toggle_Recent_Groups: null,
 
             NVPN_Sett_Switch_Cmd_Change: null,
             NVPN_Sett_Grid2: null,
@@ -64,6 +65,7 @@ class NVPN_Settings{
         this._id_version_check_toggle= null;
         this._id_server_option_reconnect= null;
         this._id_recent_capacity_change= null;
+        this._id_distinguish_groups_recent= null;
         this._id_target_mode_select= null;
 
         this._id_cmd_change_triggering= null;
@@ -97,6 +99,10 @@ class NVPN_Settings{
         if(this._id_recent_capacity_change){
             this._objects.NVPN_Sett_Spin_Recent_Cap.disconnect();
             this._id_recent_capacity_change= null;
+        }
+        if(this._id_distinguish_groups_recent){
+            this._objects.NVPN_Sett_Toggle_Recent_Groups.disconnect(this._id_distinguish_groups_recent);
+            this._id_distinguish_groups_recent= null;
         }
         if(this._id_target_mode_select){
             this._objects.NVPN_Sett_TxtCombo_Target_Mode.disconnect();
@@ -170,6 +176,7 @@ class NVPN_Settings{
         this._objects.NVPN_Sett_Toggle_Version.set_state(SETTINGS.get_boolean('version-check'));
         this._objects.NVPN_Sett_Toggle_Option_Reconnect.set_state(SETTINGS.get_boolean('settings-change-reconnect'));
         this._objects.NVPN_Sett_Spin_Recent_Cap.set_value(SETTINGS.get_int('recent-capacity'));
+        this._objects.NVPN_Sett_Toggle_Recent_Groups.set_state(SETTINGS.get_boolean('recent-distinguish-groups'));
         this._objects.NVPN_Sett_TxtCombo_Target_Mode.set_active(SETTINGS.get_int('target-display-mode'));
     }
 
@@ -222,13 +229,22 @@ class NVPN_Settings{
             this._objects.NVPN_Sett_Spin_Recent_Cap.set_value(SETTINGS.get_int('recent-capacity'));
         });
 
+        this._id_distinguish_groups_recent=
+            this._objects.NVPN_Sett_Toggle_Recent_Groups.connect(
+                "state-set",
+                Lang.bind(this,this._sig_Distinguish_groups_recentmenu)
+            );
+        this.SETT_SIGS[5]= SETTINGS.connect('changer::recent-distinguish-groups', ()=>{
+            this._objects.NVPN_Sett_Toggle_Recent_Groups.set_state(SETTINGS.get_boolean('recent-distinguish-groups'));
+        });
+
 
         this._id_target_mode_select=
             this._objects.NVPN_Sett_TxtCombo_Target_Mode.connect(
                 "changed",
                 Lang.bind(this, this._sig_target_mode_changed)
             );
-        this.SETT_SIGS[5]= SETTINGS.connect('changed::target-display-mode', () => {
+        this.SETT_SIGS[6]= SETTINGS.connect('changed::target-display-mode', () => {
             this._objects.NVPN_Sett_TxtCombo_Target_Mode.set_active(SETTINGS.get_int('target-display-mode'));
         });
 
@@ -311,6 +327,12 @@ class NVPN_Settings{
     _sig_Recent_capacity_value_changed(item, user_data){
         if(item){
             SETTINGS.set_int('recent-capacity', item.get_value());
+        }
+    }
+
+    _sig_Distinguish_groups_recentmenu(item, state, user_data){
+        if(item){
+            SETTINGS.set_boolean('recent-distinguish-groups', state);
         }
     }
 

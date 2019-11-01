@@ -16,6 +16,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const Unescape= Me.imports.unescape;
+const MyUtils= Convenience.MyUtils;
 
 const Util = imports.misc.util;
 const GLib = imports.gi.GLib;
@@ -58,6 +59,7 @@ function COMMAND_LINE_ASYNC(cmd, shell="/bin/bash"){
   let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
   GLib.spawn_command_line_async(command);
 }
+
 
 /**
  * Dictionnary that pair up country from their country code
@@ -837,7 +839,6 @@ class NVPNMenu extends PanelMenu.Button{
     
     /** calling command, initiating objects… */
     let t= this._cmd.exec_sync('get_groups_countries');
-    log("nordvpn t: "+t);
     let r= (t===undefined || t===null || t==='')? null : {'groups':null,'countries':null};
     var tmp= [];
     /** processing the command results and storing result */
@@ -845,11 +846,9 @@ class NVPNMenu extends PanelMenu.Button{
       tmp= t.split('\n');
       r.groups= tmp[0].split(',');
       _clearEmpty(r.groups);
-      log("nordvpn t -> groups: -"+r.groups+"- l: "+r.groups.length);
       if(tmp.length>1){
         r.countries= tmp[1].split(',');
         _clearEmpty(r.countries);
-        log("nordvpn t -> countries: -"+r.countries+"- l: "+r.countries.length);
       }
     }
 
@@ -862,6 +861,7 @@ class NVPNMenu extends PanelMenu.Button{
   */
   _updateGroupsAndCountries(){
     /** dynamically fetchs the lists */
+    log("nordvpn wuuut _updateGroupsAndCountries");
     let gac= this._getGroupsAndCountries();
     
     /** update local attribute */
@@ -1156,10 +1156,11 @@ class NVPNMenu extends PanelMenu.Button{
   _nordvpn_quickconnect(placeName=""){
     log("nordvpn qc("+placeName+')');
     var loc= placeName;
-    let rgx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
-    let arr= rgx.exec(placeName);
-    if(Boolean(arr) && arr.length>2 && Boolean(arr[1]) && Boolean(arr[2])){
-      loc= "-group "+arr[1]+' '+arr[2];
+    var plc_grp= MyUtils.locationToPlaceGroupPair(placeName);
+    if(Boolean(plc_grp)){
+      loc= (plc_grp.place===plc_grp.group) ?
+            plc_grp.place
+          : "-group "+plc_grp.group+' '+plc_grp.place;
     }
 
     /** if the live monitoring of the vpn connection state in on (through the boolean
@@ -1180,7 +1181,11 @@ class NVPNMenu extends PanelMenu.Button{
         /** asynchronous connection call */
         let t= this._cmd.exec_async('server_place_connect', {'target': loc});
 
-        this._recent_connection(placeName);
+        this._recent_connection(
+          (Boolean(plc_grp) && plc_grp.place===plc_grp.group) ?
+              plc_grp.place
+            : placeName
+        );
 
         if(t!==undefined && t!==null) this._waiting_state();
       }
@@ -1377,13 +1382,9 @@ class NVPNMenu extends PanelMenu.Button{
 
     let tsm= this._submenuPlaces;
 
-    
-    log("nordvpn so i am here: "+ displayMode);
-
     /** the 'displayMode' value will affect the "style" in which the items are
      *  displayed, along with their nature (groups or countries) */
     if(displayMode===SubMenus.LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY){
-      log("nordvpn test1");
       var b_noDynItem= false;
       if( (b_noDynItem=(c_list.length===0 && g_list.length===0)) ){
         c_list= this._get_countries_list();
@@ -1391,7 +1392,6 @@ class NVPNMenu extends PanelMenu.Button{
       }
 
       if(b_noDynItem){
-        log("nordvpn test2");
         g_list.forEach(function(grp) {
           //add crossed
           tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP, SubMenus.LOCATION_ITEM_STATE.FORCED);
@@ -1402,11 +1402,9 @@ class NVPNMenu extends PanelMenu.Button{
         });
       }
       else{
-        log("nordvpn test3");
         g_list.forEach(function(grp) {
           //add normal
           tsm.add_place(grp, SubMenus.LOCATION_TYPE.GROUP);
-          log("nordvpn test 3.1: add_place("+grp+", GROUP)");
         });
         c_list.forEach(function(cntry) {
           //add normal
@@ -1656,7 +1654,11 @@ class NVPNMenu extends PanelMenu.Button{
     /** if a change has been detected, a ui update is needed */
     if (change){
       this._update_status_and_ui();
-      this._udpate_location_submenu();
+      log("nordvpn /!\\ experimental subsitution")
+      // /!\ try and and avoid seg fault, maybe du do conflit of treading when trying to 
+      //    interven on location menu
+      //this._location_update_pending= true;
+      //this._udpate_location_submenu();
     }
   }
 
@@ -1786,6 +1788,10 @@ class NVPNMenu extends PanelMenu.Button{
    * @param {string} serv the server name to which try and connect
    */
   _serv_fav_cliked(item, serv){
+    log("nordvpn hmmmm");
+    this._udpate_location_submenu();
+    this._update_recent_location_submenu();
+
     if(serv){
       this._place_menu_new_selection(serv);
     }

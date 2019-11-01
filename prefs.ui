@@ -195,6 +195,19 @@ You can't try increasing it, for performance issue? But you probably shouldn't c
           </packing>
         </child>
         <child>
+          <object class="GtkLabel" id="NVPN_Sett_Label_Target_Mode">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the 'available' targets given dynamically by the CLI, or the 'deault' static targets hard coded that may not be available at the time)</property>
+            <property name="label" translatable="yes">Target (locations) display mode:</property>
+            <property name="xalign">0.30000001192092896</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">6</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkComboBoxText" id="NVPN_Sett_TxtCombo_Target_Mode">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -209,19 +222,36 @@ You can't try increasing it, for performance issue? But you probably shouldn't c
           </object>
           <packing>
             <property name="left_attach">1</property>
-            <property name="top_attach">5</property>
+            <property name="top_attach">6</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="NVPN_Sett_Label_Target_Mode">
+          <object class="GtkLabel" id="NVPN_Sett_Label_Recent_Groups">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the 'available' targets given dynamically by the CLI, or the 'deault' static targets hard coded that may not be available at the time)</property>
-            <property name="label" translatable="yes">Target (locations) display mode:</property>
+            <property name="tooltip_text" translatable="yes">How many 'recent connections' items can be stored?</property>
+            <property name="label" translatable="yes">Distinguish groups (if any ) in 'Recent connections' ?</property>
+            <property name="justify">center</property>
+            <property name="wrap">True</property>
             <property name="xalign">0.30000001192092896</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
+            <property name="top_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="NVPN_Sett_Toggle_Recent_Groups">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="hexpand">False</property>
+            <property name="vexpand">False</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
             <property name="top_attach">5</property>
           </packing>
         </child>

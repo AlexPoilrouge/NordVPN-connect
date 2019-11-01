@@ -21,6 +21,8 @@ const PersistentData = Me.imports.persistentData;
 
 const Convenience = Me.imports.convenience;
 
+const MyUtils= Convenience.MyUtils;
+
 
 
 /** Object that will be the access holder to this extension's gSettings */
@@ -223,7 +225,8 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
 
     unselectGroup(){
       this._groupSelect= false;
-      this.style_class= this.style_class.replace(/ group-selected/g,'');
+      if(Boolean(this.style_class))
+        this.style_class= this.style_class.replace(/ group-selected/g,'');
     }
   });
   
@@ -371,6 +374,7 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       if(Boolean(this._groupSelected)){
         this._groupSelected.unselectGroup();
       }
+      this._groupSelected= null;
     }
 
     get SelectedGroupName(){
@@ -438,6 +442,7 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
      * @method
      */
     clearAllLocations(){
+      log("nordvpn clearAllLocations called…");
       this.unselectGroup();
 
       let children= this.menu._getMenuItems();
@@ -445,7 +450,6 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       for(var i=0; i<children.length; ++i){
         let item= children[i];
         if( (item!==undefined) && (item instanceof PlaceItem) ){
-          log("nordvpn ch["+i+"].destroy() --- "+item.PlaceName)
           item.destroy();
         }
       }
@@ -926,8 +930,6 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
       ' submenu-label-state-unavailable':
       ''  )
     ;
-
-    log("nordvpn upStyle: "+this.tLabel.style_class);
   }
 });
 
@@ -965,6 +967,8 @@ class RecentLocationStacker extends StackerBase{
     this._rlocHandler= new PersistentData.RecentLocationHandler(persistentDataHandler, this._capacity);
 
     this._generateItemList();
+
+    this._groupless= false;
   }
 
   /**
@@ -1086,13 +1090,24 @@ class RecentLocationStacker extends StackerBase{
    * @param {boolean} pin is the location pinned ?
    */
   addRecentLocation(location, pin= false){
-    var b_wasPinned= this._rlocHandler.isPinned(location);
+    var loc= location;
+    if(this.grouplessAdd){
+      let plc_grp= MyUtils.locationToPlaceGroupPair(location);
+      loc= (Boolean(plc_grp))? plc_grp.place : location;
+      let p= this.findLocationAsGroupless(loc);
+      if(p===0 || Boolean(p)){
+        this._rlocHandler.modify(p,loc);
+        this._parentMenu.menu._getMenuItems()[this._startPos+p]._location= loc;
+      }
+    }
+
+    var b_wasPinned= this._rlocHandler.isPinned(loc);
     if(pin){
-      this._deleteItem(location);
-      this._rlocHandler.pin(location);
+      this._deleteItem(loc);
+      this._rlocHandler.pin(loc);
     }
     else{
-      var rmvLoc= this._rlocHandler.add(location);
+      var rmvLoc= this._rlocHandler.add(loc);
       if(Boolean(rmvLoc)){
         this._deleteItem(rmvLoc);
       }
@@ -1102,9 +1117,9 @@ class RecentLocationStacker extends StackerBase{
 
     var i=0;
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
-      if(t[0]===location){
+      if(t[0]===loc){
         if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
-          this._addRLocItem(location, i, pin);
+          this._addRLocItem(loc, i, pin);
         }
 
         break;
@@ -1171,13 +1186,23 @@ class RecentLocationStacker extends StackerBase{
       }
     };
 
+    let isPlaceGroupValid= (location) =>{
+      let plc_grp= MyUtils.locationToPlaceGroupPair(location);
+
+      return (Boolean(plc_grp) &&
+              (countries.includes(plc_grp.place) || groups.includes(plc_grp.place)) &&
+              groups.includes(plc_grp.group)
+            );
+    }
+
     let b_noDynamic= (!(Boolean(countries) || Boolean(groups))) || (!(countries.length>0 || groups.length>0));
     styleUpdateFn(LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY, (item)=>{
-
       let state=
         (b_noDynamic)?
         LOCATION_ITEM_STATE.FORCED  :
-          (countries.includes(item.location) || groups.includes(item.location))?
+          ( isPlaceGroupValid(item.location)
+            || countries.includes(item.location) || groups.includes(item.location)
+          )?
             LOCATION_ITEM_STATE.DEFAULT :
             LOCATION_ITEM_STATE.UNAVAILABLE;
       
@@ -1187,7 +1212,9 @@ class RecentLocationStacker extends StackerBase{
     styleUpdateFn(LOCATIONS_DISPLAY_MODE.DISCRIMINATE_DISPLAY, (item)=>{
 
       let state=
-        (countries.includes(item.location) || groups.includes(item.location))?
+        ( isPlaceGroupValid(item.location)
+          || countries.includes(item.location) || groups.includes(item.location)
+        )?
           LOCATION_ITEM_STATE.DEFAULT :
           LOCATION_ITEM_STATE.UNAVAILABLE;
 
@@ -1197,6 +1224,36 @@ class RecentLocationStacker extends StackerBase{
     styleUpdateFn(LOCATIONS_DISPLAY_MODE.SHOW_ALL, (item)=>{
         return LOCATION_ITEM_STATE.DEFAULT;
     });
+  }
+
+  findLocationAsGroupless(location){
+    let grp_place= MyUtils.locationToPlaceGroupPair(location);
+    let place= (Boolean(grp_place))? grp_place.place : location;
+
+    var r= null;
+    if(Boolean(place)){
+      var it= this._rlocHandler.first();
+
+      var i=0;
+      while(Boolean(it)){
+        if(Boolean(it[0]) && it[0].endsWith(place)) break;
+
+        ++i;
+        it= it.next();
+      }
+
+      if(i<this._rlocHandler.count) r= i;
+    }
+
+    return r;
+  }
+
+  set grouplessAdd(b){
+    this._groupless= b;
+  }
+
+  get grouplessAdd(){
+    return this._groupless;
   }
 }
 );
@@ -1288,11 +1345,15 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
 
         var rlocCapactiy= SETTINGS.get_int('recent-capacity');        
         this.recent= new RecentLocationStacker(this, this.persistentDataHandler, rlocCapactiy);
+        this.recent.grouplessAdd= SETTINGS.get_boolean('recent-distinguish-groups');
         this.SIGS_ID[3]= this.recent.connect('location-connect', (item, location)=>{
           this.emit('location-connect', location);
         });
         this._sett_sig1= SETTINGS.connect('changed::recent-capacity', () => {
           this.recent.setCapacity(SETTINGS.get_int('recent-capacity'));
+        });
+        this._sett_sig2= SETTINGS.connect('changed::recent-distinguish-groups', () => {
+          this.recent.grouplessAdd= SETTINGS.get_boolean('recent-distinguish-groups');
         });
 
         this.fav= new FavoriteStacker(this, this.persistentDataHandler);
@@ -1312,6 +1373,7 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     this.fav.disconnect(this.SIGS_ID[3]);
 
     SETTINGS.disconnect(this._sett_sig1);
+    SETTINGS.disconnect(this._sett_sig2);
 
     //super.destroy();
     super._onDestroy();

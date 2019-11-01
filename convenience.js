@@ -90,4 +90,27 @@ function getSettings(schema) {
 
     return new Gio.Settings({ settings_schema: schemaObj });
 }
+
+
+const MyUtils= {
+  locationToPlaceGroupPair: (locstr) => {
+    let rgx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
+    let arr= rgx.exec(locstr);
+    var r= {place: null, group: null};
+    if(Boolean(arr) && arr.length>2 && Boolean(arr[1]) && Boolean(arr[2])){
+      if(arr.length>1 && Boolean(arr[1])){
+        r.group= arr[1];
+        
+        if(arr.length>2 && Boolean(arr[2])){
+          r.place= arr[2];
+  
+          return r;
+        }
+        else return null;
+      }
+      else return null;
+    }
+    else return null;
+  },
+};
 								  

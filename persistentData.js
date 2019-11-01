@@ -532,4 +532,16 @@ class RecentLocationHandler{
 
     return undefined;
   }
+
+  modify(index, placename){
+    if(index>0 && index<this.count){
+      let l= this._recentObj.pin.length;
+      if(index<l){
+        this._recentObj.pin[index]= placename;
+      }
+      else{
+        this._recentObj.regular[index-l]= placename;
+      }
+    }
+  }
 };
