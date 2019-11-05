@@ -914,6 +914,10 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
 
   get isPin(){ return this._pin;}
   get location(){ return this._location;}
+  set location(l){
+    this._location= l;
+    this.tLabel.text= l.replace(/_/gi,' ')
+  }
 
   /** Method to update style of displayed item according to a given state
    * 
@@ -1090,14 +1094,16 @@ class RecentLocationStacker extends StackerBase{
    * @param {boolean} pin is the location pinned ?
    */
   addRecentLocation(location, pin= false){
+    log("nordvpn addRecentLocation("+location+", "+pin+")");
     var loc= location;
     if(this.grouplessAdd){
       let plc_grp= MyUtils.locationToPlaceGroupPair(location);
       loc= (Boolean(plc_grp))? plc_grp.place : location;
       let p= this.findLocationAsGroupless(loc);
       if(p===0 || Boolean(p)){
+        let sdp= this.acutalizedDynamicItemStartPos;
         this._rlocHandler.modify(p,loc);
-        this._parentMenu.menu._getMenuItems()[this._startPos+p]._location= loc;
+        this._parentMenu.menu._getMenuItems()[sdp+p].location= loc;
       }
     }
 
@@ -1239,7 +1245,7 @@ class RecentLocationStacker extends StackerBase{
         if(Boolean(it[0]) && it[0].endsWith(place)) break;
 
         ++i;
-        it= it.next();
+        it= this._rlocHandler.next();
       }
 
       if(i<this._rlocHandler.count) r= i;
@@ -1360,6 +1366,11 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         this.SIGS_ID[4]= this.fav.connect('server-fav-connect', (item, servName)=>{
           this.emit('server-fav-connect', servName);
         });
+
+
+      this._countriesList= null;
+      this._groupsList= null;
+      this._displayMode= LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY;
     }
   
   /** Destructor
@@ -1459,8 +1470,12 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
    * @param {string} location - name of location
    */
   notifyRecentConnection(location){
-    if(this.recent){
+    if(Boolean(this.recent)){
       this.recent.addRecentLocation(location);
+
+      if(this._countriesList && this._groupsList){
+        this.updateRecentLocationDisplay(this._displayMode, this._countriesList, this._groupsList);
+      }
     }
   }
 
@@ -1474,6 +1489,10 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
   updateRecentLocationDisplay(displayMode, countries, groups){
     if(Boolean(this.recent)){
       this.recent.updateLocationsDisplay(displayMode, countries, groups)
+
+      this._countriesList= countries;
+      this._groupsList= groups;
+      this._displayMode= displayMode;
     }
   }
 });
