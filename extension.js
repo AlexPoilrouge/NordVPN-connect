@@ -60,7 +60,6 @@ function COMMAND_LINE_ASYNC(cmd, shell="/bin/bash"){
   GLib.spawn_command_line_async(command);
 }
 
-
 /**
  * Dictionnary that pair up country from their country code
  * (seems similar to the ISO norm except for the uk ('uk' instead
@@ -457,12 +456,6 @@ class NVPNMenu extends PanelMenu.Button{
      *  (contrary is experimental) */
     this.nvpn_monitor= true;
 
-    /** this private member is used while reconnecting to another server
-     * i.e.: when user wants to switch server locations
-     * if this string is not empty during deconnection, the code will try
-     *  to reconnect to the location designated by this string after disconnecting*/
-    //this._auto_connect_to= "";
-
     //unused
     this._transition_time_out= 0;
 
@@ -649,10 +642,6 @@ class NVPNMenu extends PanelMenu.Button{
 
     this.menu.addMenuItem(this._submenuServer);
 
-    /** also have to update the display of the 'recent locations' menu,
-     *  since the display of the items vary according to the 'display mode' option */
-    //this._update_recent_location_submenu(displayMode);
-
 
     /** this private member is the implementation of the submenu that allows to select
      *  to toggle different option of the nordvpn tool */
@@ -765,6 +754,7 @@ class NVPNMenu extends PanelMenu.Button{
     this.menu.actor.width= hbox3.get_preferred_width(-1)[1]+
                             this._submenuServer.menu.actor.get_preferred_width(-1)[1];
 
+    /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/
     this._unregister_next_connexion= false;
   }
 
@@ -861,7 +851,6 @@ class NVPNMenu extends PanelMenu.Button{
   */
   _updateGroupsAndCountries(){
     /** dynamically fetchs the lists */
-    log("nordvpn wuuut _updateGroupsAndCountries");
     let gac= this._getGroupsAndCountries();
     
     /** update local attribute */
@@ -974,11 +963,18 @@ class NVPNMenu extends PanelMenu.Button{
     }
   }
 
+  /**
+   * Private method that determine the country according to server name
+   * @method
+   * 
+   * @param {string} server string that is the server name (i.e. fr87, us88, etc.)
+   * 
+   * @returns {string} country corresponding the the server name, empty string if unfound
+   */
   _getCountyFromServerName(server){
     var tsm= this._submenuPlaces;
     if((server) && (tsm)){
       let rgx= /([a-z]*)[0-9]*.*$/g;
-      //let arr= rgx.exec(this.server_name);
       let arr= rgx.exec(server);
       if((arr!==null) && (arr[1]!==undefined)){
         /** we use the 'Country_Dict' const field, our country dictionnary, to obtain
@@ -1059,6 +1055,7 @@ class NVPNMenu extends PanelMenu.Button{
       /** enbales the submenus to show*/
       this._submenusVisible(true);
       
+      /** mark appropriate country as selected in the locations list */
       let country= this._getCountyFromServerName(this.server_info.serverName);
       if(country){
         this._submenuPlaces.select_from_name(country);
@@ -1150,12 +1147,21 @@ class NVPNMenu extends PanelMenu.Button{
 
   /**
    * Private method that iniate a connection through the 'nordvpn' command line tool
+   * 
    * @method
    * @param {string} placeName - optional, the place name (i.e. country, server, ...) to connect to
+   *          Also can specify a 'group + location' connexion attempt if string formated
+   *            as "[Group] location"
    */
   _nordvpn_quickconnect(placeName=""){
     log("nordvpn qc("+placeName+')');
     var loc= placeName;
+    /** nordvpn 3.4 update feature:
+     *  Integrated the feature that allow to specify a group along location (i.e. P2P + France)
+     *  the given string has to be formated as follow '[Group] location' (i.e. "[P2P] France")
+     *  Therefore, the following extracts the group and location from this format
+     *  and transforms it has the appropriate argument for the connect command
+     *  (i.e. "-group P2P France")*/
     var plc_grp= MyUtils.locationToPlaceGroupPair(placeName);
     if(Boolean(plc_grp)){
       loc= (plc_grp.place===plc_grp.group) ?
@@ -1181,6 +1187,7 @@ class NVPNMenu extends PanelMenu.Button{
         /** asynchronous connection call */
         let t= this._cmd.exec_async('server_place_connect', {'target': loc});
 
+        /** the 'recent location' submenu supports the '[grp] loc' format */
         this._recent_connection(
           (Boolean(plc_grp) && plc_grp.place===plc_grp.group) ?
               plc_grp.place
@@ -1190,10 +1197,6 @@ class NVPNMenu extends PanelMenu.Button{
         if(t!==undefined && t!==null) this._waiting_state();
       }
 
-      /** if there is a reconnection, it is done with the connection step, or there is none to begin
-          with. Either way we deativate it by emptying the private attribute '_auto_connect_to' */
-      //this._auto_connect_to="";
-
       /** unlocking ui updates */
       this._vpn_lock= false;
     }
@@ -1202,9 +1205,11 @@ class NVPNMenu extends PanelMenu.Button{
        *  meantime) */
       this._cmd.exec_sync('server_place_connect', {'target': loc});
 
+      /** inform 'recent connection' menu of the attempt */
       this._recent_connection(placeName);
     }
 
+    /** once the connexion attempt made, the co-joint goup is unselected (if any) */
     if(Boolean(this._submenuPlaces)){
       this._submenuPlaces.unselectGroup();
     }
@@ -1228,7 +1233,6 @@ class NVPNMenu extends PanelMenu.Button{
        *  the process must be aborted and updating accordingly the ui */
       if (this._get_current_status() < NVPNMenu.STATUS.TRANSITION){
         this._update_status_and_ui();
-        //this._auto_connect_to="";
       }
       else{
       /** asynchronous disconnection call */
@@ -1256,24 +1260,10 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _nordvpn_ch_connect(placeName=""){
     if(placeName){
-      /** setting the private attribute '_auto_connect_to' to signify that a reconnection
-       *  will have to be made, to that place, after the disconnection.
-       *  In practice, the reconnection will be handled by the "live monitoring" ( '_vpn_check()'
-       *  private method); when the vpn disconnection is set, and if '_auto_connect_to', at that
-       *  time, isn't empty, a reconnection to the place designated by this attribute should be
-       *  handled */
-      /*this._auto_connect_to= placeName;
-      this._nordvpn_disconnect();
-      this.currentStatus= NVPNMenu.STATUS.TRANSITION;*/
       this._waiting_state();
       this._nordvpn_quickconnect(placeName);
 
     }
-    /** if no live monitoring, the synchronous (re)connection must be called once the disconnection
-     *  has been made */
-    /*if(!this.nvpn_monitor){
-      this._nordvpn_quickconnect(placeName);
-    }*/
 
   }
 
@@ -1500,6 +1490,9 @@ class NVPNMenu extends PanelMenu.Button{
    */
   _place_menu_new_selection(placeName){
     var loc=placeName
+    /** nordvpn v3.4 feature -
+     *  if a co-joint group is selected, format the location as following '[group] location'
+     */
     let s_grp= (Boolean(this._submenuPlaces))?this._submenuPlaces.SelectedGroupName:null;
     if(s_grp){
       loc= '['+s_grp+"] "+placeName;
@@ -1569,14 +1562,6 @@ class NVPNMenu extends PanelMenu.Button{
     /** boolean that will be set to true when change is detected */
     let change= false;
 
-    /** local reconnection function for factoring purposes */
-    let _this= this;
-    /*let _reconnection= function(){
-      if(_this._auto_connect_to.length!==0){
-          _this._nordvpn_quickconnect(_this._auto_connect_to);
-        }
-    };*/
-
     let t= undefined;
 
     switch(this.currentStatus){
@@ -1601,21 +1586,7 @@ class NVPNMenu extends PanelMenu.Button{
     case NVPNMenu.STATUS.TRANSITION:
       this._transition_time_out+= this._refresh_delay;
 
-      change= (!(this._is_in_transition()) /*&& this._auto_connect_to.length===0*/);
-
-      /** if, while in transition, a change is detected, and if the attribute
-       *  _auto_connect_to is set, then it means that a reconnection to the
-       *  place designated by this attribute is pending. */
-      /*if(change && this._auto_connect_to.length!==0){
-        _reconnection();*/
-
-        /** if there is a reconnection, then we're still in transition.
-         *  No change is status and visual feedback necessary */
-        /*change= false;
-      }
-      else if(this._transition_time_out>10){
-        //this.setSensitive(true);
-      }*/
+      change= (!(this._is_in_transition()));
 
       break;
     /** when the status is 'disconnected', check if there's a connection to a vpn */
@@ -1632,20 +1603,9 @@ class NVPNMenu extends PanelMenu.Button{
       change= ( t!==undefined && t!==null && t.length===0 );
 
       /** if a change is detected in this case, a particular disposition has to be made:
-       *  the country selection submenu has to be clear of any selection,
-       *  and if the application is in the process of reconnection (recognized by the fact that the private attribute
-       *  '_auto_connect_to' is a non empty string list) then lauchnes a connection to the target country server (designated
-       *  by the value of '_auto_connect_to') */
+       *  the country selection submenu has to be clear of any selection*/
       if(change){
         this._submenuPlaces.unselect_no_cb();
-
-        /*if(this._auto_connect_to.length!==0){
-           _reconnection();*/
-
-          /** if there is a reconnection, then we're still in transition.
-           *  No change is status and visual feedback necessary */
-          /*change= false;
-        }*/
       }
 
       break;
@@ -1654,11 +1614,6 @@ class NVPNMenu extends PanelMenu.Button{
     /** if a change has been detected, a ui update is needed */
     if (change){
       this._update_status_and_ui();
-      log("nordvpn /!\\ experimental subsitution")
-      // /!\ try and and avoid seg fault, maybe du do conflit of treading when trying to 
-      //    interven on location menu
-      //this._location_update_pending= true;
-      //this._udpate_location_submenu();
     }
   }
 
@@ -1720,7 +1675,6 @@ class NVPNMenu extends PanelMenu.Button{
     if( (option==="protocol" || option==="obfuscate" || option==="cybersec" || option==="technology") )
     {
       this._udpate_location_submenu();
-      this._update_recent_location_submenu();
     }
 
     if(SETTINGS.get_boolean('settings-change-reconnect') && this.server_info.isConnected()){
@@ -1788,15 +1742,21 @@ class NVPNMenu extends PanelMenu.Button{
    * @param {string} serv the server name to which try and connect
    */
   _serv_fav_cliked(item, serv){
-    log("nordvpn hmmmm");
+    /** update location menus displays  */
     this._udpate_location_submenu();
-    this._update_recent_location_submenu();
 
     if(serv){
       this._place_menu_new_selection(serv);
     }
   }
 
+  /**
+   * Private method to inform the 'recent conenction' menu of a connexion attempt
+   *  to a location. 
+   * @method
+   * 
+   * @param {string} location the location to connect to (supports '[group] location' string format)
+   */
   _recent_connection(location){
     if(location && !this._unregister_next_connexion){
       this._submenuServer.notifyRecentConnection(location);

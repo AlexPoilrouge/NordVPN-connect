@@ -533,6 +533,11 @@ class RecentLocationHandler{
     return undefined;
   }
 
+  /**
+   * Method to change the location of an item (without changin the item itself)
+   * @param {integer} index the index (regardless of pinned or not) of the item to modify 
+   * @param {*} placename the new location
+   */
   modify(index, placename){
     if(index>0 && index<this.count){
       let l= this._recentObj.pin.length;

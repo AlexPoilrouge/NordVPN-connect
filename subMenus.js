@@ -126,9 +126,10 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
        *    i.e.: the actual string to be used when calling the 'connect' command of the CLI Tool 
        */
       this.placeName= str_Place;
-      /** type of item */
+      /** type of item (according to LOCATION_TYPE)*/
       this.type= type;
 
+      /** the state of display of the item (according to LOCATION_ITEM_STATE) */
       this.state= state;
   
       this.checkIcon = new St.Icon({  icon_name: 'network-vpn-symbolic',
@@ -219,10 +220,19 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
       return this.placeName;
     }
 
+    /**
+     * Getter to determine if group is selected as a co-joint group for connexion
+     * @method
+     * @returns {boolean} - whether or not is selected
+     */
     get isGroupSelected(){
       return (this.type===LOCATION_TYPE.GROUP) && this._groupSelect;
     }
 
+    /**
+     * Unselect group, as co-joint group for connexion
+     * @method
+     */
     unselectGroup(){
       this._groupSelect= false;
       if(Boolean(this.style_class))
@@ -324,6 +334,10 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       this.select_cb= func;
     }
 
+    /** If there is a currently selected group, as co-joint group for connexion,
+     *  then unselects it
+     * @method
+     */
     unselect_current(){
       if(this.cur_selected!=null){
         this.cur_selected.select(false);
@@ -360,8 +374,15 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       this.select_cb(this.LastSelectedPlaceName);
     }
 
+    /**
+     * Private method that toggles a given item, as a co-joint location for connexion
+     *  attempt.
+     * 
+     * @param {PlaceItem} item - the item on which to apply toggling
+     * @param {string} placeName - uhhhh
+     * @param {boolean} toggle - the toggle, to select or unselect 
+     */
     _group_select_toggle(item, placeName, toggle){
-      log("nordvpn _group_select_toggle"+[placeName, toggle]);
       if(Boolean(this._groupSelected) && 
           !(toggle && item===this._groupSelected))
       {
@@ -370,6 +391,11 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       this._groupSelected= toggle?item:null;
     }
 
+    /** 
+     * Private method to unselects the currently selected group, for co-joint connexion attempt,
+     *    is any.
+     * @method
+     */
     unselectGroup(){
       if(Boolean(this._groupSelected)){
         this._groupSelected.unselectGroup();
@@ -377,6 +403,12 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
       this._groupSelected= null;
     }
 
+    /**
+     * Getter to the currenctly selected, for co-joint connexion attemps, group, if any
+     * @method
+     * 
+     * @returns {string} the location or name of the currently selected item
+     */
     get SelectedGroupName(){
       return Boolean(this._groupSelected)?this._groupSelected.PlaceName:"";
     }
@@ -442,7 +474,6 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
      * @method
      */
     clearAllLocations(){
-      log("nordvpn clearAllLocations called…");
       this.unselectGroup();
 
       let children= this.menu._getMenuItems();
@@ -916,6 +947,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
   get location(){ return this._location;}
   set location(l){
     this._location= l;
+    /** also updating the displayed location, ofc */
     this.tLabel.text= l.replace(/_/gi,' ')
   }
 
@@ -972,6 +1004,8 @@ class RecentLocationStacker extends StackerBase{
 
     this._generateItemList();
 
+    /** should the recent menu consided the co-joint location, if any, when
+     *    adding a new 'recent location'*/
     this._groupless= false;
   }
 
@@ -1094,8 +1128,12 @@ class RecentLocationStacker extends StackerBase{
    * @param {boolean} pin is the location pinned ?
    */
   addRecentLocation(location, pin= false){
-    log("nordvpn addRecentLocation("+location+", "+pin+")");
     var loc= location;
+    /** if submenu is set to not consider the co-joint location,
+     *  then we extract solely the location, and determine if another
+     *  occurence of this location in the submenu exists.
+     *  If so we change it to a 'groupless' location (if needed)
+     */
     if(this.grouplessAdd){
       let plc_grp= MyUtils.locationToPlaceGroupPair(location);
       loc= (Boolean(plc_grp))? plc_grp.place : location;
@@ -1368,6 +1406,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
         });
 
 
+      /** field to save the current group and coutnry list, and display mode
+       * in case no update performed before needing them  */
       this._countriesList= null;
       this._groupsList= null;
       this._displayMode= LOCATIONS_DISPLAY_MODE.AVAILABLE_ONLY;
@@ -1443,7 +1483,7 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
    *    @method
    *    @param {string} txt - the text from which extract the server name.
    *        Server name must match format (e.g: ccXX[.nordvpn.com])
-   *    @return {string} the server name (e.g.: ccXX) if parameted matched format,
+   *    @returns {string} the server name (e.g.: ccXX) if parameted matched format,
    *        undefined otherwise
   */
   _getServerFromText(txt){
@@ -1473,6 +1513,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     if(Boolean(this.recent)){
       this.recent.addRecentLocation(location);
 
+      /** for each new recent connexion, we need to make sure it's display,
+       *  after addtion, is updated*/
       if(this._countriesList && this._groupsList){
         this.updateRecentLocationDisplay(this._displayMode, this._countriesList, this._groupsList);
       }
@@ -1490,6 +1532,8 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
     if(Boolean(this.recent)){
       this.recent.updateLocationsDisplay(displayMode, countries, groups)
 
+      /** saving lists and display mode in case they are needed before another
+       * extrnal call to this function*/
       this._countriesList= countries;
       this._groupsList= groups;
       this._displayMode= displayMode;

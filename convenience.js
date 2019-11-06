@@ -91,8 +91,21 @@ function getSettings(schema) {
     return new Gio.Settings({ settings_schema: schemaObj });
 }
 
-
+/** 
+ * Groupement of usefull functions to be used within different location
+ * in the extension's code
+*/
 const MyUtils= {
+  /**
+   * Convert a 'Group Location' string (form "[group] location")
+   * into an object where both strings are accessible as strings
+   * 
+   * @function
+   * @param {string} locstr 'Group Location' string (form "[group] location")
+   * 
+   * @returns {object} an object containing two string as fields: 'group' & 'place'
+   *          returns null info the infos couldn't be extracted from the given string 
+   */
   locationToPlaceGroupPair: (locstr) => {
     let rgx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
     let arr= rgx.exec(locstr);
