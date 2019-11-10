@@ -1056,6 +1056,7 @@ class RecentLocationStacker extends StackerBase{
    * @param {string} location the location 
    */
   _deleteItem(location){
+    log("nordvpn _deleteItem("+location)
     let p_items= this._parentMenu.menu._getMenuItems();
 
     var disp= this.acutalizedDynamicItemStartPos;
@@ -1064,6 +1065,7 @@ class RecentLocationStacker extends StackerBase{
       if( Boolean(i_item) && (i_item instanceof RecentLocationItem)
           && i_item.location===location){
         this.__deleteInnerItem(i_item);
+        log("nordvpn i="+i+" __deleteItem("+i_item.location)
       }
     }
   }
@@ -1104,21 +1106,38 @@ class RecentLocationStacker extends StackerBase{
 
     if(isPin){
       this.RLOC_SIGS.push([rlocItem, rlocItem.connect('unpin', (item, loc) =>{
-        var b= this._rlocHandler.unpin(loc);
+        /*var b= this._rlocHandler.unpin(loc);
         this._rlocHandler.save();
 
         this.__deleteInnerItem(item);
-        if(b) this.addRecentLocation(loc, false);
+        if(b) this.addRecentLocation(loc, false);*/
+        this._unpinItem(item);
       })])
     }
     else{
       this.RLOC_SIGS.push([rlocItem, rlocItem.connect('pin', (item, loc) =>{
-        this._rlocHandler.pin(loc);
+        /*this._rlocHandler.pin(loc);
         this._rlocHandler.save();
 
-        this.addRecentLocation(loc, true);
+        this.addRecentLocation(loc, true);*/
+        this._pinItem(item);
       })])
     }
+  }
+
+  _unpinItem(item){
+    if(this._rlocHandler.isPinned(item.location)){
+      this._rlocHandler.unpin(item.location);
+    }
+
+    if(item.isPin){
+      this.__deleteInnerItem(item);
+    }
+    this.addRecentLocation(item.location, false);
+  }
+
+  _pinItem(item){
+    this.addRecentLocation(item.location, true);
   }
 
   /**
@@ -1134,23 +1153,18 @@ class RecentLocationStacker extends StackerBase{
      *  occurence of this location in the submenu exists.
      *  If so we change it to a 'groupless' location (if needed)
      */
-    if(this.grouplessAdd){
-      let plc_grp= MyUtils.locationToPlaceGroupPair(location);
-      loc= (Boolean(plc_grp))? plc_grp.place : location;
-      let p= this.findLocationAsGroupless(loc);
-      if(p===0 || Boolean(p)){
-        let sdp= this.acutalizedDynamicItemStartPos;
-        this._rlocHandler.modify(p,loc);
-        this._parentMenu.menu._getMenuItems()[sdp+p].location= loc;
-      }
-    }
+    log("nordvpn addRecentLoc("+location+", "+pin);
+
+
 
     var b_wasPinned= this._rlocHandler.isPinned(loc);
     if(pin){
+      log("nordvpn ar3");
       this._deleteItem(loc);
       this._rlocHandler.pin(loc);
     }
     else{
+      log("nordvpn ar4");
       var rmvLoc= this._rlocHandler.add(loc);
       if(Boolean(rmvLoc)){
         this._deleteItem(rmvLoc);
@@ -1162,9 +1176,10 @@ class RecentLocationStacker extends StackerBase{
     var i=0;
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
       if(t[0]===loc){
-        if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
+        //if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
+          log("nordvpn ar4 ("+loc+", "+i+", "+pin);
           this._addRLocItem(loc, i, pin);
-        }
+        //}
 
         break;
       }
@@ -1271,24 +1286,31 @@ class RecentLocationStacker extends StackerBase{
   }
 
   findLocationAsGroupless(location){
+    log("nordvpn flags "+location)
     let grp_place= MyUtils.locationToPlaceGroupPair(location);
     let place= (Boolean(grp_place))? grp_place.place : location;
 
     var r= null;
     if(Boolean(place)){
       var it= this._rlocHandler.first();
+      log("nordvpn this.handler.pin= "+this._rlocHandler._recentObj.pin);
 
+      log("nordvpn this.handler.regular= "+this._rlocHandler._recentObj.regular);
       var i=0;
       while(Boolean(it)){
+        log("nordvpn flag i="+i+" it[0]="+it[0]);
         if(Boolean(it[0]) && it[0].endsWith(place)) break;
 
         ++i;
         it= this._rlocHandler.next();
       }
+      log("nordvpn flag final: i="+i);
 
+      log("nordvpn flag i<count="+this._rlocHandler.count);
       if(i<this._rlocHandler.count) r= i;
     }
 
+    log("nordvpn flag final: r="+r);
     return r;
   }
 

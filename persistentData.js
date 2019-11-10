@@ -306,6 +306,9 @@ class RecentLocationHandler{
 
       this.save();
     }
+
+    log("nordvpn cstr:RLocHandler - pin: "+this._recentObj.pin);
+    log("nordvpn cstr:RLocHandler - regular: "+this._recentObj.regular);
   }
 
   /**
@@ -546,6 +549,42 @@ class RecentLocationHandler{
       }
       else{
         this._recentObj.regular[index-l]= placename;
+      }
+    }
+  }
+
+  
+
+  /**
+   * Method to change the location of an item (without changin the item itself)
+   * @param {string} oldName the name of the old location to change
+   * @param {string} placename the new location
+   * @param {boolean} first optional - only change the first occurence if true
+   */
+  /*modify(oldName, placename, first=false){
+    let l= this._recentObj.pin.length;
+    for(var i=0; i<this.count;++i){
+      if(i<l){
+        if(this._recentObj.pin[i]===oldName){
+          this._recentObj.pin[i]= placename;
+          if(first) break;
+        }
+      }
+      else if(this._recentObj.regular[i-l]===oldName){
+        this._recentObj.regular[i-l]= placename;
+        if(first) break;
+      }
+    }
+  }*/
+
+  delete(index){
+    if(index>0 && index<this.count){
+      let l= this._recentObj.pin.length;
+      if(index<l){
+        this._recentObj.pin.splice(index,1);
+      }
+      else{
+        this._recentObj.regular.splice(index,1);
       }
     }
   }
