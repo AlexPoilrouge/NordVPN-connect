@@ -92,10 +92,13 @@ function getSettings(schema) {
 }
 
 /** 
- * Groupement of usefull functions to be used within different location
+ * Groupment of usefull functions to be used within different location
  * in the extension's code
 */
 const MyUtils= {
+  groupSpecificLocationMatch: (loc) => {
+    return RegExp("^\\s*(\\[([A-Za-z0-9\\-_]+)\\])?\\s*"+loc+"\\s*$", 'g');
+  },
   /**
    * Convert a 'Group Location' string (form "[group] location")
    * into an object where both strings are accessible as strings
@@ -107,8 +110,9 @@ const MyUtils= {
    *          returns null info the infos couldn't be extracted from the given string 
    */
   locationToPlaceGroupPair: (locstr) => {
-    let rgx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
-    let arr= rgx.exec(locstr);
+    log("nordvpn utils - lctpgp("+locstr+")");
+    let rx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
+    let arr= rx.exec(locstr);
     var r= {place: null, group: null};
     if(Boolean(arr) && arr.length>2 && Boolean(arr[1]) && Boolean(arr[2])){
       if(arr.length>1 && Boolean(arr[1])){

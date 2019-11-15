@@ -234,7 +234,7 @@ class NVPN_Settings{
                 "state-set",
                 Lang.bind(this,this._sig_Distinguish_groups_recentmenu)
             );
-        this.SETT_SIGS[5]= SETTINGS.connect('changer::recent-distinguish-groups', ()=>{
+        this.SETT_SIGS[5]= SETTINGS.connect('changed::recent-distinguish-groups', ()=>{
             this._objects.NVPN_Sett_Toggle_Recent_Groups.set_state(SETTINGS.get_boolean('recent-distinguish-groups'));
         });
 

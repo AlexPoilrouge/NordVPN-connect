@@ -561,7 +561,7 @@ class RecentLocationHandler{
    * @param {string} placename the new location
    * @param {boolean} first optional - only change the first occurence if true
    */
-  /*modify(oldName, placename, first=false){
+  modifyName(oldName, placename, first=false){
     let l= this._recentObj.pin.length;
     for(var i=0; i<this.count;++i){
       if(i<l){
@@ -575,9 +575,9 @@ class RecentLocationHandler{
         if(first) break;
       }
     }
-  }*/
+  }
 
-  delete(index){
+  delete(locationNam){
     if(index>0 && index<this.count){
       let l= this._recentObj.pin.length;
       if(index<l){
@@ -587,5 +587,42 @@ class RecentLocationHandler{
         this._recentObj.regular.splice(index,1);
       }
     }
+  }
+
+  unique(match, first=false){
+    log("nordvpn pd unique("+match+", "+first+")");
+    var r= {remain: null, deleted: []};
+    var c=0;
+    let l= this._recentObj.pin.length;
+    var i= 0;
+    while(i<this.count){     
+      let b_pin= (i<l); 
+      var i_l= (b_pin)? this._recentObj.pin[i] : this._recentObj.regular[i-l];
+      if( i_l.match(match) ){
+        log("nordvpn pd unique - match with "+i_l)
+        ++c;
+        if(c>1){          
+          log("nordvpn pd unique splicing away "+i_l);
+          if(b_pin){
+            this._recentObj.pin.splice(i, 1)
+            --l;
+          }
+          else{
+            this._recentObj.regular.splice(i-l, 1);
+          }
+          r.deleted.push(i_l);
+
+          if(first) break;
+        }
+        else{
+          log("nordvpn pd unique remains "+i_l)
+          r.remain= i_l;
+          ++i;
+        };
+      }
+      else ++i;
+    }
+
+    return r;
   }
 };

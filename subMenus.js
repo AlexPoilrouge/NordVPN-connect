@@ -1006,7 +1006,7 @@ class RecentLocationStacker extends StackerBase{
 
     /** should the recent menu consided the co-joint location, if any, when
      *    adding a new 'recent location'*/
-    this._groupless= false;
+    this._groupless= true;
   }
 
   /**
@@ -1155,7 +1155,7 @@ class RecentLocationStacker extends StackerBase{
      */
     log("nordvpn addRecentLoc("+location+", "+pin);
 
-
+    let locGrp= MyUtils.locationToPlaceGroupPair(location);
 
     var b_wasPinned= this._rlocHandler.isPinned(loc);
     if(pin){
@@ -1167,6 +1167,7 @@ class RecentLocationStacker extends StackerBase{
       log("nordvpn ar4");
       var rmvLoc= this._rlocHandler.add(loc);
       if(Boolean(rmvLoc)){
+        log("nordvpn ar4-1 "+rmvLoc);
         this._deleteItem(rmvLoc);
       }
     }
@@ -1177,7 +1178,7 @@ class RecentLocationStacker extends StackerBase{
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
       if(t[0]===loc){
         //if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
-          log("nordvpn ar4 ("+loc+", "+i+", "+pin);
+          log("nordvpn ar6 ("+loc+", "+i+", "+pin);
           this._addRLocItem(loc, i, pin);
         //}
 
@@ -1185,6 +1186,16 @@ class RecentLocationStacker extends StackerBase{
       }
 
       ++i;
+    }
+
+    log("nordvpn ar5 "+this.grouplessAdd+" | "+locGrp);
+    if((!this.grouplessAdd) && Boolean(locGrp)){
+      let rem= this.uniqueItem(MyUtils.groupSpecificLocationMatch(locGrp.place));
+
+      if(Boolean(rem)){
+        log("nordvpn ar5 - locGrp= "+locGrp.place+", "+rem);
+        this._modifyLocationName(rem,locGrp.place,true);
+      }
     }
   }
 
@@ -1320,6 +1331,67 @@ class RecentLocationStacker extends StackerBase{
 
   get grouplessAdd(){
     return this._groupless;
+  }
+
+  uniqueItem(locationMatch, first=false){
+    var r= null;
+    let rmvLoc= this._rlocHandler.unique(locationMatch, first);
+    log("nordvpn uniqueItem("+locationMatch+", "+first);
+    log("nordvpn uniqueItem - rmvLoc: "+rmvLoc+" -- {remains: "+
+        rmvLoc.remain+", deleted: ["+rmvLoc.deleted+']');
+
+    this._rlocHandler.save();
+
+    var p_items= this._parentMenu.menu._getMenuItems();
+    let sp= this.acutalizedDynamicItemStartPos;
+    var i_rmv= 0;
+    var i= 0;
+    var c= 0;
+    if(Boolean(rmvLoc.remain)){
+      log("nordvpn uniqueItem - c1 "+this._length);
+      while(i<this._length){
+        var p_item= p_items[sp + i];
+        log("nordvpn uniqueItem  - i="+i+", p_item= "+p_item.location);
+
+        if(p_item.location === rmvLoc.remain){
+          log("nordvpn unique item - b1");
+          ++c;
+          ++i;
+        }
+        else if((p_item.location === rmvLoc.deleted[i_rmv]) && c>0 && i_rmv<rmvLoc.deleted.length){
+          log("nordvpn unique item - b2");
+          ++c;
+          this.__deleteInnerItem(p_item)
+          p_items= this._parentMenu.menu._getMenuItems();
+          ++i_rmv;
+          if(first) break;
+        }
+        else ++i;
+      }
+      r= rmvLoc.remain;
+    }
+
+    return r;
+  }
+
+  _modifyLocationName(oldName, locationName, first=false){
+    log("nordvpn  TODO!!!!");
+    this._rlocHandler.modifyName(oldName, locationName, first);
+
+    this._rlocHandler.save();
+    
+    let sp= this.acutalizedDynamicItemStartPos;
+    let p_items= this._parentMenu.menu._getMenuItems();
+    for(var i=0; i<p_items.length; ++i){
+      var p_item= p_items[sp+i];
+      if(Boolean(p_item) && p_item.location===oldName){
+        p_item.location= locationName;
+        
+        if(first){
+          break;
+        }
+      }
+    }
   }
 }
 );
