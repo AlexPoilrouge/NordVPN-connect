@@ -96,6 +96,15 @@ function getSettings(schema) {
  * in the extension's code
 */
 const MyUtils= {
+  /**
+   * Generate a regex that matches a location regardless of included group
+   * 
+   * @function
+   * @param {string} loc 'location' to match
+   * 
+   * @returns {RegExp} The regular expression that matches the location, regardless if
+   *                a group is joint (i.e.: "[group] location")
+   */
   groupSpecificLocationMatch: (loc) => {
     return RegExp("^\\s*(\\[([A-Za-z0-9\\-_]+)\\])?\\s*"+loc+"\\s*$", 'g');
   },
@@ -110,7 +119,6 @@ const MyUtils= {
    *          returns null info the infos couldn't be extracted from the given string 
    */
   locationToPlaceGroupPair: (locstr) => {
-    log("nordvpn utils - lctpgp("+locstr+")");
     let rx= /^\s*\[([A-Za-z0-9\-_]+)\]\s*([A-Za-z0-9\-_]+)\s*$/g;
     let arr= rx.exec(locstr);
     var r= {place: null, group: null};

@@ -382,7 +382,6 @@ class Core_CMDs{
       command= command.replace("_%"+k+"%_", params[k]);
     }
     COMMAND_LINE_ASYNC(command, this.command_shell);
-    log("nordvpn exec_async -> cmd='"+command+"'");
 
     return true;
   }
@@ -1154,7 +1153,6 @@ class NVPNMenu extends PanelMenu.Button{
    *            as "[Group] location"
    */
   _nordvpn_quickconnect(placeName=""){
-    log("nordvpn qc("+placeName+')');
     var loc= placeName;
     /** nordvpn 3.4 update feature:
      *  Integrated the feature that allow to specify a group along location (i.e. P2P + France)

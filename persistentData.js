@@ -306,9 +306,6 @@ class RecentLocationHandler{
 
       this.save();
     }
-
-    log("nordvpn cstr:RLocHandler - pin: "+this._recentObj.pin);
-    log("nordvpn cstr:RLocHandler - regular: "+this._recentObj.regular);
   }
 
   /**
@@ -577,20 +574,18 @@ class RecentLocationHandler{
     }
   }
 
-  delete(locationNam){
-    if(index>0 && index<this.count){
-      let l= this._recentObj.pin.length;
-      if(index<l){
-        this._recentObj.pin.splice(index,1);
-      }
-      else{
-        this._recentObj.regular.splice(index,1);
-      }
-    }
-  }
-
+  /**
+   * Method that suppress multiple occurence of a location within the stack
+   * according to a given regular expression.
+   * 
+   * @param {RegExp} match regular expression to detect several occurence
+   * @param {boolean} first if true, only deletes the first reoccurence met before terminating
+   * 
+   * @return {object} returns an object containing two fields 'remain' et 'deleted'
+   *              which respectively corresponds the remaining occurence (string) and
+   *              the deleted ones (string array)
+   */
   unique(match, first=false){
-    log("nordvpn pd unique("+match+", "+first+")");
     var r= {remain: null, deleted: []};
     var c=0;
     let l= this._recentObj.pin.length;
@@ -599,10 +594,8 @@ class RecentLocationHandler{
       let b_pin= (i<l); 
       var i_l= (b_pin)? this._recentObj.pin[i] : this._recentObj.regular[i-l];
       if( i_l.match(match) ){
-        log("nordvpn pd unique - match with "+i_l)
         ++c;
         if(c>1){          
-          log("nordvpn pd unique splicing away "+i_l);
           if(b_pin){
             this._recentObj.pin.splice(i, 1)
             --l;
@@ -615,7 +608,6 @@ class RecentLocationHandler{
           if(first) break;
         }
         else{
-          log("nordvpn pd unique remains "+i_l)
           r.remain= i_l;
           ++i;
         };

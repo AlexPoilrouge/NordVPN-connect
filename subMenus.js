@@ -1056,7 +1056,6 @@ class RecentLocationStacker extends StackerBase{
    * @param {string} location the location 
    */
   _deleteItem(location){
-    log("nordvpn _deleteItem("+location)
     let p_items= this._parentMenu.menu._getMenuItems();
 
     var disp= this.acutalizedDynamicItemStartPos;
@@ -1065,7 +1064,6 @@ class RecentLocationStacker extends StackerBase{
       if( Boolean(i_item) && (i_item instanceof RecentLocationItem)
           && i_item.location===location){
         this.__deleteInnerItem(i_item);
-        log("nordvpn i="+i+" __deleteItem("+i_item.location)
       }
     }
   }
@@ -1106,25 +1104,21 @@ class RecentLocationStacker extends StackerBase{
 
     if(isPin){
       this.RLOC_SIGS.push([rlocItem, rlocItem.connect('unpin', (item, loc) =>{
-        /*var b= this._rlocHandler.unpin(loc);
-        this._rlocHandler.save();
-
-        this.__deleteInnerItem(item);
-        if(b) this.addRecentLocation(loc, false);*/
         this._unpinItem(item);
       })])
     }
     else{
       this.RLOC_SIGS.push([rlocItem, rlocItem.connect('pin', (item, loc) =>{
-        /*this._rlocHandler.pin(loc);
-        this._rlocHandler.save();
-
-        this.addRecentLocation(loc, true);*/
         this._pinItem(item);
       })])
     }
   }
 
+  /**
+   * Private method to unpin an item from the recent location stacker
+   * 
+   * @param {RecentLocationItem} item 
+   */
   _unpinItem(item){
     if(this._rlocHandler.isPinned(item.location)){
       this._rlocHandler.unpin(item.location);
@@ -1136,6 +1130,11 @@ class RecentLocationStacker extends StackerBase{
     this.addRecentLocation(item.location, false);
   }
 
+  /**
+   * Private method to pin an item from the recent location stacker
+   * 
+   * @param {RecentLocationItem} item 
+   */
   _pinItem(item){
     this.addRecentLocation(item.location, true);
   }
@@ -1153,21 +1152,16 @@ class RecentLocationStacker extends StackerBase{
      *  occurence of this location in the submenu exists.
      *  If so we change it to a 'groupless' location (if needed)
      */
-    log("nordvpn addRecentLoc("+location+", "+pin);
 
     let locGrp= MyUtils.locationToPlaceGroupPair(location);
 
-    var b_wasPinned= this._rlocHandler.isPinned(loc);
     if(pin){
-      log("nordvpn ar3");
       this._deleteItem(loc);
       this._rlocHandler.pin(loc);
     }
     else{
-      log("nordvpn ar4");
       var rmvLoc= this._rlocHandler.add(loc);
       if(Boolean(rmvLoc)){
-        log("nordvpn ar4-1 "+rmvLoc);
         this._deleteItem(rmvLoc);
       }
     }
@@ -1177,10 +1171,7 @@ class RecentLocationStacker extends StackerBase{
     var i=0;
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
       if(t[0]===loc){
-        //if( (pin && b_wasPinned) || (!pin && !b_wasPinned) ){
-          log("nordvpn ar6 ("+loc+", "+i+", "+pin);
-          this._addRLocItem(loc, i, pin);
-        //}
+        this._addRLocItem(loc, i, pin);
 
         break;
       }
@@ -1188,12 +1179,10 @@ class RecentLocationStacker extends StackerBase{
       ++i;
     }
 
-    log("nordvpn ar5 "+this.grouplessAdd+" | "+locGrp);
     if((!this.grouplessAdd) && Boolean(locGrp)){
       let rem= this.uniqueItem(MyUtils.groupSpecificLocationMatch(locGrp.place));
 
       if(Boolean(rem)){
-        log("nordvpn ar5 - locGrp= "+locGrp.place+", "+rem);
         this._modifyLocationName(rem,locGrp.place,true);
       }
     }
@@ -1256,7 +1245,7 @@ class RecentLocationStacker extends StackerBase{
       }
     };
 
-    let isPlaceGroupValid= (location) =>{
+    let isPlaceGroupValid= (location) => {
       let plc_grp= MyUtils.locationToPlaceGroupPair(location);
 
       return (Boolean(plc_grp) &&
@@ -1296,32 +1285,29 @@ class RecentLocationStacker extends StackerBase{
     });
   }
 
+  /**
+   * 
+   * 
+   * @param {string} location 
+   */
   findLocationAsGroupless(location){
-    log("nordvpn flags "+location)
     let grp_place= MyUtils.locationToPlaceGroupPair(location);
     let place= (Boolean(grp_place))? grp_place.place : location;
 
     var r= null;
     if(Boolean(place)){
       var it= this._rlocHandler.first();
-      log("nordvpn this.handler.pin= "+this._rlocHandler._recentObj.pin);
-
-      log("nordvpn this.handler.regular= "+this._rlocHandler._recentObj.regular);
       var i=0;
       while(Boolean(it)){
-        log("nordvpn flag i="+i+" it[0]="+it[0]);
         if(Boolean(it[0]) && it[0].endsWith(place)) break;
 
         ++i;
         it= this._rlocHandler.next();
       }
-      log("nordvpn flag final: i="+i);
 
-      log("nordvpn flag i<count="+this._rlocHandler.count);
       if(i<this._rlocHandler.count) r= i;
     }
 
-    log("nordvpn flag final: r="+r);
     return r;
   }
 
@@ -1333,12 +1319,18 @@ class RecentLocationStacker extends StackerBase{
     return this._groupless;
   }
 
+  /**
+   * Method to suppress reoccurence of a location in the stacker
+   * according to given regular expression
+   * 
+   * @param {RegExp} locationMatch regular expresssion that determines the reoccurence
+   * @param {boolean} first if ture, only deletes the first reoccurence before terminating
+   * 
+   * @returns {string} the remaining location of the stacker
+   */
   uniqueItem(locationMatch, first=false){
     var r= null;
     let rmvLoc= this._rlocHandler.unique(locationMatch, first);
-    log("nordvpn uniqueItem("+locationMatch+", "+first);
-    log("nordvpn uniqueItem - rmvLoc: "+rmvLoc+" -- {remains: "+
-        rmvLoc.remain+", deleted: ["+rmvLoc.deleted+']');
 
     this._rlocHandler.save();
 
@@ -1348,18 +1340,14 @@ class RecentLocationStacker extends StackerBase{
     var i= 0;
     var c= 0;
     if(Boolean(rmvLoc.remain)){
-      log("nordvpn uniqueItem - c1 "+this._length);
       while(i<this._length){
         var p_item= p_items[sp + i];
-        log("nordvpn uniqueItem  - i="+i+", p_item= "+p_item.location);
 
         if(p_item.location === rmvLoc.remain){
-          log("nordvpn unique item - b1");
           ++c;
           ++i;
         }
         else if((p_item.location === rmvLoc.deleted[i_rmv]) && c>0 && i_rmv<rmvLoc.deleted.length){
-          log("nordvpn unique item - b2");
           ++c;
           this.__deleteInnerItem(p_item)
           p_items= this._parentMenu.menu._getMenuItems();
@@ -1374,8 +1362,14 @@ class RecentLocationStacker extends StackerBase{
     return r;
   }
 
+  /**
+   * Private method that renames an item location
+   * 
+   * @param {string} oldName the old item's location name
+   * @param {string} locationName the new item's location
+   * @param {boolean} first if true, only renames the first occurence encountered
+   */
   _modifyLocationName(oldName, locationName, first=false){
-    log("nordvpn  TODO!!!!");
     this._rlocHandler.modifyName(oldName, locationName, first);
 
     this._rlocHandler.save();
