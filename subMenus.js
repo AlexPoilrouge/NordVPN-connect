@@ -1146,6 +1146,7 @@ class RecentLocationStacker extends StackerBase{
    * @param {boolean} pin is the location pinned ?
    */
   addRecentLocation(location, pin= false){
+    log("nordvpn arl("+location+","+pin+")");
     var loc= location;
     /** if submenu is set to not consider the co-joint location,
      *  then we extract solely the location, and determine if another
@@ -1154,6 +1155,7 @@ class RecentLocationStacker extends StackerBase{
      */
 
     let locGrp= MyUtils.locationToPlaceGroupPair(location);
+    let b_pinned= this._rlocHandler.isPinned(location);
 
     if(pin){
       this._deleteItem(loc);
@@ -1170,7 +1172,7 @@ class RecentLocationStacker extends StackerBase{
 
     var i=0;
     for(var t= this._rlocHandler.first(); t!==undefined; t=this._rlocHandler.next()){
-      if(t[0]===loc){
+      if(t[0]===loc && !b_pinned){
         this._addRLocItem(loc, i, pin);
 
         break;
@@ -1179,11 +1181,13 @@ class RecentLocationStacker extends StackerBase{
       ++i;
     }
 
-    if((!this.grouplessAdd) && Boolean(locGrp)){
-      let rem= this.uniqueItem(MyUtils.groupSpecificLocationMatch(locGrp.place));
+
+    if((!this.grouplessAdd)){
+      loc= (Boolean(locGrp))?locGrp.place:location;
+      let rem= this.uniqueItem(MyUtils.groupSpecificLocationMatch(loc));
 
       if(Boolean(rem)){
-        this._modifyLocationName(rem,locGrp.place,true);
+        this._modifyLocationName(rem,loc,true);
       }
     }
   }
