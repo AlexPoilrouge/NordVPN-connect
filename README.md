@@ -100,7 +100,7 @@ This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'
 This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.34.0' and the *'nordvpn' CLI tool version 3.3.1-3*, for later commits.
 
 
-###### Install (classic)
+###### Install
 
 If you've cloned or downloaded this extension from github, copy the content of its root directory to a new directory: `~/.local/share/gnome-shell/extensions/NordVPN_Connect@poilrouge.fr`.
 
@@ -136,7 +136,7 @@ You can also use this script to install the extension as a *system-wide extensio
 `./setup.sh --system`
 
 After install, you might still need to refresh your gnome-shell using:
-`Alt + F2` → typing `r`
+`Alt + F2` → enter `r`
 
 More option for this script are available, be sure to check:
 `./setup.sh --help`
