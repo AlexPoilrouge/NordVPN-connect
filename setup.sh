@@ -280,6 +280,8 @@ esac
 if $OPT_SHELL_RELOAD ;
 then
     gnome-shell -r || true ;
+else
+    echo "[!] ${EXTENSION_NAME} ${MODE} done. You might need to refresh gnome-shell, for it to take effect on your system. Use hotkey `Alt + F2` and enter \"r\"…";
 fi
 
 exit 0
