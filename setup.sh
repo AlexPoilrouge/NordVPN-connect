@@ -202,7 +202,7 @@ OLD_BRANCH=$( git branch | grep "\*" | cut -d ' ' -f2 )
 
 _install_copy(){
     mkdir -p ${INSTALL_DIR}/${EXTENSION_NAME} ;
-    cp -rvf ./*.md ./*.js ./*json ./*.ui img schemas ./*.css ${INSTALL_DIR}/${EXTENSION_NAME} ./setup.sh;
+    cp -rvf ./*.md ./*.js ./*json ./*.ui img schemas ./*.css  ./setup.sh ${INSTALL_DIR}/${EXTENSION_NAME};
 }
 
 remove_config_files(){
