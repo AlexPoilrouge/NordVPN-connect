@@ -33,7 +33,7 @@ help() {
     echo "${SCRIPT_NAME} [options <arg>] [<COMMAND>]"
     echo "---"
     echo "Options:"
-    echo -e "\t--d, --directory <dir_path>"
+    echo -e "\t-d, --directory <dir_path>"
     echo -e "\t\tspecify the extension install directory"
     echo ""
     echo -e "\t--branch <branch>"
@@ -164,7 +164,9 @@ if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]]; then
     fi
 fi
 
-OLD_BRANCH=$( git branch | grep "\*" | cut -d ' ' -f2 )
+if ! $OPT_GITLESS; then
+    OLD_BRANCH=$( git branch | grep "\*" | cut -d ' ' -f2 )
+fi
 
 
 ##### not mine #####
@@ -209,7 +211,7 @@ remove_config_files(){
     if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]]; then
         sed -n '/^\([^:]\+\):[^:]\+:[1-9][0-9]\{3\}/ { s/:.*//; p }' /etc/passwd | while read -r U
         do
-            U_HOME_DIR=$( realpath ~"$U" )
+            U_HOME_DIR="$( eval "realpath ~$U" )"
             U_CONFIG_DIR="${U_HOME_DIR}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
 
             if [ -d "${U_CONFIG_DIR}" ]; then
