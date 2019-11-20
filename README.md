@@ -115,25 +115,31 @@ From the start, a command line install should look like this:
 
 `cp NordVPN-connect/* ~/.local/share/gnome-shell/extensions/NordVPN_Connect@poilrouge.fr/`
 
-( May not be necessary ):
+`gnome-extensions enable NordVPN_Connect@poilrouge.fr`
 
-`gnome-shell-extension-tool -e NordVPN_Connect@poilrouge.fr`
-
-`gnome-shell -r`
+I might be necessary to refresh your gnome-shell afterwards. The best way to do this is to use the hotkey `Alt + F2` and then entering `r`.
 
 
 ###### Install (scripted)
 
 The step above has been automated with a shell script.
-Once you've cloned or downloaded this extension from github, use the following script:
+Once you've cloned or downloaded this extension from github, head up to the downloaded folder:
+
+`cd NordVPN-connect`
+
+and use the following script:
 
 `./setup.sh`
-
-It still maye be necessary to refresh gnome-shell afterwards…
 
 You can also use this script to install the extension as a *system-wide extension*:
 
 `./setup.sh --system`
+
+After install, you might still need to refresh your gnome-shell using:
+`Alt + F2` → typing `r`
+
+More option for this script are available, be sure to check:
+`./setup.sh --help`
 
 
 ## Misc.

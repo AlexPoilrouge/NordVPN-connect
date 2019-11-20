@@ -88,7 +88,7 @@ then
     exit 1;
 fi
  
-if ! OPTS=$( getopt -l help,directory:,remote:,branch:,system-install,gitless -o h,r,d: -- "$@" );
+if ! OPTS=$( getopt -l help,directory:,remote:,branch:,system-install,gitless,keep-config-files -o h,r,d: -- "$@" );
 then
     echo >&2 "Unexpected error while reading options and commands …"
     exit 1
@@ -120,14 +120,14 @@ while true ; do
             shift 2;
             ;;
         --system-install) INSTALL_DIR=${SYSTEM_INSTALL_DIR};
-            shift
+            shift;
             ;;
-        --gitless) echo "Gitless run …" 
-            OPT_GITLESS=true
-            shift
+        --gitless) echo "Gitless run …" ;
+            OPT_GITLESS=true;
+            shift;
             ;;
-        --keep-config-files) OPT_UNINSTALL_KEEP_CONFIG_FILE=true
-            shift
+        --keep-config-files) OPT_UNINSTALL_KEEP_CONFIG_FILE=true;
+            shift;
             ;;
         --) shift; break;;
     esac
