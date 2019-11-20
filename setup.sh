@@ -13,6 +13,7 @@ GIT_REMOTE="origin"
 
 OPT_SHELL_RELOAD=false
 OPT_GITLESS=false
+OPT_UNINSTALL_KEEP_CONFIG_FILE=false
 
 MODE="install"
 
@@ -46,6 +47,9 @@ help() {
     echo ""
     echo -e "\t--gitless"
     echo -e "\t\tproceed with the script but without executing git commands …"
+    echo ""
+    echo -e "\t--keep-config-files"
+    echo -e "\t\tdo not remove config files during uninstallation …"
     echo -e "\n---"
     echo "Commands:"
     echo -e "\tinstall"
@@ -122,11 +126,14 @@ while true ; do
             OPT_GITLESS=true
             shift
             ;;
+        --keep-config-files) OPT_UNINSTALL_KEEP_CONFIG_FILE=true
+            shift
+            ;;
         --) shift; break;;
     esac
 done
 
-if [ $# -gt 1 ]; then
+if [ $# -gt 0 ]; then
     MODE=$1
 fi
 
@@ -222,9 +229,11 @@ case $MODE in
                 y|Y ) rm -rfv "${INSTALL_DIR:?}"/"${EXTENSION_NAME}";;
                 * ) echo "NO! ${INSTALL_DIR}/${EXTENSION_NAME} will remain…";;
             esac
+        else
+            rm -rfv "${INSTALL_DIR:?}"/"${EXTENSION_NAME}"
         fi
 
-        if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]]; then
+        if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]] && ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
             sed -n '/^\([^:]\+\):[^:]\+:[1-9][0-9]\{3\}/ { s/:.*//; p }' /etc/passwd | while read -r U
             do
                 U_HOME_DIR=$( realpath ~"$U" )
@@ -238,7 +247,7 @@ case $MODE in
         else
             U_CONFIG_DIR="${HOME}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
 
-            if [ -d "${U_CONFIG_DIR}" ]; then
+            if [ -d "${U_CONFIG_DIR}" ] && ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
                 echo "Removing user config (${U_CONFIG_DIR}) …"
                 rm -rvf "${U_CONFIG_DIR}"
             fi
