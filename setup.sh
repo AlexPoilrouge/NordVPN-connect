@@ -14,6 +14,7 @@ GIT_REMOTE="origin"
 OPT_SHELL_RELOAD=false
 OPT_GITLESS=false
 OPT_UNINSTALL_KEEP_CONFIG_FILE=false
+OPT_EXTENSION_MODE=true
 
 MODE="install"
 
@@ -50,6 +51,9 @@ help() {
     echo ""
     echo -e "\t--keep-config-files"
     echo -e "\t\tdo not remove config files during uninstallation …"
+    echo ""
+    echo -e "\t--no-extension-mode"
+    echo -e "\t\tdo not use the command line gnome shell utilities to manage extension …"
     echo -e "\n---"
     echo "Commands:"
     echo -e "\tinstall"
@@ -61,6 +65,9 @@ help() {
     echo ""
     echo -e "\tupdate"
     echo -e "\t\tupdate the '${EXTENSION_NAME}' extension"
+    echo ""
+    echo -e "\tclean"
+    echo -e "\t\tclean the '${EXTENSION_NAME}' extension of its config files"
 }
 
 
@@ -88,7 +95,7 @@ then
     exit 1;
 fi
  
-if ! OPTS=$( getopt -l help,directory:,remote:,branch:,system-install,gitless,keep-config-files -o h,r,d: -- "$@" );
+if ! OPTS=$( getopt -l help,directory:,remote:,branch:,system-install,gitless,keep-config-files,no-extension-mode -o h,r,d: -- "$@" );
 then
     echo >&2 "Unexpected error while reading options and commands …"
     exit 1
@@ -127,6 +134,9 @@ while true ; do
             shift;
             ;;
         --keep-config-files) OPT_UNINSTALL_KEEP_CONFIG_FILE=true;
+            shift;
+            ;;
+        --no-extension-mode) OPT_EXTENSION_MODE=false
             shift;
             ;;
         --) shift; break;;
@@ -192,7 +202,29 @@ OLD_BRANCH=$( git branch | grep "\*" | cut -d ' ' -f2 )
 
 _install_copy(){
     mkdir -p ${INSTALL_DIR}/${EXTENSION_NAME} ;
-    cp -rvf ./*.md ./*.js ./*json ./*.ui img schemas ./*.css ${INSTALL_DIR}/${EXTENSION_NAME} ;
+    cp -rvf ./*.md ./*.js ./*json ./*.ui img schemas ./*.css ${INSTALL_DIR}/${EXTENSION_NAME} ./setup.sh;
+}
+
+remove_config_files(){
+    if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]]; then
+        sed -n '/^\([^:]\+\):[^:]\+:[1-9][0-9]\{3\}/ { s/:.*//; p }' /etc/passwd | while read -r U
+        do
+            U_HOME_DIR=$( realpath ~"$U" )
+            U_CONFIG_DIR="${U_HOME_DIR}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
+
+            if [ -d "${U_CONFIG_DIR}" ]; then
+                echo "Removing config for user $U (${U_CONFIG_DIR}) …"
+                rm -rvf "${U_CONFIG_DIR}"
+            fi
+        done
+    else
+        U_CONFIG_DIR="${HOME}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
+
+        if [ -d "${U_CONFIG_DIR}" ]; then
+            echo "Removing user config (${U_CONFIG_DIR}) …"
+            rm -rvf "${U_CONFIG_DIR}"
+        fi
+    fi
 }
 
 case $MODE in
@@ -214,11 +246,15 @@ case $MODE in
             git checkout "$OLD_BRANCH" ;
         fi
 
-        gnome-extensions enable ${EXTENSION_NAME}
+        if $OPT_EXTENSION_MODE; then
+            gnome-extensions enable ${EXTENSION_NAME}
+        fi
 
         ;;
     uninstall) echo "Uninstalling ${EXTENSION_NAME} …"
-        gnome-extensions disable ${EXTENSION_NAME}
+        if $OPT_EXTENSION_MODE; then
+            gnome-extensions disable ${EXTENSION_NAME}
+        fi
 
         if [[ "${INSTALL_DIR}/${EXTENSION_NAME}" == "${SCRIPT_DIR_PATH}" ]]; then
             echo "WARNING! the install directory is also the same as this directory (and therefore probably the source directory and the git repository)!!!"
@@ -233,24 +269,8 @@ case $MODE in
             rm -rfv "${INSTALL_DIR:?}"/"${EXTENSION_NAME}"
         fi
 
-        if [[ "${INSTALL_DIR}" == "${SYSTEM_INSTALL_DIR}" ]] && ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
-            sed -n '/^\([^:]\+\):[^:]\+:[1-9][0-9]\{3\}/ { s/:.*//; p }' /etc/passwd | while read -r U
-            do
-                U_HOME_DIR=$( realpath ~"$U" )
-                U_CONFIG_DIR="${U_HOME_DIR}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
-
-                if [ -d "${U_CONFIG_DIR}" ]; then
-                    echo "Removing config for user $U (${U_CONFIG_DIR}) …"
-                    rm -rvf "${U_CONFIG_DIR}"
-                fi
-            done
-        else
-            U_CONFIG_DIR="${HOME}/${NVPN_C_CONFIG_HOME_RELATIVE_PATH}"
-
-            if [ -d "${U_CONFIG_DIR}" ] && ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
-                echo "Removing user config (${U_CONFIG_DIR}) …"
-                rm -rvf "${U_CONFIG_DIR}"
-            fi
+        if ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
+            remove_config_files;
         fi
 
         ;;
@@ -271,8 +291,18 @@ case $MODE in
             git checkout "$OLD_BRANCH" ;
         fi
 
-        gnome-extensions reload ${EXTENSION_NAME}
 
+        if $OPT_EXTENSION_MODE; then
+            gnome-extensions reload ${EXTENSION_NAME}
+        fi
+
+        ;;
+    clean) echo "Cleaning ${EXTENSION_NAME} …"
+        if ! $OPT_UNINSTALL_KEEP_CONFIG_FILE; then
+            remove_config_files;
+        else
+            echo "The 'clean' command is incompatible with the '--keep-config-files' option …"
+        fi
         ;;
     *) echo >&2 "$1 isn't a viable command …";;
 esac
