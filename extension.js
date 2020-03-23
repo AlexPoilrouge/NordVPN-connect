@@ -675,8 +675,7 @@ class NVPNMenu extends PanelMenu.Button{
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
 
-    this.label_action_btn= new St.Label({style_class: 'label-action-btn', text: _("Quick Connect")});
-    this.action_button= new St.Button({style_class: 'nvpn-action-button', child:this.label_action_btn});
+    this.action_button= new St.Button({style_class: 'nvpn-action-button', label: _("Quick Connect") });
 
     /** saving this id for later disconnection of the signal during object's destruction */
     this._id_c_btn1= this.action_button.connect('clicked', this._button_clicked.bind(this));
@@ -1027,7 +1026,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.label_connection.text= "--";
 
       this.action_button.style_class= 'nvpn-action-button-help';
-      this.label_action_btn.text= _("Help?");
+      this.action_button.label= _("Help?");
 
       this._panel_hbox.style_class='panel-status-menu-hbox-problem';
       this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
@@ -1046,7 +1045,7 @@ class NVPNMenu extends PanelMenu.Button{
 
       this.label_connection.text= "- "+this.server_info.serverName+" -";
       this.action_button.style_class= 'nvpn-action-button-dq';
-      this.label_action_btn.text= _("Disconnect");
+      this.action_button.label= _("Disconnect");
 
       this._panel_hbox.style_class='panel-status-menu-hbox-connected';
       this._panel_icon.icon_name= 'network-vpn-symbolic';
@@ -1068,7 +1067,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.label_connection.text= "--";
 
       this.action_button.style_class= 'nvpn-action-button';
-      this.label_action_btn.text= _("Quick Connect (default)");
+      this.action_button.label= _("Quick Connect (default)");
 
       this._panel_hbox.style_class='panel-status-menu-hbox';
       this._panel_icon.icon_name= 'action-unavailable-symbolic';

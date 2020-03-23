@@ -148,7 +148,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
         text: this.placeName.replace(/_/gi,' ')}
       );
 
-      this.actor.add(label_item);
+      this.actor.add(label_item, {expand: true});
       this.checkIcon.hide();
 
       this._groupSelect=false;
@@ -158,7 +158,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
       if(type===LOCATION_TYPE.GROUP){
     
         let btnIcon = new St.Icon({ icon_name: 'emoji-flags-symbolic',
-                                   style_class: 'system-status-icon' });
+                                   style_class: 'system-status-icon nvpn-submenu-icon' });
     
         this._button= new St.Button({
               child: btnIcon,
@@ -169,7 +169,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
         });
     
         this._statusBin = new St.Bin({ x_align: St.Align.END, });
-        this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+        this.actor.add(this._statusBin, { x_align: St.Align.END });
         this._statusBin.child= this._button;
 
         this._idc1= this._button.connect('clicked', () => {
@@ -633,13 +633,13 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
   _init(servName, infos){
     super._init({style_class: 'server-fav',});
     this.tLabel= new St.Label({text: servName+" - "+infos.slice(0,13)+((infos.length>13)?'…':'')});
-    this.actor.add(this.tLabel, {expand: true, x_fill: false});
+    this.actor.add(this.tLabel, {expand: true});
 
     this._servName= servName;
     this._infos= infos;
     
     let btnIcon = new St.Icon({ icon_name: 'edit-delete-symbolic',
-                               style_class: 'system-status-icon' });
+                               style_class: 'system-status-icon nvpn-submenu-icon' });
 
     this._button= new St.Button({
           child: btnIcon,
@@ -650,7 +650,7 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
     });
 
     this._statusBin = new St.Bin({ x_align: St.Align.END, });
-    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    this.actor.add(this._statusBin, { x_align: St.Align.END });
     this._statusBin.child= this._button;
 
     /** signal 'delete-fav' is emmited when the delete button is clicked */
@@ -917,13 +917,13 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
       style_class: 'recent-location-label' +((isPin)?' pinned':''),
       text: location.replace(/_/gi,' ')
     });
-    this.actor.add(this.tLabel, {expand: true, x_fill: false});
+    this.actor.add(this.tLabel, {expand: true});
 
     this._location= location;
     this._pin= isPin;
     
     let btnIcon = new St.Icon({ icon_name: (isPin)?'zoom-out-symbolic':'view-pin-symbolic',
-                               style_class: 'system-status-icon' });
+                               style_class: 'system-status-icon nvpn-submenu-icon' });
 
     this._button= new St.Button({
           child: btnIcon,
@@ -934,7 +934,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
     });
 
     this._statusBin = new St.Bin({ x_align: St.Align.MIDDLE, });
-    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.MIDDLE });
+    this.actor.add(this._statusBin, { x_align: St.Align.MIDDLE });
     this._statusBin.child= this._button;
 
     /** signal 'unpin'/'pin' is emmited when the pin button is clicked */
@@ -1660,8 +1660,7 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
         this/*.actor*/.reactive= false;
 
         this.label = new St.Label({ text: text, });
-        this/*.actor*/.label_actor= this.label;
-        this/*.actor*/.add_child(this.label);
+        this.actor.add(this.label, {expand: true});
         this/*.actor*/.accessible_role = Atk.Role.CHECK_MENU_ITEM;
 
         this._switch= new PopupMenu.Switch(true);
@@ -1670,7 +1669,7 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
         this._switch/*.actor*/.active= true;
 
         this._statusBin = new St.Bin({ x_align: St.Align.END });
-        this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+        this.actor.add(this._statusBin, { x_align: St.Align.END });
         this._statusBin.child= this._switch/*.actor*/;
 
         this._c_id= this._switch/*.actor*/.connect('button-press-event', this.toggle.bind(this));
@@ -1708,7 +1707,7 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
      *  @param {boolean} state - the new state
      */
     setToggleState(state) {
-        this._switch.setToggleState(state);
+        this._switch.state= state;
     }
 
     /** Generic method to change state
@@ -1750,7 +1749,7 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
 
         let label= new St.Label({ text: text });
         this.actor.label_actor= label;
-        this.actor.add_child(label);
+        this.actor.add(label, {expand: true});
         this.actor.reactive= false;
 
         this._options= options;
@@ -1896,9 +1895,9 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
 
     this.actor.reactive= false;
 
-    this.label = new St.Label({ text: text, });
+    this.label = new St.Label({ text: text});
     this.actor.label_actor= this.label;
-    this.actor.add_child(this.label);
+    this.actor.add(this.label);
 
     /** this attribute allows to save the previous entered text,
      *  so that, if the user types something indalid, the text can
@@ -1913,9 +1912,10 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
       text: this._oldText,
       track_hover: true,
     });
-    this._statusBin = new St.Bin({x_fill: true, x_align: St.Align.END });
-    this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
-    this._statusBin.child= this.entry;
+    // this._statusBin = new St.Bin({x_fill: true, x_align: St.Align.END });
+    // this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+    // this._statusBin.child= this.entry;
+    this.actor.add(this.entry, {expand: true});
 
     /** When ever the user enter's new text… */
     this._idc1= this.entry.get_clutter_text().connect('text-changed', (txt) =>
