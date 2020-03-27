@@ -432,7 +432,7 @@ class NVPNMenu extends PanelMenu.Button{
    * @method
    */
   _init(){
-    super._init(0.0, _("NordVPN"));
+    super._init(0.0, _("NordVPN"), false);
 
     /** Create and init the gSettings's core commands manager*/
     this._cmd= new Core_CMDs(this);
@@ -663,25 +663,26 @@ class NVPNMenu extends PanelMenu.Button{
 
 
 
-    this.menu.addMenuItem(this._main_menu,0);
+    this.menu.addMenuItem(this._main_menu, 0);
     /** adding a sperator int his menu to separate the 'information display' part
      *  from the 'connection interface' part*/
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
     /** creating the menu item that contains the 'connection' menu button */
     let _itemCurrent2 = new PopupMenu.PopupBaseMenuItem({
-            reactive: false
+            reactive: false,
+            can_focus: false
         });
     let vbox2= new St.BoxLayout({style_class: 'nvpn-menu-vbox2'});
     vbox2.set_vertical(true);
 
-    this.action_button= new St.Button({style_class: 'nvpn-action-button', label: _("Quick Connect") });
+    this.action_button= new St.Button({style_class: 'nvpn-action-button', label: _("Quick Connect")});
 
     /** saving this id for later disconnection of the signal during object's destruction */
     this._id_c_btn1= this.action_button.connect('clicked', this._button_clicked.bind(this));
     vbox2.add_child(this.action_button);
 
-    _itemCurrent2.actor.add(vbox2, { expand: true });
+    _itemCurrent2.actor.add(vbox2, { expand: true});
     this.menu.addMenuItem(_itemCurrent2);
 
     /** Adding the menu item that displays a message when the CLI tool version
@@ -748,9 +749,6 @@ class NVPNMenu extends PanelMenu.Button{
     /** call to the private method '_vpn_survey()' to start "the monitoring loop "
      *  that update the ui in case of a 'norvdpn' tool state change */
     this._vpn_survey();
-
-    this.menu.actor.width= hbox3.get_preferred_width(-1)[1]+
-                            this._submenuServer.menu.actor.get_preferred_width(-1)[1];
 
     /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/
     this._unregister_next_connexion= false;
