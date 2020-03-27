@@ -97,7 +97,9 @@ This tool has been tested on '*Archlinux*', with '*GNOME Shell 3.32.0*' and the 
 
 This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.32.1' and the *'nordvpn' CLI tool version 3.0.0-4*, for commits before (and including) commit `099034f172582f5077ec1018f38aaa3ef908586c`.
 
-This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.34.0' and the *'nordvpn' CLI tool version 3.3.1-3*, for later commits.
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.34.0' and the *'nordvpn' CLI tool version 3.3.1-3*, for before (and including) commit `b009a83b298fbce6ab88a9371b8904f29a88cb31`.
+
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.36.0' and the *'nordvpn' CLI tool version 3.7.0-2*, for later commits.
 
 
 ###### Install
