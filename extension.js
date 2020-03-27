@@ -750,6 +750,14 @@ class NVPNMenu extends PanelMenu.Button{
      *  that update the ui in case of a 'norvdpn' tool state change */
     this._vpn_survey();
 
+    var max= Math.max(this.menu.actor.width,
+      this._submenuServer.menu.actor.width,
+      this._submenuPlaces.menu.actor.width,
+      this._submenuOptions.menu.actor.width
+    );
+    this.menu.actor.width=max
+
+
     /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/
     this._unregister_next_connexion= false;
   }
