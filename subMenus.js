@@ -1749,13 +1749,13 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
 
         let label= new St.Label({ text: text });
         this.actor.label_actor= label;
-        this.actor.add(label, {expand: true});
+        this.actor.add(label);
         this.actor.reactive= false;
 
         this._options= options;
         this._iterator= 0;
 
-        this._btnLabel= new St.Label({text: this._options[this._iterator],});
+        this._btnLabel= new St.Label({text: this._options[this._iterator]});
 
         this._button= new St.Button({
                   child: this._btnLabel,
@@ -1767,7 +1767,7 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
         this._button.set_toggle_mode(true);
 
         this._statusBin = new St.Bin({ x_align: St.Align.END, });
-        this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
+        this.actor.add(this._statusBin, { x_fill: false, expand: true, x_align: St.Align.END });
         this._statusBin.child= this._button;
 
         this._idC= this._button.connect('clicked', this._toggleBtn.bind(this));
@@ -2357,7 +2357,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
     
     this._panel_hbox= new St.BoxLayout();
     let label1= new St.Label({style_class:'dns-cybersec-warning',});
-    label1.text= "Note: Setting DNS disables CyberSec and vice versa.";
+    label1.text= "Note: Setting DNS disables\n\tCyberSec and vice versa.";
     label1.get_clutter_text().set_line_wrap(true);
 
     this._panel_hbox.add_child(label1);

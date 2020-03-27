@@ -755,7 +755,7 @@ class NVPNMenu extends PanelMenu.Button{
       this._submenuPlaces.menu.actor.width,
       this._submenuOptions.menu.actor.width
     );
-    this.menu.actor.width=max
+    this.menu.actor.width=hbox3.actor.width + max;
 
 
     /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/
