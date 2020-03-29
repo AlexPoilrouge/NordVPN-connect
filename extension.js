@@ -463,7 +463,8 @@ class NVPNMenu extends PanelMenu.Button{
     this._panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
     /** the icon in the top panel area (may change according to current status)*/
     this._panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
-                               style_class: 'system-status-icon' });
+                                      style_class: 'system-status-icon',
+                                      icon_size: 18 });
     this._panel_hbox.add(this._panel_icon);
 
     /** 'NVPN' panel text label*/
