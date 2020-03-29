@@ -4,6 +4,8 @@
   border-radius: 5px;
 }
 
+.nvpn-status-icon{}
+
 .panel-status-menu-hbox-connected{
   background-color: rgba(10,130,10,0.6);
   border-radius: 5px;

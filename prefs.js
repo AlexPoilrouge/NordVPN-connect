@@ -29,6 +29,7 @@ class NVPN_Settings{
             NVPN_Sett_Grid: null,
             NVPN_Sett_Toggle_Compact: null,
             NVPN_Sett_Label_Compact: null,
+            NVPN_Sett_Toggle_Color: null,
             NVPN_Sett_Spin_Refresh: null,
             NVPN_Sett_Label_Refresh: null,
             NVPN_Sett_Toggle_Version: null,
@@ -61,6 +62,7 @@ class NVPN_Settings{
         }
 
         this._id_compact_toggle= null;
+        this._id_color_toggle= null;
         this._id_delay_change= null;
         this._id_version_check_toggle= null;
         this._id_server_option_reconnect= null;
@@ -83,6 +85,10 @@ class NVPN_Settings{
         if(this._id_compact_toggle){
             this._objects.NVPN_Sett_Toggle_Compact.disconnect(this._id_compact_toggle);
             this._id_compact_toggle= null;
+        }
+        if(this._id_color_toggle){
+            this._objects.NVPN_Sett_Toggle_Color.disconnect(this._id_color_toggle);
+            this._id_color_toggle= null;
         }
         if(this._id_delay_change){
             this._objects.NVPN_Sett_Spin_Refresh.disconnect(this._id_delay_change);
@@ -172,6 +178,7 @@ class NVPN_Settings{
      */
     _initFromSettings(){
         this._objects.NVPN_Sett_Toggle_Compact.set_state(SETTINGS.get_boolean('compact-icon'));
+        this._objects.NVPN_Sett_Toggle_Color.set_state(SETTINGS.get_boolean('colored-status'));
         this._objects.NVPN_Sett_Spin_Refresh.set_value(SETTINGS.get_int('refresh-delay'));
         this._objects.NVPN_Sett_Toggle_Version.set_state(SETTINGS.get_boolean('version-check'));
         this._objects.NVPN_Sett_Toggle_Option_Reconnect.set_state(SETTINGS.get_boolean('settings-change-reconnect'));
@@ -191,6 +198,15 @@ class NVPN_Settings{
             );
         this.SETT_SIGS[0]= SETTINGS.connect('changed::compact-icon', ()=>{
             this._objects.NVPN_Sett_Toggle_Compact.set_state(SETTINGS.get_boolean('compact-icon'));
+        });
+
+        this._id_color_toggle=
+            this._objects.NVPN_Sett_Toggle_Color.connect(
+                "state-set",
+                Lang.bind(this, this._sig_Color_state_set)
+            );
+        this.SETT_SIGS[7]= SETTINGS.connect('changed::colored-status', ()=>{
+            this._objects.NVPN_Sett_Toggle_Color.set_state(SETTINGS.get_boolean('colored-status'));
         });
 
         this._id_delay_change=
@@ -308,6 +324,10 @@ class NVPN_Settings{
 
     _sig_Compact_state_set(item, state, user_data){
         SETTINGS.set_boolean('compact-icon', state);
+    }
+
+    _sig_Color_state_set(item, state, user_data){
+        SETTINGS.set_boolean('colored-status', state);
     }
 
     _sig_Version_check_set(item, state, user_data){

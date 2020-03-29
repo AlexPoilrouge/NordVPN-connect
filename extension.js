@@ -458,12 +458,36 @@ class NVPNMenu extends PanelMenu.Button{
     //unused
     this._transition_time_out= 0;
 
+
+    /** should the status be colored according to the goption 'colored-status' */
+    this._b_colored_status= SETTINGS.get_boolean('colored-status');
+    this.SETT_SIGS[4]= SETTINGS.connect('changed::colored-status', () => {
+      this._b_colored_status= SETTINGS.get_boolean('colored-status');
+      log("nordvpn this._b_colored_status: "+this._b_colored_status);
+      switch(this.currentStatus){
+        case NVPNMenu.STATUS.DAEMON_DOWN:
+        case NVPNMenu.STATUS.LOGGED_OUT:
+        case NVPNMenu.STATUS.NOT_FOUND:    
+          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-problem':'panel-status-menu-hbox';    
+          break;
+        case NVPNMenu.STATUS.CONNECTED:
+          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-connected':'panel-status-menu-hbox';
+          break;
+        case NVPNMenu.STATUS.DISCONNECTED:
+        case NVPNMenu.STATUS.TRANSITION:
+        default:
+          this._panel_hbox.style_class='panel-status-menu-hbox';
+          break;
+        }
+    });
+
+
     /** this private member is the horyzontal layout box contaning the server indicator
      * in the panel area*/
     this._panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
     /** the icon in the top panel area (may change according to current status)*/
     this._panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
-                               style_class: 'system-status-icon' });
+                               style_class: 'system-status-icon nvpn-status-icon' });
     this._panel_hbox.add(this._panel_icon);
 
     /** 'NVPN' panel text label*/
@@ -1793,7 +1817,7 @@ function enable() {
   
   /** creating main object and attaching it to the top pannel */
   _indicator= new NVPNMenu;
-  Main.panel.addToStatusArea('nvpn-menu', _indicator);
+  Main.panel.addToStatusArea('nvpn-menu', _indicator, 0);
 }
 
 /**

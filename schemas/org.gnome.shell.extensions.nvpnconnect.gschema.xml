@@ -8,6 +8,11 @@
             <summary>if true just icon on pannel</summary>
             <description>Display just the icon in top pannel (without 'NVPN')</description>
         </key>
+        <key type="b" name="colored-status">
+            <default>true</default>
+            <summary>if true icon colored in status bar when connected</summary>
+            <description>Display color in the top status bar</description>
+        </key>
         <key type="i" name="refresh-delay">
             <range min="1" max="60"/>
             <default>2</default>
