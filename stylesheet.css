@@ -84,7 +84,7 @@
 }
 
 .nvpn-action-button:hover{
-  background-color: rgba(10,255,10,0.6)
+  background-color: rgba(10,180,10,0.6)
 }
 
 .nvpn-action-button:active{
@@ -106,7 +106,7 @@
 }
 
 .nvpn-action-button-dq:hover{
-  background-color: rgba(255,10,10,0.6)
+  background-color: rgba(180,10,10,0.6)
 }
 
 .nvpn-action-button-dq:active{
