@@ -476,7 +476,7 @@ class NVPNMenu extends PanelMenu.Button{
         case NVPNMenu.STATUS.DISCONNECTED:
         case NVPNMenu.STATUS.TRANSITION:
         default:
-          this._panel_hbox.style_class='panel-status-menu-hbox';
+          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-transition':'panel-status-menu-hbox';
           break;
         }
     });
@@ -1170,7 +1170,7 @@ class NVPNMenu extends PanelMenu.Button{
       /** menu is closed (if opened) */
       this.menu.close();
       this._panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
-      this._panel_hbox.style_class='panel-status-menu-hbox';
+      this._panel_hbox.style_class='panel-status-menu-hbox-transition';
   }
 
   /**

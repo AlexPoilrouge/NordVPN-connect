@@ -6,6 +6,12 @@
 
 .nvpn-status-icon{}
 
+.panel-status-menu-hbox-transition{
+  background-color: rgba(200,150,30,0.6);
+  border-radius: 5px;
+  font-size: 15px;
+}
+
 .panel-status-menu-hbox-connected{
   background-color: rgba(10,130,10,0.6);
   border-radius: 5px;
@@ -13,7 +19,7 @@
 }
 
 .panel-status-menu-hbox-problem{
-  background-color: rgba(200,150,30,0.6);
+  background-color: rgba(130, 10, 10, 0.6);
   border-radius: 5px;
   font-size: 15px;
 }
