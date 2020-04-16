@@ -37,6 +37,15 @@
     icon-size: 15px;
 }
 
+.system-menu-action{
+  border-width: 1px;
+}
+
+.system-menu-action:hover{
+  border-color: transparent;
+  border-width: 1px;
+}
+
 .groups-submenu-label-item{
   font-style: italic;
 }
