@@ -486,7 +486,7 @@ class NVPNMenu extends PanelMenu.Button{
      * in the panel area*/
     this._panel_hbox= new St.BoxLayout({style_class: 'panel-status-menu-hbox'});
     /** the icon in the top panel area (may change according to current status)*/
-    this._panel_icon = new St.Icon({ icon_name: 'action-unavailable-symbolic',
+    this._panel_icon = new St.Icon({ icon_name: 'network-vpn-offline-symbolic',
                                style_class: 'system-status-icon nvpn-status-icon' });
     this._panel_hbox.add(this._panel_icon);
 
@@ -600,7 +600,7 @@ class NVPNMenu extends PanelMenu.Button{
      */
     let hbox3= new St.BoxLayout();
 
-    let ic0= new St.Icon({icon_name:'find-location-symbolic'});
+    let ic0= new St.Icon({icon_name:'mark-location-symbolic'});
     this.v3_button0= new St.Button({
 			reactive: true,
 			can_focus: true,
@@ -618,7 +618,7 @@ class NVPNMenu extends PanelMenu.Button{
       child:ic1});
     hbox3.add_child(this.v3_button1);
 
-    let ic2= new St.Icon({icon_name:'view-more-symbolic'});
+    let ic2= new St.Icon({icon_name:'settings-symbolic'});
     this.v3_button2= new St.Button({
 			reactive: true,
 			can_focus: true,
@@ -1100,7 +1100,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.label= _("Quick Connect (default)");
 
       this._panel_hbox.style_class='panel-status-menu-hbox';
-      this._panel_icon.icon_name= 'action-unavailable-symbolic';
+      this._panel_icon.icon_name= 'network-vpn-offline-symbolic';
 
       this._submenusVisible(true);
       /** call to the 'unselect_no_cb()' private method to clear the country server connection menu
