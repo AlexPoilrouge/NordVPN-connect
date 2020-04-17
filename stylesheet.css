@@ -6,6 +6,12 @@
 
 .nvpn-status-icon{}
 
+.panel-status-menu-hbox-transition{
+  background-color: rgba(200,150,30,0.6);
+  border-radius: 5px;
+  font-size: 15px;
+}
+
 .panel-status-menu-hbox-connected{
   background-color: rgba(10,130,10,0.6);
   border-radius: 5px;
@@ -13,7 +19,7 @@
 }
 
 .panel-status-menu-hbox-problem{
-  background-color: rgba(200,150,30,0.6);
+  background-color: rgba(130, 10, 10, 0.6);
   border-radius: 5px;
   font-size: 15px;
 }
@@ -29,6 +35,15 @@
 
 .countries_submenu_label_item_selected_icon {
     icon-size: 15px;
+}
+
+.system-menu-action{
+  border-width: 1px;
+}
+
+.system-menu-action:hover{
+  border-color: transparent;
+  border-width: 1px;
 }
 
 .groups-submenu-label-item{
@@ -47,7 +62,7 @@
 .sub-menu-btn{
   margin-left:0.5em;
   margin-right:0.5em;
-  padding: 3px;
+  padding: 12px;
 }
 
 .sub-menu-btn:hover{
@@ -69,7 +84,7 @@
 }
 
 .nvpn-action-button:hover{
-  background-color: rgba(10,255,10,0.6)
+  background-color: rgba(10,180,10,0.6)
 }
 
 .nvpn-action-button:active{
@@ -91,7 +106,7 @@
 }
 
 .nvpn-action-button-dq:hover{
-  background-color: rgba(255,10,10,0.6)
+  background-color: rgba(180,10,10,0.6)
 }
 
 .nvpn-action-button-dq:active{

@@ -474,9 +474,11 @@ class NVPNMenu extends PanelMenu.Button{
           this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-connected':'panel-status-menu-hbox';
           break;
         case NVPNMenu.STATUS.DISCONNECTED:
+          this._panel_hbox.style_class='panel-status-menu-hbox';
+          break;
         case NVPNMenu.STATUS.TRANSITION:
         default:
-          this._panel_hbox.style_class='panel-status-menu-hbox';
+          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-transition':'panel-status-menu-hbox';
           break;
         }
     });
@@ -491,10 +493,10 @@ class NVPNMenu extends PanelMenu.Button{
     this._panel_hbox.add(this._panel_icon);
 
     /** 'NVPN' panel text label*/
-    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel', text: 'NVPN ',});
-    this.label_nvpn.visible= !(SETTINGS.get_boolean('compact-icon'));
+    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel'});
+    this.label_nvpn.text= (SETTINGS.get_boolean('compact-icon')) ? ' ' : 'NVPN ';
     this.SETT_SIGS[0]= SETTINGS.connect('changed::compact-icon', () => {
-      this.label_nvpn.visible= (!SETTINGS.get_boolean('compact-icon'));
+      this.label_nvpn.text= (SETTINGS.get_boolean('compact-icon')) ? ' ' : 'NVPN ';
     });
     this._panel_hbox.add(this.label_nvpn, {y_fill: false, y_align: St.Align.MIDDLE});
     this.add_child(this._panel_hbox);
@@ -600,7 +602,7 @@ class NVPNMenu extends PanelMenu.Button{
      */
     let hbox3= new St.BoxLayout();
 
-    let ic0= new St.Icon({icon_name:'find-location-symbolic'});
+    let ic0= new St.Icon({icon_name:'mark-location-symbolic'});
     this.v3_button0= new St.Button({
 			reactive: true,
 			can_focus: true,
@@ -1170,7 +1172,7 @@ class NVPNMenu extends PanelMenu.Button{
       /** menu is closed (if opened) */
       this.menu.close();
       this._panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
-      this._panel_hbox.style_class='panel-status-menu-hbox';
+      this._panel_hbox.style_class='panel-status-menu-hbox-transition';
   }
 
   /**
