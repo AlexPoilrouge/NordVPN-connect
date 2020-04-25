@@ -1060,7 +1060,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-help';
       this.action_button.label= _("Help?");
 
-      this._panel_hbox.style_class='panel-status-menu-hbox-problem';
+      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-problem':'panel-status-menu-hbox';
       this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
       /** submenus hidden */
@@ -1079,7 +1079,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-dq';
       this.action_button.label= _("Disconnect");
 
-      this._panel_hbox.style_class='panel-status-menu-hbox-connected';
+      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-connected':'panel-status-menu-hbox';
       this._panel_icon.icon_name= 'network-vpn-symbolic';
 
       /** enbales the submenus to show*/
@@ -1172,7 +1172,7 @@ class NVPNMenu extends PanelMenu.Button{
       /** menu is closed (if opened) */
       this.menu.close();
       this._panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
-      this._panel_hbox.style_class='panel-status-menu-hbox-transition';
+      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-transition':'panel-status-menu-hbox';
   }
 
   /**
