@@ -103,7 +103,7 @@ class NVPN_Settings{
             this._id_server_option_reconnect= null;
         }
         if(this._id_recent_capacity_change){
-            this._objects.NVPN_Sett_Spin_Recent_Cap.disconnect();
+            this._objects.NVPN_Sett_Spin_Recent_Cap.disconnect(this._id_recent_capacity_change);
             this._id_recent_capacity_change= null;
         }
         if(this._id_distinguish_groups_recent){
@@ -111,7 +111,7 @@ class NVPN_Settings{
             this._id_distinguish_groups_recent= null;
         }
         if(this._id_target_mode_select){
-            this._objects.NVPN_Sett_TxtCombo_Target_Mode.disconnect();
+            this._objects.NVPN_Sett_TxtCombo_Target_Mode.disconnect(this._id_target_mode_select);
             this._id_target_mode_select= null;
         }
         if(_id_cmd_change_triggering){
