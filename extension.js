@@ -786,6 +786,8 @@ class NVPNMenu extends PanelMenu.Button{
 
     /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/
     this._unregister_next_connexion= false;
+
+    this._vpn_check_stop= false;
   }
 
   /**
@@ -793,6 +795,12 @@ class NVPNMenu extends PanelMenu.Button{
    *  @method
    */
   _onDestroy(){
+    this._vpn_check_stop= true;
+    if(this._vpn_timeout){
+      Mainloop.source_remove(this._vpn_timeout);
+      this._vpn_timeout= null;
+    }
+
     this.disconnect(this._id_c_click1);
     this._id_c_click1= 0;
 
@@ -1578,7 +1586,9 @@ class NVPNMenu extends PanelMenu.Button{
     //}
 
     /** recall itself, creating a separate loop, in 2 second (=timeout) */
-    this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
+    if(!this._vpn_check_stop){
+      this._vpn_timeout= Mainloop.timeout_add_seconds(this._refresh_delay,this._vpn_survey.bind(this));
+    }
   }
 
   /**
@@ -1802,6 +1812,7 @@ class NVPNMenu extends PanelMenu.Button{
  * @function
  */
 function init() {
+  log('[nvpn] init()')
     Convenience.initTranslations();
 }
 
@@ -1812,6 +1823,7 @@ let _indicator;
  * @function
  */
 function enable() {
+  log('[nvpn] enable()')
   /** Iniating the gSettings access */
   SETTINGS = Convenience.getSettings();
 
@@ -1827,6 +1839,7 @@ function enable() {
  * @function
  */
 function disable() {
+  log('[nvpn] disable()')
   /** destruction of the main object */
   _indicator.destroy();
 }

@@ -46,6 +46,10 @@
   border-width: 1px;
 }
 
+.countries-submenu-label-item{
+  font-style: normal;
+}
+
 .groups-submenu-label-item{
   font-style: italic;
 }
