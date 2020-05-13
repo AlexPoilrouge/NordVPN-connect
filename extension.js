@@ -1812,8 +1812,7 @@ class NVPNMenu extends PanelMenu.Button{
  * @function
  */
 function init() {
-  log('[nvpn] init()')
-    Convenience.initTranslations();
+  Convenience.initTranslations();
 }
 
 let _indicator;
@@ -1823,7 +1822,6 @@ let _indicator;
  * @function
  */
 function enable() {
-  log('[nvpn] enable()')
   /** Iniating the gSettings access */
   SETTINGS = Convenience.getSettings();
 
@@ -1839,7 +1837,6 @@ function enable() {
  * @function
  */
 function disable() {
-  log('[nvpn] disable()')
   /** destruction of the main object */
   _indicator.destroy();
 }
