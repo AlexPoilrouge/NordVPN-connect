@@ -43,8 +43,8 @@ const NORDVPN_TOOL_EXPECTED_VERSION= "3.4";
  *                              2 for stderr.
  * @returns {string} the stddout of the command's exectuion as a string
  */
-function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
-  let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
+function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1, locale="en_US.UTF-8"){
+  let command= (shell)? ('LANG=' + locale + ' ' + shell + " -c \""+ cmd + "\"") : cmd;
   return ByteArray.toString(GLib.spawn_command_line_sync(command)[(descriptor>=2)?2:1]);
 }
 
