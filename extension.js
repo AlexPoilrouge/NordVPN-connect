@@ -30,7 +30,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.4";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.7";
 
 
 /**
@@ -43,8 +43,9 @@ const NORDVPN_TOOL_EXPECTED_VERSION= "3.4";
  *                              2 for stderr.
  * @returns {string} the stddout of the command's exectuion as a string
  */
-function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1){
-  let command= (shell)? (shell + " -c \""+ cmd + "\"") : cmd;
+function COMMAND_LINE_SYNC(cmd, shell="/bin/bash", descriptor=1, locale="en_US.UTF-8"){
+  let _cmd= (Boolean(shell) && Boolean(locale))? "LANG="+locale+"; "+cmd : cmd;
+  let command= (Boolean(shell))? (shell + " -c \""+ _cmd + "\"") : _cmd;
   return ByteArray.toString(GLib.spawn_command_line_sync(command)[(descriptor>=2)?2:1]);
 }
 
@@ -156,7 +157,7 @@ class ServerInfos{
 
     lines.forEach( (line)=>{
         var r= null;
-        if( (r=/^[Ss]tatus:\s*(.*)$/.exec(line)) && r.length>1 ){
+        if( (r=/[Ss]tatus:\s*(.*)$/.exec(line)) && r.length>1 ){
           this._connected= r[1].match(/[Cc]onnected/)!=null;
         }
         else if( (r=/^[Cc]urrent\s*[Ss]erver:\s*(.*)$/.exec(line)) && r.length>1 ){
@@ -1150,6 +1151,7 @@ class NVPNMenu extends PanelMenu.Button{
     if(updateData){
       this._update_server_info();
     }
+
 
     this._location_label.text= '* '+this.server_info.city+' ,'+this.server_info.country+' *';
     this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.');
