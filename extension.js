@@ -4,7 +4,6 @@ const Main = imports.ui.main;
 const Panel = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const Tweener = imports.ui.tweener;
 
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
@@ -494,12 +493,13 @@ class NVPNMenu extends PanelMenu.Button{
     this._panel_hbox.add(this._panel_icon);
 
     /** 'NVPN' panel text label*/
-    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel'});
+    this.label_nvpn= new St.Label({style_class: 'label-nvpn-panel', y_align: St.Align.END});
     this.label_nvpn.text= (SETTINGS.get_boolean('compact-icon')) ? ' ' : 'NVPN ';
     this.SETT_SIGS[0]= SETTINGS.connect('changed::compact-icon', () => {
       this.label_nvpn.text= (SETTINGS.get_boolean('compact-icon')) ? ' ' : 'NVPN ';
     });
-    this._panel_hbox.add(this.label_nvpn, {y_fill: false, y_align: St.Align.MIDDLE});
+    this.label_nvpn.y_fill= false;
+    this._panel_hbox.add(this.label_nvpn)
     this.add_child(this._panel_hbox);
 
     /** saving this idea for later disconnection of the signal during object's destruction */
@@ -546,6 +546,9 @@ class NVPNMenu extends PanelMenu.Button{
     let vbox= new St.BoxLayout({style_class: 'nvpn-menu-vbox'});
     vbox.set_vertical(true);
     let hbox2= new St.BoxLayout({style_class: 'nvpn-menu-hbox'});
+    hbox2.x_expand= true;
+    hbox2.x_fill= true;
+    hbox2.x_align= St.Align.END
     let label1= new St.Label({style_class: 'label-nvpn-menu', text: _("NordVPN")});
 
     hbox2.add_child(label1);
@@ -556,6 +559,10 @@ class NVPNMenu extends PanelMenu.Button{
     /** this private member is the text label that will display the current nordvpn connected
      * server name */
     this.label_connection= new St.Label({style_class: 'label-nvpn-connection', text: '--'});
+    
+    this.label_connection.x_expand= true;
+    this.label_connection.x_fill= true;
+    this.label_connection.x_align= St.Align.END
 
 
     hbox2.add_child(this._label_status);
@@ -563,7 +570,8 @@ class NVPNMenu extends PanelMenu.Button{
     vbox.add_child(hbox2);
     vbox.add_child(this.label_connection);
 
-    this._main_menu.actor.add(vbox, {expand: true, x_fill: false});
+    vbox.x_expand= true;
+    this._main_menu.actor.add(vbox)
 
 
 
@@ -589,7 +597,10 @@ class NVPNMenu extends PanelMenu.Button{
       reactive: false
     });
 
-    this._serverInfosItem.actor.add(vbox3, {expand: true, x_fill: true});
+    vbox3.x_expand= true;
+    vbox3.x_fill= true;
+    this._serverInfosItem.actor.add(vbox3);
+
 
     this.menu.addMenuItem(this._serverInfosItem);
     this._serverInfosItem.actor.hide();
@@ -634,7 +645,10 @@ class NVPNMenu extends PanelMenu.Button{
     this._itemSubmenusButtons= new PopupMenu.PopupBaseMenuItem({
       reactive: false
     });
-    this._itemSubmenusButtons.actor.add(hbox3, { expand: true, x_fill: false});
+    hbox3.x_expand= true
+    hbox3.x_fill= false
+    hbox3.x_align= St.Align.END;
+    this._itemSubmenusButtons.actor.add(hbox3)
     this.menu.addMenuItem(this._itemSubmenusButtons);
 
     this._id_c_btn2= this.v3_button1.connect('clicked', this.cb_serverManagement.bind(this));
@@ -709,7 +723,8 @@ class NVPNMenu extends PanelMenu.Button{
     this._id_c_btn1= this.action_button.connect('clicked', this._button_clicked.bind(this));
     vbox2.add_child(this.action_button);
 
-    _itemCurrent2.actor.add(vbox2, { expand: true});
+    vbox2.x_expand= true;
+    _itemCurrent2.actor.add(vbox2);
     this.menu.addMenuItem(_itemCurrent2);
 
     /** Adding the menu item that displays a message when the CLI tool version
@@ -782,7 +797,8 @@ class NVPNMenu extends PanelMenu.Button{
       this._submenuPlaces.menu.actor.width,
       this._submenuOptions.menu.actor.width
     );
-    this.menu.actor.width=hbox3.actor.width + max;
+    // this.menu.actor.width=hbox3.actor.width + max;
+    this.menu.actor.width=hbox3.width + max
 
 
     /** flag used to inform if a connexion should be registered or not as a "recent connexion"*/

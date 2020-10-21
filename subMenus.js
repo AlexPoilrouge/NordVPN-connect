@@ -148,7 +148,8 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
         text: this.placeName.replace(/_/gi,' ')}
       );
 
-      this.actor.add(label_item, {expand: true});
+      label_item.x_expand= true;
+      this.actor.add(label_item);
       this.checkIcon.hide();
 
       this._groupSelect=false;
@@ -169,7 +170,7 @@ class HiddenSubMenuMenuItemBase extends PopupMenu.PopupSubMenuMenuItem{
         });
     
         this._statusBin = new St.Bin({ x_align: St.Align.END, });
-        this.actor.add(this._statusBin, { x_align: St.Align.END });
+        this.actor.add(this._statusBin)
         this._statusBin.child= this._button;
 
         this._idc1= this._button.connect('clicked', () => {
@@ -525,7 +526,10 @@ class StackerBase extends GObject.Object{
     let hbox= new St.BoxLayout();
     this._startItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
     hbox.add(label);
-    this._startItem.actor.add(hbox, { expand: true, x_fill: false});
+    hbox.x_expand= true;
+    hbox.x_fill= true;
+    hbox.x_align= St.Align.END;
+    this._startItem.actor.add(hbox);
 
     if(b){
       this._parentMenu.menu.addMenuItem(this._startItem);
@@ -633,7 +637,8 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
   _init(servName, infos){
     super._init({style_class: 'server-fav',});
     this.tLabel= new St.Label({text: servName+" - "+infos.slice(0,13)+((infos.length>13)?'…':'')});
-    this.actor.add(this.tLabel, {expand: true});
+    this.tLabel.x_expand= true;
+    this.actor.add(this.tLabel);
 
     this._servName= servName;
     this._infos= infos;
@@ -650,7 +655,7 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
     });
 
     this._statusBin = new St.Bin({ x_align: St.Align.END, });
-    this.actor.add(this._statusBin, { x_align: St.Align.END });
+    this.actor.add(this._statusBin);
     this._statusBin.child= this._button;
 
     /** signal 'delete-fav' is emmited when the delete button is clicked */
@@ -727,12 +732,15 @@ class FavoriteStacker extends StackerBase{
                       track_hover: true,
                       style_class: 'system-menu-action add-fav-button',
     });
+    this._button.x_align= St.Align.END;
     this._button.set_toggle_mode(true);
     /** hidden by default */
     this._button.hide();
 
     let btnItem= new PopupMenu.PopupBaseMenuItem({reactive: false});
-    btnItem.actor.add(this._button, { expand: true, x_fill: false});
+    this._button.x_expand= true;
+    this._button.x_fill= false;
+    btnItem.actor.add(this._button);
 
     this.addNonDynamicFrontItem(btnItem);
 
@@ -917,7 +925,8 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
       style_class: 'recent-location-label' +((isPin)?' pinned':''),
       text: location.replace(/_/gi,' ')
     });
-    this.actor.add(this.tLabel, {expand: true});
+    this.tLabel.x_expand= true;
+    this.actor.add(this.tLabel);
 
     this._location= location;
     this._pin= isPin;
@@ -934,7 +943,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
     });
 
     this._statusBin = new St.Bin({ x_align: St.Align.MIDDLE, });
-    this.actor.add(this._statusBin, { x_align: St.Align.MIDDLE });
+    this.actor.add(this._statusBin);
     this._statusBin.child= this._button;
 
     /** signal 'unpin'/'pin' is emmited when the pin button is clicked */
@@ -1434,6 +1443,7 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
           hint_text: _('Enter server name'),
           track_hover: true,}
         );
+        this.servEntry.x_expand= true;
 
         this.SIGS_ID= [];
         this.SIGS_ID[0]= this.servEntry.get_clutter_text().connect( 'activate',
@@ -1463,14 +1473,15 @@ class ServerSubMenu extends HiddenSubMenuMenuItemBase{
           reactive: false
         });
 
-        item.actor.add(hbox, { expand: true, x_fill: false});
+        hbox.x_expand= true
+        item.actor.add(hbox)
         this.menu.addMenuItem(item);
 
         this.servEntry.width= 150;
 
 
-        let separator= new PopupMenu.PopupSeparatorMenuItem();
-        this.menu.addMenuItem(separator);
+        // let separator= new PopupMenu.PopupSeparatorMenuItem();
+        // this.menu.addMenuItem(separator);
 
         //peparing the handling of persistent data (favs, recents loc …)
         this.persistentDataHandler= new PersistentData.PersistentDataHandler(
@@ -1660,7 +1671,8 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
         this/*.actor*/.reactive= false;
 
         this.label = new St.Label({ text: text, });
-        this.actor.add(this.label, {expand: true});
+        this.label.x_expand= true;
+        this.actor.add(this.label);
         this/*.actor*/.accessible_role = Atk.Role.CHECK_MENU_ITEM;
 
         this._switch= new PopupMenu.Switch(true);
@@ -1669,7 +1681,7 @@ class OptionsSubMenuSwitchItem extends PopupMenu.PopupBaseMenuItem{
         this._switch/*.actor*/.active= true;
 
         this._statusBin = new St.Bin({ x_align: St.Align.END });
-        this.actor.add(this._statusBin, { x_align: St.Align.END });
+        this.actor.add(this._statusBin);
         this._statusBin.child= this._switch/*.actor*/;
 
         this._c_id= this._switch/*.actor*/.connect('button-press-event', this.toggle.bind(this));
@@ -1766,8 +1778,11 @@ class OptionsSubMenuSwitcherButtonItem extends PopupMenu.PopupBaseMenuItem{
         });
         this._button.set_toggle_mode(true);
 
-        this._statusBin = new St.Bin({ x_align: St.Align.END, });
-        this.actor.add(this._statusBin, { x_fill: false, expand: true, x_align: St.Align.END });
+        this._statusBin = new St.Bin({ x_align: St.Align.END+1, });
+        this._statusBin.x_fill= false;
+        this._statusBin.x_expand= true;
+        // this._statusBin.x_align= St.Align.END;
+        this.actor.add(this._statusBin);
         this._statusBin.child= this._button;
 
         this._idC= this._button.connect('clicked', this._toggleBtn.bind(this));
@@ -1912,10 +1927,9 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
       text: this._oldText,
       track_hover: true,
     });
-    // this._statusBin = new St.Bin({x_fill: true, x_align: St.Align.END });
-    // this.actor.add(this._statusBin, { expand: true, x_align: St.Align.END });
-    // this._statusBin.child= this.entry;
-    this.actor.add(this.entry, {expand: true});
+
+    this.entry.x_expand= true;
+    this.actor.add(this.entry);
 
     /** When ever the user enter's new text… */
     this._idc1= this.entry.get_clutter_text().connect('text-changed', (txt) =>
@@ -2460,7 +2474,8 @@ class MessageItem extends PopupMenu.PopupBaseMenuItem{
 
     hbox.add_child(this._button);
 
-    this.actor.add(hbox, { expand: true });
+    hbox.x_expand= true;
+    this.actor.add(hbox);
 
     /** message disapears when clicked */
     this._idc= this._button.connect('clicked', () => {this.actor.hide();}); 
