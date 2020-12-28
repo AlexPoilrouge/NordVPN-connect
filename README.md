@@ -169,9 +169,19 @@ Like all other Gnome-shell extensions (that provide such 'settings' page), there
 
 ***The extension says « daemon disabled/missing », what gives?***
 
+  ____Enable the daemon ?___
+
   Installing the 'nordvpn' CLI tool isn't enough (assuming version `3.3`). The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
   
     systemd enable --now nordvpnd.service
+    
+  ____User in `nordvpn` group?___
+  
+  As pointed out by [this issue](https://github.com/AlexPoilrouge/NordVPN-connect/issues/19), sometimes a user can't access the nordvpn CLI if the active user doesn't belong to the `nordvpn` group. In a terminal:
+  ```
+  groupadd nordvpn
+  sudo usermod -aG nordvpn $USER
+  ```
 
 ***The extension says « tool not logged in », what's up?***
 
