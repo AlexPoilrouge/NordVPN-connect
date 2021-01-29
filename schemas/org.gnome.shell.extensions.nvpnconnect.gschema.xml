@@ -48,7 +48,7 @@
             <default>"systemctl is-active nordvpnd | grep -Eo '^active$'"</default>
         </key>
         <key type="s" name="cmd-vpn-online-check">
-            <default>"ifconfig -a | grep -E '(nordvpn|tun0)'"</default>
+            <default>"ifconfig -a | grep -E '(nordlynx|tun0)'"</default>
         </key>
         <key type="s" name="cmd-option-set">
             <default>"nordvpn set _%option%_ _%value%_"</default>
