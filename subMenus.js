@@ -2283,6 +2283,9 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
      *  the given callbacks themselves are callback to the _optCh_cb this object's
      *  specified callback via method set_optionChangeCallBack()
     */
+    this['firewall']= addSwitchItem("Firewall", (obj,state) => {
+      if(this._optCh_cb) this._optCh_cb('firewall',state.toString());
+    });
     this['cybersec']= addSwitchItem("CyberSec", (obj,state) => {
       if(this._optCh_cb) this._optCh_cb('cybersec',state.toString());
 
@@ -2389,6 +2392,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
       var t= this._toggSigs[i];
       t[0].disconnect(t[1]);
     }
+    this['firewall'].destroy()
     this['cybersec'].destroy();
     this['killswitch'].destroy();
     this['obfuscate'].destroy();

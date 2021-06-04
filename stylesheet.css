@@ -1,10 +1,30 @@
+.panel-root-button{
+  margin: 2px;
+  /* just for testing */
+  /* background-color: rgb(136, 48, 219);  */
+}
+
+.panel-root-button.state-transition{
+  background-color: rgba(200,150,30,0.6);
+}
+
+.panel-root-button.state-connected{
+  background-color: rgba(10,130,10,0.6);
+}
+
+.panel-root-button.state-problem{
+  background-color: rgba(130, 10, 10, 0.6);
+}
+
 
 .panel-status-menu-hbox{
   font-size: 15px;
   border-radius: 5px;
 }
-
-.nvpn-status-icon{}
+.panel-status-menu-hbox{
+  border-radius: 5px;
+  font-size: 15px;
+}
 
 .panel-status-menu-hbox-transition{
   background-color: rgba(200,150,30,0.6);

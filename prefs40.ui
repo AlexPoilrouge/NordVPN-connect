@@ -1,0 +1,886 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <requires lib="gtk+" version="4.0"/>
+
+    <object class="GtkAdjustment" id="adjustment1">
+        <property name="lower">1</property>
+        <property name="upper">60</property>
+        <property name="value">2</property>
+        <property name="step_increment">1</property>
+        <property name="page_increment">10</property>
+    </object>
+    <object class="GtkAdjustment" id="adjustment2">
+        <property name="lower">1</property>
+        <property name="upper">50</property>
+        <property name="value">4</property>
+        <property name="step_increment">1</property>
+        <property name="page_increment">10</property>
+    </object> 
+
+    <object class="GtkBox" id="main_container">
+        <property name="visible">1</property>
+        <property name="margin-start">6</property>
+        <property name="margin-end">6</property>
+        <property name="margin-top">6</property>
+        <property name="margin-bottom">6</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+        <object class="GtkNotebook">
+            <child>
+                <object class="GtkGrid" id="NVPN_Sett_Grid">
+                    <property name="can_focus">0</property>
+                    <property name="margin_start">20</property>
+                    <property name="margin_end">20</property>
+                    <property name="margin_top">20</property>
+                    <property name="margin_bottom">20</property>
+                    <property name="row_spacing">20</property>
+                    <property name="column_spacing">10</property>
+                    <property name="column_homogeneous">1</property>
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Compact">
+                        <property name="can_focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Display icon only, hide label</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">0</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSwitch" id="NVPN_Sett_Toggle_Compact">
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">0</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Color">
+                        <property name="can_focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Indicate connection status with color</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">1</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSwitch" id="NVPN_Sett_Toggle_Color">
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="active">1</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">1</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Refresh">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">The delay betwing each refreshing of the extension&apos;s status monitoring.
+        You can&apos;t try increasing it, for performance issue? But you probably shouldn&apos;t change this value, idk.</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Refresh interval in Seconds</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">2</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSpinButton" id="NVPN_Sett_Spin_Refresh">
+                        <property name="tooltip_text" translatable="yes">The delay betwing each refreshing of the extension&apos;s status monitoring.
+        You can&apos;t try increasing it, for performance issue? But you probably shouldn&apos;t change this value, idk.</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="adjustment">adjustment1</property>
+                        <property name="snap_to_ticks">1</property>
+                        <property name="numeric">1</property>
+                        <property name="wrap">1</property>
+                        <property name="update_policy">if-valid</property>
+                        <property name="value">2</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">2</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Version">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">Check the installed version of the NordVPN CLI Tool at the extension launch?
+        (A message would be display if installed version is older than expected)</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Check version at launch</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">3</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSwitch" id="NVPN_Sett_Toggle_Version">
+                        <property name="tooltip_text" translatable="yes">Check the installed version of the NordVPN CLI Tool at the extension launch?
+        (A message would be display if installed version is older than expected)</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">3</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Option_Reconnect">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Automatically reconnect after changing settings</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">4</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSwitch" id="NVPN_Sett_Toggle_Option_Reconnect">
+                        <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">4</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Recent_Cap">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">How many &apos;recent connections&apos; items can be stored?</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Number of items in &lt;i&gt;Recent Connections&lt;/i&gt;</property>
+                        <property name="use_markup">1</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">5</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSpinButton" id="NVPN_Sett_Spin_Recent_Cap">
+                        <property name="tooltip_text" translatable="yes">How many &apos;recent connections&apos; items can be stored?</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="text" translatable="yes">2</property>
+                        <property name="adjustment">adjustment2</property>
+                        <property name="snap_to_ticks">1</property>
+                        <property name="numeric">1</property>
+                        <property name="wrap">1</property>
+                        <property name="update_policy">if-valid</property>
+                        <property name="value">4</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">5</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Recent_Groups">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">How many &apos;recent connections&apos; items can be stored?</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Distinguish groups (if any ) in &lt;i&gt;Recent
+        Connections&lt;/i&gt;</property>
+                        <property name="use_markup">1</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">6</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSwitch" id="NVPN_Sett_Toggle_Recent_Groups">
+                        <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">6</property>
+                        </layout>
+                    </object>
+                    </child>
+
+                    <child>
+                    <object class="GtkLabel" id="NVPN_Sett_Label_Target_Mode">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the &apos;available&apos; targets given dynamically by the CLI, or the &apos;deault&apos; static targets hard coded that may not be available at the time)</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">Server location list display mode</property>
+                        <property name="wrap">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                        <property name="column">0</property>
+                        <property name="row">7</property>
+                        </layout>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkComboBoxText" id="NVPN_Sett_TxtCombo_Target_Mode">
+                        <property name="can_focus">0</property>
+                        <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the &apos;available&apos; targets given dynamically by the CLI, or the &apos;deault&apos; static targets hard coded that may not be available at the time)</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="active">0</property>
+                        <items>
+                        <item id="0" translatable="yes">Available only</item>
+                        <item id="1" translatable="yes">Hide unavailable</item>
+                        <item id="2" translatable="yes">Show all (Default)</item>
+                        </items>
+                        <layout>
+                        <property name="column">1</property>
+                        <property name="row">7</property>
+                        </layout>
+                    </object>
+                    </child>
+                </object>
+            </child>
+            <child type="tab">
+                <object class="GtkLabel" id="NVPN_Sett_Label_Tab2">
+                    <property name="label">General</property>
+                </object>
+            </child>
+            <child>
+                <!-- <object class="GtkLabel" id="notebook-content2">
+                    <property name="label">Content2</property>
+                </object> -->
+
+                <object class="GtkBox">
+                    <property name="can_focus">0</property>
+                    <property name="orientation">vertical</property>
+                    <property name="baseline_position">top</property>
+                    <child>
+                    <object class="GtkScrolledWindow">
+                        <property name="vexpand">1</property>
+                        <property name="child">
+                        <object class="GtkViewport">
+                            <property name="can_focus">0</property>
+                            <property name="child">
+                            <object class="GtkBox" id="NVPN_Sett_Box1">
+                                <property name="can_focus">0</property>
+                                <property name="margin_start">20</property>
+                                <property name="margin_end">20</property>
+                                <property name="margin_top">20</property>
+                                <property name="margin_bottom">20</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">20</property>
+                                <child>
+                                <object class="GtkBox" id="NVPN_Sett_Box2">
+                                    <property name="can_focus">0</property>
+                                    <property name="orientation">vertical</property>
+                                    <child>
+                                    <object class="GtkBox" id="NVPN_Sett_Box3">
+                                        <property name="can_focus">0</property>
+                                        <property name="halign">center</property>
+                                        <property name="valign">center</property>
+                                        <property name="spacing">10</property>
+                                        <child>
+                                        <object class="GtkImage" id="NVPN_Sett_Image_Warning">
+                                            <property name="hexpand">1</property>
+                                            <property name="can_focus">0</property>
+                                            <property name="valign">center</property>
+                                            <property name="margin_top">5</property>
+                                            <property name="margin_bottom">5</property>
+                                            <property name="pixel_size">50</property>
+                                            <property name="icon_name">dialog-warning-symbolic</property>
+                                        </object>
+                                        </child>
+                                        <child>
+                                        <object class="GtkLabel" id="NVPN_Sett_Label_Cmd_Waring">
+                                            <property name="can_focus">0</property>
+                                            <property name="tooltip_text" translatable="yes">Seriously. Do this at your own risks…</property>
+                                            <property name="label" translatable="yes">&lt;b&gt;Warning:&lt;/b&gt; these commands are core components for the use of the  “&lt;i&gt;NordVPN Connect&lt;/i&gt;” extension. Only modify if you have a good understanding of what you&apos;re doing.</property>
+                                            <property name="use_markup">1</property>
+                                            <property name="wrap">1</property>
+                                            <property name="xalign">0</property>
+                                        </object>
+                                        </child>
+                                        <child>
+                                        <object class="GtkSwitch" id="NVPN_Sett_Switch_Cmd_Change">
+                                            <property name="halign">center</property>
+                                            <property name="tooltip_text" translatable="yes">(Dis)Activate the command changing capability. ARE YOU SURE?</property>
+                                            <property name="valign">center</property>
+                                            <property name="margin_top">5</property>
+                                            <property name="margin_bottom">5</property>
+                                        </object>
+                                        </child>
+                                    </object>
+                                    </child>
+                                </object>
+                                </child>
+                                <child>
+                                <object class="GtkGrid" id="NVPN_Sett_Grid2">
+                                    <property name="can_focus">0</property>
+                                    <property name="row_spacing">20</property>
+                                    <property name="column_spacing">10</property>
+                                    <property name="column_homogeneous">1</property>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty if the &apos;nordvpn&apos; CLI tool is available.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check the availability of the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">1</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Available_Tool">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty if the &apos;nordvpn&apos; CLI tool is available.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">1</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is connected to a server.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check if the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">2</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Connected_Check">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is connected to a server.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">2</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is  currently trying to connect to a nordvpn server.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is in transition state (&lt;i&gt;connected&lt;/i&gt; to &lt;i&gt;disconnected&lt;/i&gt; or vice-versa)</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">3</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Transition_Check">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is  currently trying to connect to a nordvpn server.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">3</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is up and running.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI can&apos;t access the &lt;i&gt;nordvpnd&lt;/i&gt; systemd daemon</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">4</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI has the user logged in.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI is properly logged in</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">5</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_No_Daemon_Check">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is up and running.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">4</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Login_Check">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI has the user logged in.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">5</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Server_Get">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the &apos;nordvpn status&apos; command.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">6</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Connect_To">
+                                        <property name="tooltip_text" translatable="yes">Shell command that launches a connection attempt for the &apos;nordvpn&apos; CLI tool.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">7</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Disconnect">
+                                        <property name="tooltip_text" translatable="yes">Shell command that launches a disconnection attempt for the &apos;nordvpn&apos; CLI tool.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">8</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Daemon_Online_Check">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is off, and NOT empty when online.</property>
+                                        <property name="valign">center</property>
+                                        <property name="input_purpose">alpha</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">9</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the connection to a vpn is not up, and NOT empty when online.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check that the VPN connection is online</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">10</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is off, and NOT empty when online.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Check  that the systemd &lt;i&gt;nordvpnd&lt;/i&gt; daemon is online</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">9</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command that launches a disconnection attempt for the &apos;nordvpn&apos; CLI tool.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Disconnects the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">8</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command that launches a connection attempt for the &apos;nordvpn&apos; CLI tool.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Connects the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool to a location</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">7</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_VPN_Online">
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the connection to a vpn is not up, and NOT empty when online.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">10</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the &apos;nordvpn status&apos; command.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Return the status of the  current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">6</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command that change the value (&apos;_%value%_&apos;) for a given option (&apos;_%option%_&apos;).</property>
+                                        <property name="halign">start</property>
+                                        <property name="valign">center</property>
+                                        <property name="label" translatable="yes">Change NordVPN options</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">11</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Option_Set">
+                                        <property name="tooltip_text" translatable="yes">Shell command that change the value (&apos;_%value%_&apos;) for a given option (&apos;_%option%_&apos;).</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">11</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command that displays the value of all options under the following format:
+        option1:value1;option2:value2;option3:value3;…</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Access NordVPN options</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">12</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Get_Options">
+                                        <property name="tooltip_text" translatable="yes">Shell command that displays the value of all options under the following format:
+        option1:value1;option2:value2;option3:value3;…</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">12</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command that displays version of the currently installed NordVPN CLI tool.
+        Format:
+        X.X.X…</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Get &lt;i&gt;nordvpn&lt;/i&gt; CLI tool version</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">13</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Get_Version">
+                                        <property name="tooltip_text" translatable="yes">Shell command that displays version of the currently installed NordVPN CLI tool.
+        Format:
+        X.X.X…</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">13</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">The command shell that will execute all of the following core commands</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Command shell</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">0</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Command_Shell">
+                                        <property name="tooltip_text" translatable="yes">The command shell that will execute all of the following core commands</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">0</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkLabel">
+                                        <property name="width_request">200</property>
+                                        <property name="can_focus">0</property>
+                                        <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
+        All items are separated with a coma.</property>
+                                        <property name="halign">start</property>
+                                        <property name="label" translatable="yes">Get list of groups and countries</property>
+                                        <property name="use_markup">1</property>
+                                        <property name="wrap">1</property>
+                                        <property name="xalign">0</property>
+                                        <layout>
+                                        <property name="column">0</property>
+                                        <property name="row">14</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                    <child>
+                                    <object class="GtkEntry" id="NVPN_Sett_Entry_Get_Groups_Countries">
+                                        <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
+        All items are separated with a coma.</property>
+                                        <property name="valign">center</property>
+                                        <layout>
+                                        <property name="column">1</property>
+                                        <property name="row">14</property>
+                                        </layout>
+                                    </object>
+                                    </child>
+                                </object>
+                                </child>
+                            </object>
+                            </property>
+                        </object>
+                        </property>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkSeparator">
+                        <property name="can_focus">0</property>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkBox" id="NVPN_Sett_ButBox_Change_Cmd_Confirm">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="margin_start">20</property>
+                        <property name="margin_end">20</property>
+                        <property name="margin_top">10</property>
+                        <property name="margin_bottom">10</property>
+                        <property name="spacing">8</property>
+                        <child>
+                        <object class="GtkButton" id="NVPN_Sett_Button_Default">
+                            <property name="label" translatable="yes">Default</property>
+                            <property name="receives_default">1</property>
+                            <property name="tooltip_text" translatable="yes">Reset all commands to their default value (effect immediately)</property>
+                        </object>
+                        <!-- <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                        </packing> -->
+                        </child>
+                        <child>
+                        <object class="GtkButton" id="NVPN_Sett_Button_Reset">
+                            <property name="label" translatable="yes">Reset</property>
+                            <property name="receives_default">1</property>
+                            <property name="tooltip_text" translatable="yes">Restore command before the edit (if not &apos;apply&apos; action was performed ofc)</property>
+                        </object>
+                        <!-- <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                        </packing> -->
+                        </child>
+                        <child>
+                        <object class="GtkButton" id="NVPN_Sett_Button_Apply">
+                            <property name="receives_default">1</property>
+                            <child>
+                            <object class="GtkLabel">
+                                <property name="can_focus">0</property>
+                                <property name="tooltip_text" translatable="yes">Take effect of the command changes made.</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Apply&lt;/b&gt;</property>
+                                <property name="use_markup">1</property>
+                            </object>
+                            </child>
+                        </object>
+                        <!-- <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                        </packing> -->
+                        </child>
+                    </object>
+                    </child>
+                </object>
+            </child>
+            <child type="tab">
+                <object class="GtkLabel" id="NVPN_Sett_Label_Tab1">
+                    <property name="label">Advanced</property>
+                </object>
+            </child>
+            <child>
+                <!-- <object class="GtkLabel" id="notebook-content3">
+                    <property name="label">Content2</property>
+                </object> -->
+
+                <object class="GtkBox">
+                    <property name="can_focus">0</property>
+                    <property name="margin_start">20</property>
+                    <property name="margin_end">20</property>
+                    <property name="margin_top">20</property>
+                    <property name="margin_bottom">20</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">20</property>
+                    <child>
+                    <object class="GtkLabel">
+                        <property name="can_focus">0</property>
+                        <property name="label" translatable="yes">NordVPN_Connect</property>
+                        <attributes>
+                        <attribute name="style" value="normal"></attribute>
+                        <attribute name="weight" value="bold"></attribute>
+                        <attribute name="scale" value="3"></attribute>
+                        </attributes>
+                        <style>
+                        <class name="testlol"/>
+                        </style>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkLabel">
+                        <property name="can_focus">0</property>
+                        <property name="label" translatable="yes">This a gnome-shell (40.1.0) extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.9.2).
+
+        This extension is availabe on (in order of &apos;freshness&apos; of the update):
+        - &lt;a href=&quot;https://github.com/AlexPoilrouge/NordVPN-connect&quot;&gt;GitHub&lt;/a&gt;
+        - The &lt;a href=&quot;https://aur.archlinux.org/packages/gnome-shell-extension-nordvpn-connect-git/&quot;&gt;AUR&lt;/a&gt; ( for Archlinux users )
+        - The &lt;a href=&quot;https://extensions.gnome.org/extension/1595/nordvpn-connect/&quot;&gt;GNOME Extensions&lt;/a&gt; website
+
+        You can check the github repository README for &lt;a href=&quot;https://github.com/AlexPoilrouge/NordVPN-connect#help&quot;&gt;help&lt;/a&gt;.
+        However, this is a personal project. Therefore, no feedback is processed, nor any support is provided by the developer.
+        Contributions are, of course, always welcome.</property>
+                        <property name="use_markup">1</property>
+                        <property name="justify">center</property>
+                        <property name="wrap">1</property>
+                    </object>
+                    </child>
+                    <child>
+                    <object class="GtkLabel">
+                        <property name="name">3</property>
+                        <property name="height_request">30</property>
+                        <property name="can_focus">0</property>
+                        <property name="valign">center</property>
+                        <property name="label" translatable="yes">&lt;i&gt;Alex Poilrouge&lt;/i&gt;</property>
+                        <property name="use_markup">1</property>
+                        <property name="xalign">1</property>
+                    </object>
+                    </child>
+                </object>
+            </child>
+            <child type="tab">
+            <object class="GtkImage" id="NVPN_Sett_Label_Tab3">
+                <property name="can_focus">0</property>
+                <property name="icon_name">help-about</property>
+            </object>
+            </child>
+        </object>
+        </child>
+    </object>
+</interface>

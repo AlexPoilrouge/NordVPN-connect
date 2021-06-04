@@ -29,7 +29,7 @@ const BoxPointer = imports.ui.boxpointer;
 
 
 
-const NORDVPN_TOOL_EXPECTED_VERSION= "3.7";
+const NORDVPN_TOOL_EXPECTED_VERSION= "3.9";
 
 
 /**
@@ -458,29 +458,32 @@ class NVPNMenu extends PanelMenu.Button{
     //unused
     this._transition_time_out= 0;
 
+    this.style_class+=' panel-root-button'
 
     /** should the status be colored according to the goption 'colored-status' */
     this._b_colored_status= SETTINGS.get_boolean('colored-status');
     this.SETT_SIGS[4]= SETTINGS.connect('changed::colored-status', () => {
       this._b_colored_status= SETTINGS.get_boolean('colored-status');
       log("nordvpn this._b_colored_status: "+this._b_colored_status);
+      var add=''
+      this._clearTransitionStateStyleClass()
       switch(this.currentStatus){
         case NVPNMenu.STATUS.DAEMON_DOWN:
         case NVPNMenu.STATUS.LOGGED_OUT:
-        case NVPNMenu.STATUS.NOT_FOUND:    
-          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-problem':'panel-status-menu-hbox';    
+        case NVPNMenu.STATUS.NOT_FOUND:
+          add= (this._b_colored_status)?" state-problem":''
           break;
         case NVPNMenu.STATUS.CONNECTED:
-          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-connected':'panel-status-menu-hbox';
+          add= (this._b_colored_status)?" state-connected":''
           break;
         case NVPNMenu.STATUS.DISCONNECTED:
-          this._panel_hbox.style_class='panel-status-menu-hbox';
           break;
         case NVPNMenu.STATUS.TRANSITION:
         default:
-          this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-transition':'panel-status-menu-hbox';
+          add= (this._b_colored_status)?" state-transition":''
           break;
         }
+        this.style_class+= add
     });
 
 
@@ -855,6 +858,14 @@ class NVPNMenu extends PanelMenu.Button{
     super.destroy();
   }
 
+  _clearTransitionStateStyleClass(){
+    this.style_class=
+      this.style_class.replaceAll(' state-transition','')
+        .replaceAll(' state-connected','')
+        .replaceAll(' state-problem','')
+
+  }
+
   /** Private method that fetchs the current version of the NordVPN CLI tool
    *  by invoking the appropriate command
    *  @method
@@ -1085,7 +1096,8 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-help';
       this.action_button.label= _("Help?");
 
-      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-problem':'panel-status-menu-hbox';
+      this._clearTransitionStateStyleClass()
+      this.style_class+= (this._b_colored_status)?" state-problem":''
       this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
 
       /** submenus hidden */
@@ -1104,7 +1116,8 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button-dq';
       this.action_button.label= _("Disconnect");
 
-      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-connected':'panel-status-menu-hbox';
+      this._clearTransitionStateStyleClass()
+      this.style_class+= (this._b_colored_status)?" state-connected":''
       this._panel_icon.icon_name= 'network-vpn-symbolic';
 
       /** enbales the submenus to show*/
@@ -1126,7 +1139,7 @@ class NVPNMenu extends PanelMenu.Button{
       this.action_button.style_class= 'nvpn-action-button';
       this.action_button.label= _("Quick Connect (default)");
 
-      this._panel_hbox.style_class='panel-status-menu-hbox';
+      this._clearTransitionStateStyleClass()
       this._panel_icon.icon_name= 'action-unavailable-symbolic';
 
       this._submenusVisible(true);
@@ -1198,7 +1211,8 @@ class NVPNMenu extends PanelMenu.Button{
       /** menu is closed (if opened) */
       this.menu.close();
       this._panel_icon.icon_name= 'network-vpn-acquiring-symbolic';
-      this._panel_hbox.style_class=(this._b_colored_status)?'panel-status-menu-hbox-transition':'panel-status-menu-hbox';
+      this._clearTransitionStateStyleClass()
+      this.style_class+= (this._b_colored_status)?" state-transition":''
   }
 
   /**

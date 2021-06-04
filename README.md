@@ -103,7 +103,9 @@ This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.36.0' and the *'
 
 This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.36.1' and the *'nordvpn' CLI tool version 3.7.2-2*, for commits before (and including) commit `b923bfb4bc89e3fb5f5892638a39178d0dea3331`.
 
-This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.38.1' and the *'nordvpn' CLI tool version 3.8.5*, for later commits.
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 3.36.1' and the *'nordvpn' CLI tool version 3.8.5*, for commits before (and including) commit `2caed946da31ed084ad0cdd7d1783e2ea033def4`.
+
+This tool has been tested on '*Archlinux*', with 'GNOME Shell 40.1.0' and the *'nordvpn' CLI tool version 3.9.2*, for later commits.
 
 
 ###### Install
@@ -171,7 +173,7 @@ Like all other Gnome-shell extensions (that provide such 'settings' page), there
 
   ____Enable the daemon ?___
 
-  Installing the 'nordvpn' CLI tool isn't enough (assuming version `3.3`). The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
+  Installing the 'nordvpn' CLI tool isn't enough. The 'nordvpnd' systemd daemon must be up and running. Open a terminal and type:
   
     systemd enable --now nordvpnd.service
     

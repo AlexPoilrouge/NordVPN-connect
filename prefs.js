@@ -17,13 +17,22 @@ let SETTINGS= Convenience.getSettings();
 /** Class that encapsulates most of the 'NordVPN_Connect' extension's settings
  *  page.
  */
-class NVPN_Settings{
+// class NVPN_Settings{
+const NVPN_Settings= new GObject.Class({
+    Name: "NVPN.Prefs.Widget",
+    GTypeName: "NVPN_Settings",
+    Extends: Gtk.Box,
     /**
      * Constructor.
      * 
      * Doesn't do much. Prepares fields and variables.
      */
-    constructor() {
+    // constructor() {
+    _init: function(params){
+        this.parent(params);
+        this.orientation = Gtk.Orientation.VERTICAL;
+        this.spacing = 0;
+
         this._objects= {
             NVPN_Sett_Tabs: null,
             NVPN_Sett_Grid: null,
@@ -74,7 +83,20 @@ class NVPN_Settings{
 
         /** Contained for signal connection IDs for later discard of the gSettings elements */
         this.SETT_SIGS=[];
-    }
+
+        this.pref_ui_filename="prefs.ui"
+        if (Gtk.get_major_version() >= "4") {
+            this.pref_ui_filename="prefs40.ui"
+            this.__addFn = this.append;
+            this.__showFn = this.show;
+        }
+        else {
+            this.__addFn = x => this.pack_start(x, true, true, 0);
+            this.__showFn = this.show_all;
+        }
+        
+        this.build()
+    },
 
     /**
      * Destructor.
@@ -135,7 +157,7 @@ class NVPN_Settings{
             if(SETT_SIGS[i])
                 SETTINGS.disconnect(SETT_SIGS[i]);
         }
-    }
+    },
 
     /**
      * Builds the UI
@@ -148,30 +170,35 @@ class NVPN_Settings{
          *  and build the UI from there.
          */
         this.builder= new Gtk.Builder();
-        this.builder.add_from_file(
-            Me.dir.get_child("prefs.ui").get_path()
-        );
+        if (this.builder.add_from_file(Me.dir.get_child(this.pref_ui_filename).get_path())==0){
+            log("[NVPN - Settings] failed to load ui file")
+        }
+        else{
+            log("[NVPN - Settings] lesgo")
+            /** Care was taken so that all the elements in the '_objects' dictionary field, 
+             *  all have the same name has the relevant corresponding objects in the '.ui' file.
+             *  This loop uses this to ensure that the fields in '_objects' are refering to the
+             *  UI elements of correcponding names.
+            */
+            for (let o in this._objects) {
+                log("[NVPN - Settings] o: "+o)
+                this._objects[o] = this.builder.get_object(o);
+            }
 
-        /** Care was taken so that all the elements in the '_objects' dictionary field, 
-         *  all have the same name has the relevant corresponding objects in the '.ui' file.
-         *  This loop uses this to ensure that the fields in '_objects' are refering to the
-         *  UI elements of correcponding names.
-        */
-        for (let o in this._objects) {
-            this._objects[o] = this.builder.get_object(o);
+            this.__addFn(this.builder.get_object('main_container'))
+
+            /** Calibrating the UI according to current gSettings state */
+            this._initFromSettings();
+
+            /** Connecting UI elements with appropriate callbacks */
+            this._initConnections();
+
+            /** Fill the UI 'Text entries' according to current gSettings state */
+            this._preapreUI();
         }
 
-        /** Calibrating the UI according to current gSettings state */
-        this._initFromSettings();
-
-        /** Connecting UI elements with appropriate callbacks */
-        this._initConnections();
-
-        /** Fill the UI 'Text entries' according to current gSettings state */
-        this._preapreUI();
-
-        return this._objects.NVPN_Sett_Tabs;
-    }
+        // return this._objects.main_container;
+    },
 
     /**
      * Method that calibrates UI elements according to current gSettings state
@@ -185,7 +212,7 @@ class NVPN_Settings{
         this._objects.NVPN_Sett_Spin_Recent_Cap.set_value(SETTINGS.get_int('recent-capacity'));
         this._objects.NVPN_Sett_Toggle_Recent_Groups.set_state(SETTINGS.get_boolean('recent-distinguish-groups'));
         this._objects.NVPN_Sett_TxtCombo_Target_Mode.set_active(SETTINGS.get_int('target-display-mode'));
-    }
+    },
 
     /**
      * Method that connects UI elements signals to appropriate callbacks
@@ -288,7 +315,7 @@ class NVPN_Settings{
                 "clicked",
                 Lang.bind(this, this._sig_Cmd_change_apply)
             );
-    }
+    },
 
     /**
      * Method that fills the 'Text Entries' elements according to current gSettings state'
@@ -319,53 +346,53 @@ class NVPN_Settings{
         let s= this._objects.NVPN_Sett_Switch_Cmd_Change.get_state();
         this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(s);
         this._objects.NVPN_Sett_Grid2.set_sensitive(s);
-    }
+    },
 
 
     _sig_Compact_state_set(item, state, user_data){
         SETTINGS.set_boolean('compact-icon', state);
-    }
+    },
 
     _sig_Color_state_set(item, state, user_data){
         SETTINGS.set_boolean('colored-status', state);
-    }
+    },
 
     _sig_Version_check_set(item, state, user_data){
         SETTINGS.set_boolean('version-check', state);
-    }
+    },
 
     _sig_Option_server_reconnect_set(item, state, user_data){
         SETTINGS.set_boolean('settings-change-reconnect', state);
-    }
+    },
     
     _sig_Referesh_value_changed(item, user_data){
         if(item){
             SETTINGS.set_int('refresh-delay', item.get_value());
         }
-    }
+    },
 
     _sig_Recent_capacity_value_changed(item, user_data){
         if(item){
             SETTINGS.set_int('recent-capacity', item.get_value());
         }
-    }
+    },
 
     _sig_Distinguish_groups_recentmenu(item, state, user_data){
         if(item){
             SETTINGS.set_boolean('recent-distinguish-groups', state);
         }
-    }
+    },
 
     _sig_target_mode_changed(item, user_data){
         if(item){
             SETTINGS.set_int('target-display-mode', item.get_active());
         }
-    }
+    },
 
     _sig_Cmd_change_triggering(item, state, user_data){
         this._objects.NVPN_Sett_Grid2.set_sensitive(state);
         this._objects.NVPN_Sett_ButBox_Change_Cmd_Confirm.set_sensitive(state);
-    }
+    },
 
     _sig_Cmd_change_default(){
         let chToDef= (gEntry, gsKey) => {
@@ -392,7 +419,7 @@ class NVPN_Settings{
         chToDef(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
-    }
+    },
 
     _sig_Cmd_change_reset(){
         let chToRst= (gEntry, gsKey) => {
@@ -416,7 +443,7 @@ class NVPN_Settings{
         chToRst(this._objects.NVPN_Sett_Entry_Get_Options, 'cmd-get-options');
         chToRst(this._objects.NVPN_Sett_Entry_Get_Version, 'cmd-get-version');
         chToRst(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
-    }
+    },
 
     _sig_Cmd_change_apply(){
         let applyCh= (gEntry, gsKey) => {
@@ -440,18 +467,20 @@ class NVPN_Settings{
         applyCh(this._objects.NVPN_Sett_Entry_Get_Groups_Countries, 'cmd-get-groups-countries');
 
         this._objects.NVPN_Sett_Switch_Cmd_Change.set_state(false);
-    }
-
-
+    },
 }
+);
 
 let ui;
 
 function init() {
-	Convenience.initTranslations();
-    ui = new NVPN_Settings();
+	// Convenience.initTranslations();
+    // ui = new NVPN_Settings();
 }
 
 function buildPrefsWidget() {
-    return ui.build();
+    // return ui.build();
+    let ui= new NVPN_Settings()
+    ui.__showFn()
+    return ui
 }
