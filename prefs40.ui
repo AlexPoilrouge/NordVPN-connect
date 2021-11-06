@@ -846,7 +846,7 @@
                     <child>
                     <object class="GtkLabel">
                         <property name="can_focus">0</property>
-                        <property name="label" translatable="yes">This a gnome-shell (40.1.0) extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.9.2).
+                        <property name="label" translatable="yes">This a gnome-shell (40.1.0) extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.12.0).
 
         This extension is availabe on (in order of &apos;freshness&apos; of the update):
         - &lt;a href=&quot;https://github.com/AlexPoilrouge/NordVPN-connect&quot;&gt;GitHub&lt;/a&gt;
