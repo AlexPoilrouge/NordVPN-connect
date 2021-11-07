@@ -29,7 +29,7 @@
         <object class="GtkNotebook">
             <child>
                 <object class="GtkGrid" id="NVPN_Sett_Grid">
-                    <property name="can_focus">0</property>
+                    <property name="can_focus">1</property>
                     <property name="margin_start">20</property>
                     <property name="margin_end">20</property>
                     <property name="margin_top">20</property>
@@ -39,7 +39,7 @@
                     <property name="column_homogeneous">1</property>
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Compact">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
                         <property name="label" translatable="yes">Display icon only, hide label</property>
@@ -64,7 +64,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Color">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
                         <property name="label" translatable="yes">Indicate connection status with color</property>
@@ -90,7 +90,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Refresh">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">The delay betwing each refreshing of the extension&apos;s status monitoring.
         You can&apos;t try increasing it, for performance issue? But you probably shouldn&apos;t change this value, idk.</property>
                         <property name="halign">start</property>
@@ -125,7 +125,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Version">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">Check the installed version of the NordVPN CLI Tool at the extension launch?
         (A message would be display if installed version is older than expected)</property>
                         <property name="halign">start</property>
@@ -154,7 +154,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Option_Reconnect">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">When activated, a server reconnection will occur whener there is modifications made on the settings</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
@@ -181,7 +181,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Recent_Cap">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">How many &apos;recent connections&apos; items can be stored?</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
@@ -216,7 +216,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Recent_Groups">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">How many &apos;recent connections&apos; items can be stored?</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
@@ -245,7 +245,7 @@
 
                     <child>
                     <object class="GtkLabel" id="NVPN_Sett_Label_Target_Mode">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the &apos;available&apos; targets given dynamically by the CLI, or the &apos;deault&apos; static targets hard coded that may not be available at the time)</property>
                         <property name="halign">start</property>
                         <property name="valign">center</property>
@@ -260,7 +260,7 @@
                     </child>
                     <child>
                     <object class="GtkComboBoxText" id="NVPN_Sett_TxtCombo_Target_Mode">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="tooltip_text" translatable="yes">How to displays the different type of targets in the location picked submenu? (There are 2 types: the &apos;available&apos; targets given dynamically by the CLI, or the &apos;deault&apos; static targets hard coded that may not be available at the time)</property>
                         <property name="halign">end</property>
                         <property name="valign">center</property>
@@ -289,7 +289,7 @@
                 </object> -->
 
                 <object class="GtkBox">
-                    <property name="can_focus">0</property>
+                    <property name="can_focus">1</property>
                     <property name="orientation">vertical</property>
                     <property name="baseline_position">top</property>
                     <child>
@@ -297,10 +297,10 @@
                         <property name="vexpand">1</property>
                         <property name="child">
                         <object class="GtkViewport">
-                            <property name="can_focus">0</property>
+                            <property name="can_focus">1</property>
                             <property name="child">
                             <object class="GtkBox" id="NVPN_Sett_Box1">
-                                <property name="can_focus">0</property>
+                                <property name="can_focus">1</property>
                                 <property name="margin_start">20</property>
                                 <property name="margin_end">20</property>
                                 <property name="margin_top">20</property>
@@ -309,18 +309,18 @@
                                 <property name="spacing">20</property>
                                 <child>
                                 <object class="GtkBox" id="NVPN_Sett_Box2">
-                                    <property name="can_focus">0</property>
+                                    <property name="can_focus">1</property>
                                     <property name="orientation">vertical</property>
                                     <child>
                                     <object class="GtkBox" id="NVPN_Sett_Box3">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="halign">center</property>
                                         <property name="valign">center</property>
                                         <property name="spacing">10</property>
                                         <child>
                                         <object class="GtkImage" id="NVPN_Sett_Image_Warning">
                                             <property name="hexpand">1</property>
-                                            <property name="can_focus">0</property>
+                                            <property name="can_focus">1</property>
                                             <property name="valign">center</property>
                                             <property name="margin_top">5</property>
                                             <property name="margin_bottom">5</property>
@@ -330,7 +330,7 @@
                                         </child>
                                         <child>
                                         <object class="GtkLabel" id="NVPN_Sett_Label_Cmd_Waring">
-                                            <property name="can_focus">0</property>
+                                            <property name="can_focus">1</property>
                                             <property name="tooltip_text" translatable="yes">Seriously. Do this at your own risks…</property>
                                             <property name="label" translatable="yes">&lt;b&gt;Warning:&lt;/b&gt; these commands are core components for the use of the  “&lt;i&gt;NordVPN Connect&lt;/i&gt;” extension. Only modify if you have a good understanding of what you&apos;re doing.</property>
                                             <property name="use_markup">1</property>
@@ -353,13 +353,13 @@
                                 </child>
                                 <child>
                                 <object class="GtkGrid" id="NVPN_Sett_Grid2">
-                                    <property name="can_focus">0</property>
+                                    <property name="can_focus">1</property>
                                     <property name="row_spacing">20</property>
                                     <property name="column_spacing">10</property>
                                     <property name="column_homogeneous">1</property>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is empty if the &apos;nordvpn&apos; CLI tool is available.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check the availability of the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool</property>
@@ -384,7 +384,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is connected to a server.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check if the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected</property>
@@ -409,7 +409,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI tool is  currently trying to connect to a nordvpn server.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is in transition state (&lt;i&gt;connected&lt;/i&gt; to &lt;i&gt;disconnected&lt;/i&gt; or vice-versa)</property>
@@ -434,7 +434,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is up and running.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI can&apos;t access the &lt;i&gt;nordvpnd&lt;/i&gt; systemd daemon</property>
@@ -449,7 +449,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI has the user logged in.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI is properly logged in</property>
@@ -525,7 +525,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the connection to a vpn is not up, and NOT empty when online.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check that the VPN connection is online</property>
@@ -540,7 +540,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is empty when the &apos;nordvpn&apos; daemon is off, and NOT empty when online.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Check  that the systemd &lt;i&gt;nordvpnd&lt;/i&gt; daemon is online</property>
@@ -555,7 +555,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command that launches a disconnection attempt for the &apos;nordvpn&apos; CLI tool.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Disconnects the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool</property>
@@ -570,7 +570,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command that launches a connection attempt for the &apos;nordvpn&apos; CLI tool.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Connects the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool to a location</property>
@@ -595,7 +595,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command which std output is the informations the of the current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connected to. Typically the output or the &apos;nordvpn status&apos; command.</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Return the status of the  current server the &lt;i&gt;nordvpn&lt;/i&gt; CLI tool is connect to</property>
@@ -610,7 +610,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command that change the value (&apos;_%value%_&apos;) for a given option (&apos;_%option%_&apos;).</property>
                                         <property name="halign">start</property>
                                         <property name="valign">center</property>
@@ -636,7 +636,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command that displays the value of all options under the following format:
         option1:value1;option2:value2;option3:value3;…</property>
                                         <property name="halign">start</property>
@@ -663,7 +663,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Shell command that displays version of the currently installed NordVPN CLI tool.
         Format:
         X.X.X…</property>
@@ -692,7 +692,7 @@
                                     </child>
                                     <child>
                                     <object class="GtkLabel">
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">The command shell that will execute all of the following core commands</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">Command shell</property>
@@ -718,7 +718,7 @@
                                     <child>
                                     <object class="GtkLabel">
                                         <property name="width_request">200</property>
-                                        <property name="can_focus">0</property>
+                                        <property name="can_focus">1</property>
                                         <property name="tooltip_text" translatable="yes">Command that gives available groups on the first line; available countries on the second line.
         All items are separated with a coma.</property>
                                         <property name="halign">start</property>
@@ -753,7 +753,7 @@
                     </child>
                     <child>
                     <object class="GtkSeparator">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                     </object>
                     </child>
                     <child>
@@ -794,7 +794,7 @@
                             <property name="receives_default">1</property>
                             <child>
                             <object class="GtkLabel">
-                                <property name="can_focus">0</property>
+                                <property name="can_focus">1</property>
                                 <property name="tooltip_text" translatable="yes">Take effect of the command changes made.</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Apply&lt;/b&gt;</property>
                                 <property name="use_markup">1</property>
@@ -822,7 +822,7 @@
                 </object> -->
 
                 <object class="GtkBox">
-                    <property name="can_focus">0</property>
+                    <property name="can_focus">1</property>
                     <property name="margin_start">20</property>
                     <property name="margin_end">20</property>
                     <property name="margin_top">20</property>
@@ -831,7 +831,7 @@
                     <property name="spacing">20</property>
                     <child>
                     <object class="GtkLabel">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="label" translatable="yes">NordVPN_Connect</property>
                         <attributes>
                         <attribute name="style" value="normal"></attribute>
@@ -845,7 +845,7 @@
                     </child>
                     <child>
                     <object class="GtkLabel">
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="label" translatable="yes">This a gnome-shell (40.1.0) extension that aims to provide an interface for the official &lt;i&gt;nordvpn&lt;/i&gt; CLI tool (tested: NordVPN Version 3.12.0).
 
         This extension is availabe on (in order of &apos;freshness&apos; of the update):
@@ -865,7 +865,7 @@
                     <object class="GtkLabel">
                         <property name="name">3</property>
                         <property name="height_request">30</property>
-                        <property name="can_focus">0</property>
+                        <property name="can_focus">1</property>
                         <property name="valign">center</property>
                         <property name="label" translatable="yes">&lt;i&gt;Alex Poilrouge&lt;/i&gt;</property>
                         <property name="use_markup">1</property>
@@ -876,7 +876,7 @@
             </child>
             <child type="tab">
             <object class="GtkImage" id="NVPN_Sett_Label_Tab3">
-                <property name="can_focus">0</property>
+                <property name="can_focus">1</property>
                 <property name="icon_name">help-about</property>
             </object>
             </child>
