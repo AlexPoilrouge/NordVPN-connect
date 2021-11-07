@@ -450,9 +450,9 @@
                                     <child>
                                     <object class="GtkLabel">
                                         <property name="can_focus">1</property>
-                                        <property name="tooltip_text" translatable="yes">Shell command which std output is NOT empty when the &apos;nordvpn&apos; CLI has the user logged in.</property>
+                                        <property name="tooltip_text" translatable="yes">Shell command which std output is 'logged' when the &apos;nordvpn&apos; CLI has the user logged in; Outputs the nordaccount login url (CLI>=3.12) when not.</property>
                                         <property name="halign">start</property>
-                                        <property name="label" translatable="yes">Check when the &lt;i&gt;nordvpn&lt;/i&gt; CLI is properly logged in</property>
+                                        <property name="label" translatable="yes">Check whether the &lt;i&gt;nordvpn&lt;/i&gt; CLI is properly logged in</property>
                                         <property name="use_markup">1</property>
                                         <property name="wrap">1</property>
                                         <property name="xalign">0</property>

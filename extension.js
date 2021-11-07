@@ -247,7 +247,7 @@ class Core_CMDs{
     this.daemon_unreachable_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-daemon-unreachable-check")))?
                           txt : "nordvpn status | grep -Po 'TransientFailure.*nordvpn.sock'";
     this.tool_logged_check= (txt=Unescape.convert(SETTINGS.get_string("cmd-tool-logged-check")))?
-                          txt : "echo '' | nordvpn login | grep -Po 'already logged'";
+                          txt : "NVPNLOG_=$( nordvpn login --nordaccount ); ( echo $NVPNLOG_ | grep -Po 'logged' ) || ( echo $NVPNLOG_ | grep -Po '(https?:\/\/\S*login\S*)' )";
     this.current_server_get= (txt=Unescape.convert(SETTINGS.get_string("cmd-current-server-get")))?
                           txt : "nordvpn status";
     this.server_place_connect= (txt=Unescape.convert(SETTINGS.get_string("cmd-server-place-connect")))?
@@ -992,13 +992,21 @@ class NVPNMenu extends PanelMenu.Button{
 
   /**
    * Private method that determine whether or not the user is logged in to use the 'nordvpn' command line tool
+   * 
+   * [ NordVPN CLI >= 3.12 ] is the login check return a 'login url', said url is stored in private attribute
+   *      '_lastLoginUrl' (null if no link fetched)
    * @method
    * @return {boolean}
    */
-  _is_user_logged_in(){
-    // return (COMMAND_LINE_SYNC("echo '' | nordvpn login | grep -Po 'already logged'").length!==0);
+  _check_login_status(){
     let t= this._cmd.exec_sync('tool_logged_check');
-    return (t !== undefined && t !== null)? (t.length!==0) : false;
+    let b= (t.startsWith('logged'));
+    if (!b){
+      var match= t.match(/https?\:\/\/\S*login\S*/);
+      this._lastLoginUrl= (match)?match[0]:null;
+    }
+
+    return b
   }
 
   /**
@@ -1017,7 +1025,7 @@ class NVPNMenu extends PanelMenu.Button{
       else if (this._is_daemon_unreachable()) {
         return NVPNMenu.STATUS.DAEMON_DOWN;
       }
-      else if (!this._is_user_logged_in()){
+      else if (!this._check_login_status()){
         return NVPNMenu.STATUS.LOGGED_OUT;
       }
       else if(this._is_in_transition()){
@@ -1082,12 +1090,37 @@ class NVPNMenu extends PanelMenu.Button{
     /** the following switch-case allows to update the relevant UI element according to the
      *  newly obtained value of the 'currentStatus' attribute */
     switch(this.currentStatus){
-    case NVPNMenu.STATUS.DAEMON_DOWN:
     case NVPNMenu.STATUS.LOGGED_OUT:
+      this._label_status.text= _(" nordvpn tool not logged in");
+
+      this.label_connection.text= "--";
+
+      if (this._lastLoginUrl){
+        this.action_button.style_class= 'nvpn-action-button-login';
+                                      
+        this.action_button.label=  _("Login");
+
+        this._clearTransitionStateStyleClass();
+        this._panel_icon.icon_name= 'action-unavailable-symbolic';
+      }
+      else{
+        this.action_button.style_class= 'nvpn-action-button-help';
+                                      
+        this.action_button.label= _("Help?");
+
+        this._clearTransitionStateStyleClass();
+        this.style_class+= (this._b_colored_status)?" state-problem":''
+        this._panel_icon.icon_name= 'network-vpn-no-route-symbolic';
+      }
+
+      /** submenus hidden */
+      this._submenusVisible(false);
+      
+      break;
+    case NVPNMenu.STATUS.DAEMON_DOWN:
+    // case NVPNMenu.STATUS.LOGGED_OUT:
     case NVPNMenu.STATUS.NOT_FOUND:
-      this._label_status.text= (this.currentStatus===NVPNMenu.STATUS.LOGGED_OUT)?
-                                _(" nordvpn tool not logged in")
-                              : (this.currentStatus===NVPNMenu.STATUS.DAEMON_DOWN)?
+      this._label_status.text= (this.currentStatus===NVPNMenu.STATUS.DAEMON_DOWN)?
                                 _(" daemon disabled/missing ")
                               : _(" tool not found.");
 
@@ -1344,14 +1377,22 @@ class NVPNMenu extends PanelMenu.Button{
     /** the apearance and behavior of the button changes according to the current status */
     switch(this.currentStatus){
     /** these states are not supposed to display the button, so nothing is done */
-    case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.LOGGED_OUT:
+      Gio.app_info_launch_default_for_uri(
+        ((this._lastLoginUrl) ?
+            this._lastLoginUrl
+          : "https://github.com/AlexPoilrouge/NordVPN-connect/blob/master/README.md#help"
+        ),
+        global.create_app_launch_context(0, -1)
+      );
+
+      break;
+    case NVPNMenu.STATUS.NOT_FOUND:
     case NVPNMenu.STATUS.DAEMON_DOWN:
       Gio.app_info_launch_default_for_uri(
         "https://github.com/AlexPoilrouge/NordVPN-connect/blob/master/README.md#help",
         global.create_app_launch_context(0, -1)
       );
-
 
       break;
     case NVPNMenu.STATUS.TRANSITION:
@@ -1636,11 +1677,6 @@ class NVPNMenu extends PanelMenu.Button{
     let t= undefined;
 
     switch(this.currentStatus){
-    /** when state is 'logged out', check for login state */
-    case NVPNMenu.STATUS.LOGGED_OUT:
-      change= this._is_user_logged_in();
-
-      break;
     /** when the status is 'nordvpn tool not found' makes a check for this tool presence */
     case NVPNMenu.STATUS.NOT_FOUND:
       change= this._is_NVPN_found();

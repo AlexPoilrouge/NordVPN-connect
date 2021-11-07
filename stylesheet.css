@@ -163,6 +163,27 @@
   border-color: rgba(130,130,130,0.5);
 }
 
+.nvpn-action-button-login{
+  color: rgba(255,255,255,1.0);
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px;
+  background-color: rgba(70, 135, 255,0.6);
+}
+
+.nvpn-action-button-login:hover{
+  background-color: rgba(41, 86, 168, 0.4);
+}
+
+.nvpn-action-button-login:active{
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: normal;
+  background-color: rgba(70, 135, 255,0.4);
+  padding: 2px;
+  border: 3px;
+  border-color: rgba(37, 99, 214, 0.5);
+}
+
 .nvpn-serv-entry-error{
   color: rgba(255, 0, 0, 1.0);
 }

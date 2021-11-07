@@ -33,7 +33,7 @@
             <default>"nordvpn status | grep -Po '[cC]annot.*[dD]aemon'"</default>
         </key>
         <key type="s" name="cmd-tool-logged-check">
-            <default>"echo '' | nordvpn login --nordaccount | grep -Po 'already logged'"</default>
+            <default>"NVPNLOG_=$( nordvpn login --nordaccount ); ( echo $NVPNLOG_ | grep -Po 'logged' ) || ( echo $NVPNLOG_ | grep -Po '(https?:\\\/\\\/\\S*login\\S*)' )"</default>
         </key>
         <key type="s" name="cmd-current-server-get">
             <default>"nordvpn status"</default>
