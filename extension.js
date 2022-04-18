@@ -1215,7 +1215,7 @@ class NVPNMenu extends PanelMenu.Button{
     }
 
 
-    this._location_label.text= '* '+this.server_info.city+' ,'+this.server_info.country+' *';
+    this._location_label.text= '* '+this.server_info.city+', '+this.server_info.country+' *';
     this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.');
     this._tech_label.text= "Technology: "+ ((this.server_info.isOpenVPN())?
                                               ("OpenVPN / " + (this.server_info.isUDP()?"udp":"tcp"))
