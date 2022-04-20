@@ -1215,14 +1215,14 @@ class NVPNMenu extends PanelMenu.Button{
     }
 
 
-    this._location_label.text= '* '+this.server_info.city+' ,'+this.server_info.country+' *';
-    this._ip_label.text= "Shown IP: "+this.server_info.ip.join('.');
+    this._location_label.text= '* '+this.server_info.city+', '+this.server_info.country+' *';
+    this._ip_label.text= "External IP: "+this.server_info.ip.join('.');
     this._tech_label.text= "Technology: "+ ((this.server_info.isOpenVPN())?
-                                              ("OpenVPN / " + (this.server_info.isUDP()?"udp":"tcp"))
+                                              ("OpenVPN / " + (this.server_info.isUDP()?"UDP":"TCP"))
                                             : "NordLynx")
     this._transfer_label.text= "↑ "+this.server_info.transferData.sent.data+" "+this.server_info.transferData.sent.unit+
-                                " ; ↓ "+this.server_info.transferData.recv.data+" "+this.server_info.transferData.recv.unit;
-    this._uptime_label.text= "uptime: "+this.server_info.uptimeInfoString;
+                                " | ↓ "+this.server_info.transferData.recv.data+" "+this.server_info.transferData.recv.unit;
+    this._uptime_label.text= "Uptime: "+this.server_info.uptimeInfoString;
 
     /**
      * this data is only to be displayed (shown/visible) when the server is connected
