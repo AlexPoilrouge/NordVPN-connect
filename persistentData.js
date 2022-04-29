@@ -8,7 +8,7 @@ const ByteArray = imports.byteArray;
  * the extension uses.
  * Stores, add, removes, write reads said data
  */
-class PersistentDataHandler{
+var PersistentDataHandler = class PersistentDataHandler{
     /**
      * Constructor
      * 
@@ -147,7 +147,7 @@ class PersistentDataHandler{
  * Stores, adds, removes and writes & reads favs on disk
  * through an existing and loaded instance of PersistentDataHandler.
  */
-class FavHandler{
+var FavHandler = class FavHandler{
     /**
      * Constructor
      * 
@@ -267,7 +267,7 @@ class FavHandler{
  * Stores, adds, removes and writes & reads favs on disk
  * through an existing and loaded instance of PersistentDataHandler.
  */
-class RecentLocationHandler{
+var RecentLocationHandler = class RecentLocationHandler{
   /**
    * Constructor
    * 
