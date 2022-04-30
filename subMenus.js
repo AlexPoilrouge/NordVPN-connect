@@ -39,7 +39,7 @@ function init(){
  *  @readonly
  *  @enum {number}
  */
-const LOCATIONS_DISPLAY_MODE={
+var LOCATIONS_DISPLAY_MODE={
   AVAILABLE_ONLY: 0,
   DISCRIMINATE_DISPLAY: 1,
   SHOW_ALL: 2,
@@ -51,7 +51,7 @@ const LOCATIONS_DISPLAY_MODE={
  *  @readonly
  *  @enum {number}
  */
-const LOCATION_ITEM_STATE= {
+var LOCATION_ITEM_STATE= {
   DEFAULT: 0,
   UNAVAILABLE: 1,
   FORCED: 2,
@@ -63,7 +63,7 @@ const LOCATION_ITEM_STATE= {
  *  @readonly
  *  @enum {number}
  */
-const LOCATION_TYPE= {
+var LOCATION_TYPE= {
   COUNTRY: 0,
   CITY: 1,
   GROUP: 2,
