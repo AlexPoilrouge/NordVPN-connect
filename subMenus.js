@@ -39,7 +39,7 @@ function init(){
  *  @readonly
  *  @enum {number}
  */
-const LOCATIONS_DISPLAY_MODE={
+var LOCATIONS_DISPLAY_MODE={
   AVAILABLE_ONLY: 0,
   DISCRIMINATE_DISPLAY: 1,
   SHOW_ALL: 2,
@@ -51,7 +51,7 @@ const LOCATIONS_DISPLAY_MODE={
  *  @readonly
  *  @enum {number}
  */
-const LOCATION_ITEM_STATE= {
+var LOCATION_ITEM_STATE= {
   DEFAULT: 0,
   UNAVAILABLE: 1,
   FORCED: 2,
@@ -63,7 +63,7 @@ const LOCATION_ITEM_STATE= {
  *  @readonly
  *  @enum {number}
  */
-const LOCATION_TYPE= {
+var LOCATION_TYPE= {
   COUNTRY: 0,
   CITY: 1,
   GROUP: 2,
@@ -489,7 +489,7 @@ class LocationsMenu extends HiddenSubMenuMenuItemBase{
 });
 
 
-let StackerBase = GObject.registerClass(
+var StackerBase = GObject.registerClass(
 {
 },
 /**
@@ -617,7 +617,7 @@ class StackerBase extends GObject.Object{
 /**
  * Class that implements faved server as a GUI menu item
  */
-let FavedServerItem = GObject.registerClass(
+var FavedServerItem = GObject.registerClass(
   {
     Signals: {
       'delete-fav': {
@@ -692,7 +692,7 @@ class FavedServerItem extends PopupMenu.PopupBaseMenuItem{
 /** Regisering this item as a GObject in order
  *  to use signals via the 'emit' method
  */
-let FavoriteStacker = GObject.registerClass(
+var FavoriteStacker = GObject.registerClass(
 {
   Signals: {
     'server-fav-connect': {
@@ -978,7 +978,7 @@ class RecentLocationItem extends PopupMenu.PopupBaseMenuItem{
   }
 });
 
-let RecentLocationStacker = GObject.registerClass(
+var RecentLocationStacker = GObject.registerClass(
 {
   Signals: {
     'location-connect': {
@@ -2104,7 +2104,7 @@ class OptionsSubDNSItem extends PopupMenu.PopupBaseMenuItem {
 /** Regisering this item as a GObject in order
  *  to use signals via the 'emit' method
  */
-let OptionsSubDNSItemContainer = GObject.registerClass(
+var OptionsSubDNSItemContainer = GObject.registerClass(
 {
   Signals: {
     'new-DNS-config': {
@@ -2256,7 +2256,7 @@ class OptionsSubDNSItemContainer extends GObject.Object{
  *  different options offered by the CLI tool.
  */
 
-let OptionsSubMenu = GObject.registerClass(
+var OptionsSubMenu = GObject.registerClass(
 class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
   /** Constructor
    *  @method
@@ -2452,7 +2452,7 @@ class OptionsSubMenu extends HiddenSubMenuMenuItemBase{
 /** class that implements a inforative message as a gui
  * menu item
  */
-let MessageItem = GObject.registerClass(
+var MessageItem = GObject.registerClass(
 class MessageItem extends PopupMenu.PopupBaseMenuItem{
   /**
    * constructor
@@ -2511,7 +2511,7 @@ class MessageItem extends PopupMenu.PopupBaseMenuItem{
 /** Class that implements the menu item that shows a message when
  *  expected given version doesn't match actual given version
  */
-let VersionChecker = GObject.registerClass(
+var VersionChecker = GObject.registerClass(
 class VersionChecker extends MessageItem{
   /** Enumerator for the possible result of versions comparison
    *  @readonly

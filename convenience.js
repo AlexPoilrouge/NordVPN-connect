@@ -95,7 +95,7 @@ function getSettings(schema) {
  * Groupment of usefull functions to be used within different location
  * in the extension's code
 */
-const MyUtils= {
+var MyUtils= {
   /**
    * Generate a regex that matches a location regardless of included group
    * 
