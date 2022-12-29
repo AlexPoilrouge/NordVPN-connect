@@ -5,6 +5,6 @@
 	"url": "https://github.com/AlexPoilrouge/NordVPN-connect",
 	"uuid": "NordVPN_Connect@poilrouge.fr",
 	"settings-schema": "org.gnome.shell.extensions.nvpnconnect",
-	"shell-version": ["40","41","42"],
-	"version": 19
+	"shell-version": ["40","41","42","43"],
+	"version": 20
 }
